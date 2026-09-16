@@ -61,8 +61,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | --- | --- |
 | `npm run dev` | Start the development server. |
 | `npm run lint` | Run ESLint checks. |
-| `npx tsc --noEmit` | Run TypeScript checks without generating files. |
+| `npm run typecheck` | Run TypeScript checks without generating files. |
 | `npm run build` | Create an optimized production build. |
+| `npm run check` | Run lint, typecheck, and build in sequence. |
 | `npm run start` | Start the production server after a successful build. |
 
 ## Project Structure
