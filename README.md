@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinFlow
+
+FinFlow is a financial operations platform for freelancers and small businesses.
+It is being built as a production-minded portfolio project that combines practical
+accounting workflows with modern web engineering.
+
+> **Project status:** Phase 1 — Project Foundation is in progress. The repository
+> currently contains the frontend foundation only; financial workflows and backend
+> services have not been implemented yet.
+
+## Product Direction
+
+FinFlow will help business owners and accountants manage financial operations in
+one workspace, including:
+
+- Customers, vendors, and invoices
+- Payments, income, and expenses
+- Bank accounts and transactions
+- Transaction reconciliation and audit history
+- Financial reports such as Profit & Loss and Cash Flow
+
+The complete, incremental delivery plan is available in [plan.md](./plan.md).
+
+## Current Technology
+
+- [Next.js](https://nextjs.org/) 16 with the App Router
+- [React](https://react.dev/) 19
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) 4
+- ESLint
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js `24.21.0` (the version is pinned in `.nvmrc`)
+- npm
+
+Verify your Node.js version:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+node --version
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+It should begin with `v24.21.0`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Install and run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+git clone https://github.com/elahe-fakour/finflow.git
+cd finflow
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Available Commands
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server. |
+| `npm run lint` | Run ESLint checks. |
+| `npx tsc --noEmit` | Run TypeScript checks without generating files. |
+| `npm run build` | Create an optimized production build. |
+| `npm run start` | Start the production server after a successful build. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```text
+src/app/       # App Router routes, layouts, and global styles
+public/        # Static assets
+.vscode/       # Shared VS Code workspace settings and recommendations
+plan.md        # Product roadmap, architecture direction, and delivery plan
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Engineering Principles
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Financial correctness, consistency, traceability, and auditability come first.
+- Future monetary values will use integer minor units rather than JavaScript
+  floating-point numbers.
+- Business and financial rules will live outside React UI components.
+- Authorization will be enforced by the backend when authentication is introduced.
+- Secrets and real financial data must never be committed. Use `.env.local` for
+  local values and `.env.example` only for safe placeholders.
+
+## Contributing to This Learning Project
+
+Development follows a deliberate sequence:
+
+```text
+Phase → Milestone → Task → Learn → Implement → Test → Review → Commit
+```
+
+Each task is intentionally small, tested in proportion to its risk, and designed
+to result in one focused Git commit.
