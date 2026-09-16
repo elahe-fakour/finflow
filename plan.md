@@ -66,17 +66,17 @@ complexity during the visual foundation work.
 
 Planned additions, introduced at their first genuine need:
 
-| Tool | Purpose in FinFlow | When introduced |
-| --- | --- | --- |
-| shadcn/ui | Accessible, composable primitives with source ownership | Design-system component milestone |
-| React Hook Form + Zod | Reliable, typed form state and validation | First create/edit form |
-| TanStack Query | Client cache and mutation states for richer data screens | When client-side server-state interactions justify it |
-| NestJS | Modular API, validation, authorization, business services | Backend foundation |
-| PostgreSQL + Prisma | Relational integrity, migrations, typed persistence | Backend foundation |
-| Vitest | Fast unit/integration tests for money and business logic | First financial calculation |
-| Playwright | End-to-end coverage of critical user journeys | First complete vertical slice |
-| Docker | Reproducible local PostgreSQL and later services | Database setup |
-| GitHub Actions | Continuous quality checks | When lint/typecheck/tests exist |
+| Tool                  | Purpose in FinFlow                                        | When introduced                                       |
+| --------------------- | --------------------------------------------------------- | ----------------------------------------------------- |
+| shadcn/ui             | Accessible, composable primitives with source ownership   | Design-system component milestone                     |
+| React Hook Form + Zod | Reliable, typed form state and validation                 | First create/edit form                                |
+| TanStack Query        | Client cache and mutation states for richer data screens  | When client-side server-state interactions justify it |
+| NestJS                | Modular API, validation, authorization, business services | Backend foundation                                    |
+| PostgreSQL + Prisma   | Relational integrity, migrations, typed persistence       | Backend foundation                                    |
+| Vitest                | Fast unit/integration tests for money and business logic  | First financial calculation                           |
+| Playwright            | End-to-end coverage of critical user journeys             | First complete vertical slice                         |
+| Docker                | Reproducible local PostgreSQL and later services          | Database setup                                        |
+| GitHub Actions        | Continuous quality checks                                 | When lint/typecheck/tests exist                       |
 
 ### Money representation decision
 
