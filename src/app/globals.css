@@ -55,9 +55,18 @@
   --color-background: var(--surface-canvas);
   --color-foreground: var(--text-primary);
   --color-surface: var(--surface-raised);
+  --color-card: var(--surface-raised);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--text-primary);
   --color-muted: var(--surface-muted);
   --color-muted-foreground: var(--text-secondary);
+  --color-secondary: var(--surface-muted);
+  --color-secondary-foreground: var(--text-primary);
+  --color-accent: var(--surface-muted);
+  --color-accent-foreground: var(--text-primary);
   --color-border: var(--border-subtle);
+  --color-input: var(--border-subtle);
   --color-primary: var(--action-primary);
   --color-primary-hover: var(--action-primary-hover);
   --color-primary-foreground: var(--action-primary-foreground);
@@ -69,6 +78,9 @@
   --color-danger-foreground: var(--status-danger-foreground);
   --color-info: var(--status-info);
   --color-info-foreground: var(--status-info-foreground);
+  --color-destructive: var(--status-danger);
+  --color-destructive-foreground: var(--status-danger-foreground);
+  --color-ring: var(--focus-ring);
   --color-focus-ring: var(--focus-ring);
 
   --font-sans: var(--font-family-sans);
@@ -86,6 +98,10 @@
   --radius-card: var(--shape-card);
   --radius-panel: var(--shape-panel);
   --radius-pill: var(--shape-pill);
+  --radius-lg: var(--shape-control);
+  --radius-xl: var(--shape-card);
+  --radius-2xl: var(--shape-panel);
+  --radius-4xl: var(--shape-pill);
 }
 
 @media (prefers-color-scheme: dark) {
