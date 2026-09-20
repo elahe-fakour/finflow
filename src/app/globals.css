@@ -1,26 +1,121 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Color */
+  --surface-canvas: #f8fafc;
+  --surface-raised: #ffffff;
+  --surface-muted: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border-subtle: #e2e8f0;
+  --action-primary: #0f766e;
+  --action-primary-hover: #115e59;
+  --action-primary-foreground: #ffffff;
+  --status-success: #15803d;
+  --status-success-foreground: #ffffff;
+  --status-warning: #b45309;
+  --status-warning-foreground: #ffffff;
+  --status-danger: #b91c1c;
+  --status-danger-foreground: #ffffff;
+  --status-info: #1d4ed8;
+  --status-info-foreground: #ffffff;
+  --focus-ring: #0f766e;
+
+  /* Typography */
+  --font-family-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-family-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --type-display-size: 2.25rem;
+  --type-display-line-height: 2.5rem;
+  --type-page-title-size: 1.875rem;
+  --type-page-title-line-height: 2.25rem;
+  --type-section-title-size: 1.25rem;
+  --type-section-title-line-height: 1.75rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Shape */
+  --shape-control: 0.5rem;
+  --shape-card: 0.75rem;
+  --shape-panel: 1rem;
+  --shape-pill: 9999px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--surface-canvas);
+  --color-foreground: var(--text-primary);
+  --color-surface: var(--surface-raised);
+  --color-muted: var(--surface-muted);
+  --color-muted-foreground: var(--text-secondary);
+  --color-border: var(--border-subtle);
+  --color-primary: var(--action-primary);
+  --color-primary-hover: var(--action-primary-hover);
+  --color-primary-foreground: var(--action-primary-foreground);
+  --color-success: var(--status-success);
+  --color-success-foreground: var(--status-success-foreground);
+  --color-warning: var(--status-warning);
+  --color-warning-foreground: var(--status-warning-foreground);
+  --color-danger: var(--status-danger);
+  --color-danger-foreground: var(--status-danger-foreground);
+  --color-info: var(--status-info);
+  --color-info-foreground: var(--status-info-foreground);
+  --color-focus-ring: var(--focus-ring);
+
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
+  --text-display: var(--type-display-size);
+  --text-display--line-height: var(--type-display-line-height);
+  --text-page-title: var(--type-page-title-size);
+  --text-page-title--line-height: var(--type-page-title-line-height);
+  --text-section-title: var(--type-section-title-size);
+  --text-section-title--line-height: var(--type-section-title-line-height);
+
+  --spacing: var(--space-1);
+
+  --radius-control: var(--shape-control);
+  --radius-card: var(--shape-card);
+  --radius-panel: var(--shape-panel);
+  --radius-pill: var(--shape-pill);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --surface-canvas: #0f172a;
+    --surface-raised: #111827;
+    --surface-muted: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border-subtle: #334155;
+    --action-primary: #2dd4bf;
+    --action-primary-hover: #5eead4;
+    --action-primary-foreground: #042f2e;
+    --status-success: #86efac;
+    --status-success-foreground: #052e16;
+    --status-warning: #fcd34d;
+    --status-warning-foreground: #451a03;
+    --status-danger: #fca5a5;
+    --status-danger-foreground: #450a0a;
+    --status-info: #93c5fd;
+    --status-info-foreground: #172554;
+    --focus-ring: #5eead4;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
