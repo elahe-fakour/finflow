@@ -1,113 +1,17 @@
 "use client";
 
-import type { LucideIcon } from "@/lib/icons";
-import { cn } from "@/lib/utils";
 import {
-  ArrowLeftRight,
-  BarChart3,
-  Building2,
-  FileText,
-  Landmark,
-  LayoutDashboard,
-  Receipt,
-  Scale,
-  Settings,
-  Users,
-} from "lucide-react";
+  isNavigationItemActive,
+  navigationGroups,
+  settingsNavigationItem,
+  type NavigationItem,
+} from "@/components/layout/navigation-config";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type NavigationItem = {
-  href: string;
-  icon: LucideIcon;
-  label: string;
-};
-
-type NavigationGroup = {
-  label: string;
-  items: NavigationItem[];
-};
-
-const navigationGroups: NavigationGroup[] = [
-  {
-    label: "Overview",
-    items: [
-      {
-        href: "/",
-        icon: LayoutDashboard,
-        label: "Dashboard",
-      },
-    ],
-  },
-  {
-    label: "Sales",
-    items: [
-      {
-        href: "/invoices",
-        icon: FileText,
-        label: "Invoices",
-      },
-      {
-        href: "/customers",
-        icon: Users,
-        label: "Customers",
-      },
-      {
-        href: "/vendors",
-        icon: Building2,
-        label: "Vendors",
-      },
-    ],
-  },
-  {
-    label: "Banking",
-    items: [
-      {
-        href: "/transactions",
-        icon: ArrowLeftRight,
-        label: "Transactions",
-      },
-      {
-        href: "/bank-accounts",
-        icon: Landmark,
-        label: "Bank Accounts",
-      },
-      {
-        href: "/income-expenses",
-        icon: Receipt,
-        label: "Income & Expenses",
-      },
-    ],
-  },
-  {
-    label: "Analysis",
-    items: [
-      {
-        href: "/reports",
-        icon: BarChart3,
-        label: "Reports",
-      },
-      {
-        href: "/reconciliation",
-        icon: Scale,
-        label: "Reconciliation",
-      },
-    ],
-  },
-];
-
-const settingsItem: NavigationItem = {
-  href: "/settings",
-  icon: Settings,
-  label: "Settings",
-};
-
-function isActivePath(pathname: string, href: string) {
-  return href === "/" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
-}
-
 function NavigationLink({ item, pathname }: { item: NavigationItem; pathname: string }) {
-  const isActive = isActivePath(pathname, item.href);
+  const isActive = isNavigationItemActive(pathname, item.href);
   const Icon = item.icon;
 
   return (
@@ -166,7 +70,7 @@ function AppSidebar() {
       </nav>
 
       <div className="border-t border-border p-3">
-        <NavigationLink item={settingsItem} pathname={pathname} />
+        <NavigationLink item={settingsNavigationItem} pathname={pathname} />
       </div>
     </aside>
   );
