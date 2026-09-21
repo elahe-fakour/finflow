@@ -1,3 +1,4 @@
+import { CashFlowChart, type CashFlowDataPoint } from "@/components/dashboard/cash-flow-chart";
 import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
 import type { Metadata } from "next";
 import { CircleDollarSign, Landmark, ReceiptText, WalletCards } from "lucide-react";
@@ -34,6 +35,15 @@ const dashboardMetrics = [
   },
 ];
 
+const cashFlowSampleData: CashFlowDataPoint[] = [
+  { period: "Apr", netCashFlowCents: 425_000 },
+  { period: "May", netCashFlowCents: 510_000 },
+  { period: "Jun", netCashFlowCents: 378_000 },
+  { period: "Jul", netCashFlowCents: 642_000 },
+  { period: "Aug", netCashFlowCents: 584_000 },
+  { period: "Sep", netCashFlowCents: 711_000 },
+];
+
 export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
@@ -59,6 +69,10 @@ export default function DashboardPage() {
             <DashboardKpiCard key={metric.label} {...metric} />
           ))}
         </div>
+      </section>
+
+      <section aria-label="Cash flow" className="mt-6">
+        <CashFlowChart data={cashFlowSampleData} />
       </section>
     </section>
   );
