@@ -1,9 +1,38 @@
+import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
 import type { Metadata } from "next";
+import { CircleDollarSign, Landmark, ReceiptText, WalletCards } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dashboard",
   description: "An overview of your FinFlow financial operations.",
 };
+
+const dashboardMetrics = [
+  {
+    label: "Total income",
+    value: "$24,850.00",
+    description: "Current period · sample data",
+    icon: CircleDollarSign,
+  },
+  {
+    label: "Total expenses",
+    value: "$8,420.00",
+    description: "Current period · sample data",
+    icon: ReceiptText,
+  },
+  {
+    label: "Outstanding invoices",
+    value: "$7,240.00",
+    description: "4 invoices awaiting payment · sample data",
+    icon: WalletCards,
+  },
+  {
+    label: "Cash balance",
+    value: "$31,620.00",
+    description: "Across 3 accounts · sample data",
+    icon: Landmark,
+  },
+];
 
 export default function DashboardPage() {
   return (
@@ -20,6 +49,17 @@ export default function DashboardPage() {
           Monitor your business finances and stay on top of your daily operations.
         </p>
       </header>
+
+      <section aria-labelledby="dashboard-metrics-title" className="mt-8">
+        <h2 className="sr-only" id="dashboard-metrics-title">
+          Key financial metrics
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {dashboardMetrics.map((metric) => (
+            <DashboardKpiCard key={metric.label} {...metric} />
+          ))}
+        </div>
+      </section>
     </section>
   );
 }
