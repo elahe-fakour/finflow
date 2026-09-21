@@ -1,5 +1,9 @@
 import { CashFlowChart, type CashFlowDataPoint } from "@/components/dashboard/cash-flow-chart";
 import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
+import {
+  ExpenseBreakdownChart,
+  type ExpenseBreakdownDataPoint,
+} from "@/components/dashboard/expense-breakdown-chart";
 import type { Metadata } from "next";
 import { CircleDollarSign, Landmark, ReceiptText, WalletCards } from "lucide-react";
 
@@ -44,6 +48,14 @@ const cashFlowSampleData: CashFlowDataPoint[] = [
   { period: "Sep", netCashFlowCents: 711_000 },
 ];
 
+const expenseBreakdownSampleData: ExpenseBreakdownDataPoint[] = [
+  { category: "Payroll", amountCents: 315_000, color: "#0f766e" },
+  { category: "Contractors", amountCents: 195_000, color: "#0284c7" },
+  { category: "Software", amountCents: 122_000, color: "#7c3aed" },
+  { category: "Marketing", amountCents: 104_000, color: "#d97706" },
+  { category: "Other", amountCents: 106_000, color: "#db2777" },
+];
+
 export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
@@ -73,6 +85,10 @@ export default function DashboardPage() {
 
       <section aria-label="Cash flow" className="mt-6">
         <CashFlowChart data={cashFlowSampleData} />
+      </section>
+
+      <section aria-label="Expense breakdown" className="mt-6">
+        <ExpenseBreakdownChart data={expenseBreakdownSampleData} />
       </section>
     </section>
   );
