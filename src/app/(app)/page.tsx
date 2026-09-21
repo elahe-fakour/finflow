@@ -34,29 +34,31 @@ export const metadata: Metadata = {
   description: "An overview of your FinFlow financial operations.",
 };
 
+const dashboardSamplePeriod = "September 2026";
+
 const dashboardMetrics = [
   {
     label: "Total income",
     value: "$24,850.00",
-    description: "Current period · sample data",
+    description: `${dashboardSamplePeriod} · sample data`,
     icon: CircleDollarSign,
   },
   {
     label: "Total expenses",
     value: "$8,420.00",
-    description: "Current period · sample data",
+    description: `${dashboardSamplePeriod} · sample data`,
     icon: ReceiptText,
   },
   {
     label: "Outstanding invoices",
     value: "$7,240.00",
-    description: "4 invoices awaiting payment · sample data",
+    description: "2 invoices awaiting payment · sample data",
     icon: WalletCards,
   },
   {
     label: "Cash balance",
     value: "$31,620.00",
-    description: "Across 3 accounts · sample data",
+    description: `Across 3 accounts · ${dashboardSamplePeriod} sample data`,
     icon: Landmark,
   },
 ];
@@ -91,7 +93,7 @@ const recentInvoices: RecentInvoice[] = [
     customer: "Northstar Creative",
     dueDate: "Sep 18, 2026",
     status: "Overdue",
-    amount: "$2,480.00",
+    amount: "$5,990.00",
   },
   {
     invoiceNumber: "INV-2026-0180",
@@ -136,25 +138,25 @@ const recentActivity: RecentActivityItem[] = [
   {
     title: "Invoice sent",
     description: "INV-2026-0182 was sent to Acme Ltd.",
-    timestamp: "10 minutes ago",
+    timestamp: "Sep 21, 2026 · 10:20 AM",
     icon: FileCheck2,
   },
   {
     title: "Payment received",
     description: "Pine & Co. paid INV-2026-0180.",
-    timestamp: "2 hours ago",
+    timestamp: "Sep 20, 2026 · 4:15 PM",
     icon: CircleDollarSign,
   },
   {
     title: "Expense recorded",
     description: "A software subscription expense was added.",
-    timestamp: "Yesterday",
+    timestamp: "Sep 20, 2026 · 11:05 AM",
     icon: ReceiptText,
   },
   {
     title: "Transaction categorized",
     description: "A Stripe payout was categorized as income.",
-    timestamp: "Yesterday",
+    timestamp: "Sep 19, 2026 · 3:40 PM",
     icon: Landmark,
   },
 ];
@@ -183,7 +185,7 @@ export default function DashboardPage() {
           Dashboard
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Monitor your business finances and stay on top of your daily operations.
+          Review your September 2026 sample financial data in one place.
         </p>
       </header>
 

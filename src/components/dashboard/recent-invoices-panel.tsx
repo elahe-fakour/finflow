@@ -43,7 +43,7 @@ function RecentInvoicesPanel({ invoices }: RecentInvoicesPanelProps) {
     <Card>
       <CardHeader>
         <CardTitle as="h2">Recent invoices</CardTitle>
-        <CardDescription>Latest invoice activity for your workspace.</CardDescription>
+        <CardDescription>September 2026 invoice activity for your workspace.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
         </CardAction>
