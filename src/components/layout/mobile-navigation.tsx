@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type MobileNavigationLinkProps = {
   item: NavigationItem;
@@ -79,6 +79,21 @@ function MobileNavigation() {
     dialogRef.current?.close();
   }
 
+  useEffect(() => {
+    const desktopMediaQuery = window.matchMedia("(min-width: 64rem)");
+
+    function closeMenuOnDesktop() {
+      if (desktopMediaQuery.matches && dialogRef.current?.open) {
+        dialogRef.current.close();
+      }
+    }
+
+    closeMenuOnDesktop();
+    desktopMediaQuery.addEventListener("change", closeMenuOnDesktop);
+
+    return () => desktopMediaQuery.removeEventListener("change", closeMenuOnDesktop);
+  }, []);
+
   return (
     <>
       <nav
@@ -111,7 +126,7 @@ function MobileNavigation() {
       <dialog
         aria-labelledby="mobile-navigation-title"
         aria-modal="true"
-        className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-panel border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-foreground/35"
+        className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-panel border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-foreground/35 lg:hidden"
         id="mobile-navigation-dialog"
         onClose={() => setIsMoreMenuOpen(false)}
         ref={dialogRef}
