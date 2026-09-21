@@ -4,8 +4,21 @@ import {
   ExpenseBreakdownChart,
   type ExpenseBreakdownDataPoint,
 } from "@/components/dashboard/expense-breakdown-chart";
+import { QuickActionsPanel, type QuickAction } from "@/components/dashboard/quick-actions-panel";
+import {
+  RecentInvoicesPanel,
+  type RecentInvoice,
+} from "@/components/dashboard/recent-invoices-panel";
 import type { Metadata } from "next";
-import { CircleDollarSign, Landmark, ReceiptText, WalletCards } from "lucide-react";
+import {
+  CircleDollarSign,
+  FilePlus2,
+  Landmark,
+  ReceiptText,
+  Upload,
+  UserPlus,
+  WalletCards,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -56,6 +69,60 @@ const expenseBreakdownSampleData: ExpenseBreakdownDataPoint[] = [
   { category: "Other", amountCents: 106_000, color: "#db2777" },
 ];
 
+const recentInvoices: RecentInvoice[] = [
+  {
+    invoiceNumber: "INV-2026-0182",
+    customer: "Acme Ltd.",
+    dueDate: "Sep 22, 2026",
+    status: "Sent",
+    amount: "$1,250.00",
+  },
+  {
+    invoiceNumber: "INV-2026-0181",
+    customer: "Northstar Creative",
+    dueDate: "Sep 18, 2026",
+    status: "Overdue",
+    amount: "$2,480.00",
+  },
+  {
+    invoiceNumber: "INV-2026-0180",
+    customer: "Pine & Co.",
+    dueDate: "Sep 15, 2026",
+    status: "Paid",
+    amount: "$980.00",
+  },
+  {
+    invoiceNumber: "INV-2026-0179",
+    customer: "Brightline Studio",
+    dueDate: "Sep 30, 2026",
+    status: "Draft",
+    amount: "$1,560.00",
+  },
+];
+
+const quickActions: QuickAction[] = [
+  {
+    label: "Create invoice",
+    description: "Issue a new customer invoice",
+    icon: FilePlus2,
+  },
+  {
+    label: "Add customer",
+    description: "Create a customer record",
+    icon: UserPlus,
+  },
+  {
+    label: "Record expense",
+    description: "Capture a business expense",
+    icon: ReceiptText,
+  },
+  {
+    label: "Import transactions",
+    description: "Bring in bank activity",
+    icon: Upload,
+  },
+];
+
 export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
@@ -89,6 +156,14 @@ export default function DashboardPage() {
 
       <section aria-label="Expense breakdown" className="mt-6">
         <ExpenseBreakdownChart data={expenseBreakdownSampleData} />
+      </section>
+
+      <section
+        aria-label="Dashboard activity"
+        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.85fr)] xl:items-start"
+      >
+        <RecentInvoicesPanel invoices={recentInvoices} />
+        <QuickActionsPanel actions={quickActions} />
       </section>
     </section>
   );
