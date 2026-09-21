@@ -16,7 +16,7 @@ function QuickActionsPanel({ actions }: QuickActionsPanelProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quick actions</CardTitle>
+        <CardTitle as="h2">Quick actions</CardTitle>
         <CardDescription>Actions will be available as related workflows are built.</CardDescription>
       </CardHeader>
       <CardContent>

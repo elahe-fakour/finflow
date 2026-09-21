@@ -32,7 +32,7 @@ function RecentActivityPanel({ activities }: { activities: RecentActivityItem[] 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent activity</CardTitle>
+        <CardTitle as="h2">Recent activity</CardTitle>
         <CardDescription>Latest financial activity in your workspace.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
@@ -70,7 +70,7 @@ function BankAccountsPanel({ accounts }: { accounts: BankAccount[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bank accounts</CardTitle>
+        <CardTitle as="h2">Bank accounts</CardTitle>
         <CardDescription>Balances across connected financial accounts.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
@@ -100,7 +100,7 @@ function ProfitLossSummaryPanel({ summary }: { summary: ProfitLossSummary }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profit &amp; loss</CardTitle>
+        <CardTitle as="h2">Profit &amp; loss</CardTitle>
         <CardDescription>Current-period performance summary.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>

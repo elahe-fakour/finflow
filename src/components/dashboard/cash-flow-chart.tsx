@@ -42,7 +42,7 @@ function CashFlowChart({ data }: CashFlowChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Cash flow</CardTitle>
+        <CardTitle as="h2">Cash flow</CardTitle>
         <CardDescription>Monthly net cash flow in USD.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
@@ -54,7 +54,9 @@ function CashFlowChart({ data }: CashFlowChartProps) {
             <AreaChart
               accessibilityLayer
               data={data}
+              desc="Monthly net cash flow sample data in US dollars. A text table with the same values follows the chart."
               margin={{ top: 8, right: 8, bottom: 0, left: -12 }}
+              title="Cash flow sample data"
             >
               <defs>
                 <linearGradient id="cash-flow-gradient" x1="0" x2="0" y1="0" y2="1">

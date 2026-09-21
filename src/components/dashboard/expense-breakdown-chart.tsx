@@ -35,7 +35,7 @@ function ExpenseBreakdownChart({ data }: ExpenseBreakdownChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expense breakdown</CardTitle>
+        <CardTitle as="h2">Expense breakdown</CardTitle>
         <CardDescription>Current-period spending by category.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
