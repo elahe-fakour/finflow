@@ -27,15 +27,19 @@ App Router in `src/app`:
 
 ```text
 src/app/
-  layout.tsx     # Shared root layout
-  page.tsx       # Route for /
-  globals.css    # Global styles and Tailwind entry point
+  layout.tsx       # Root document, metadata, fonts, and global styles
+  globals.css      # Global styles and Tailwind entry point
+  (app)/           # URL-neutral route group for application routes
+    layout.tsx     # Shared application shell
+    page.tsx       # Route for /
 
 public/          # Static files served by Next.js
 ```
 
-The App Router makes Server Components the default. Client Components will be used
-only when browser-only interactivity is required. At this stage, the starter page
+The `(app)` route group does not affect URLs. It scopes the application shell to
+the product routes so future authentication pages can use a different layout. The
+App Router makes Server Components the default. Client Components will be used only
+when browser-only interactivity is required. At this stage, the application shell
 contains no business logic, data fetching, or client-side state.
 
 ## Current Boundaries
