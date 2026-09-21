@@ -35,7 +35,10 @@ function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex">
+    <aside
+      aria-label="FinFlow application sidebar"
+      className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex"
+    >
       <div className="flex h-16 items-center border-b border-border px-5">
         <Link
           aria-label="FinFlow dashboard"
@@ -55,8 +58,11 @@ function AppSidebar() {
       <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-5">
         <div className="space-y-6">
           {navigationGroups.map((group) => (
-            <div key={group.label}>
-              <p className="px-3 pb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            <div aria-labelledby={`navigation-group-${group.label}`} key={group.label} role="group">
+              <p
+                className="px-3 pb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                id={`navigation-group-${group.label}`}
+              >
                 {group.label}
               </p>
               <div className="space-y-1">

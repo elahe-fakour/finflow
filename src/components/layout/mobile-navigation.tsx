@@ -110,6 +110,7 @@ function MobileNavigation() {
 
       <dialog
         aria-labelledby="mobile-navigation-title"
+        aria-modal="true"
         className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-panel border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-foreground/35"
         id="mobile-navigation-dialog"
         onClose={() => setIsMoreMenuOpen(false)}
