@@ -1,6 +1,14 @@
 import { CashFlowChart, type CashFlowDataPoint } from "@/components/dashboard/cash-flow-chart";
 import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
 import {
+  BankAccountsPanel,
+  type BankAccount,
+  ProfitLossSummaryPanel,
+  type ProfitLossSummary,
+  RecentActivityPanel,
+  type RecentActivityItem,
+} from "@/components/dashboard/dashboard-summary-panels";
+import {
   ExpenseBreakdownChart,
   type ExpenseBreakdownDataPoint,
 } from "@/components/dashboard/expense-breakdown-chart";
@@ -12,6 +20,7 @@ import {
 import type { Metadata } from "next";
 import {
   CircleDollarSign,
+  FileCheck2,
   FilePlus2,
   Landmark,
   ReceiptText,
@@ -123,6 +132,45 @@ const quickActions: QuickAction[] = [
   },
 ];
 
+const recentActivity: RecentActivityItem[] = [
+  {
+    title: "Invoice sent",
+    description: "INV-2026-0182 was sent to Acme Ltd.",
+    timestamp: "10 minutes ago",
+    icon: FileCheck2,
+  },
+  {
+    title: "Payment received",
+    description: "Pine & Co. paid INV-2026-0180.",
+    timestamp: "2 hours ago",
+    icon: CircleDollarSign,
+  },
+  {
+    title: "Expense recorded",
+    description: "A software subscription expense was added.",
+    timestamp: "Yesterday",
+    icon: ReceiptText,
+  },
+  {
+    title: "Transaction categorized",
+    description: "A Stripe payout was categorized as income.",
+    timestamp: "Yesterday",
+    icon: Landmark,
+  },
+];
+
+const bankAccounts: BankAccount[] = [
+  { name: "Business checking", type: "Checking account", balance: "$18,940.00" },
+  { name: "Business savings", type: "Savings account", balance: "$8,220.00" },
+  { name: "Stripe balance", type: "Payment processor", balance: "$4,460.00" },
+];
+
+const profitLossSummary: ProfitLossSummary = {
+  income: "$24,850.00",
+  expenses: "($8,420.00)",
+  netProfit: "$16,430.00",
+};
+
 export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
@@ -164,6 +212,12 @@ export default function DashboardPage() {
       >
         <RecentInvoicesPanel invoices={recentInvoices} />
         <QuickActionsPanel actions={quickActions} />
+      </section>
+
+      <section aria-label="Financial summary" className="mt-6 grid gap-6 xl:grid-cols-3">
+        <RecentActivityPanel activities={recentActivity} />
+        <BankAccountsPanel accounts={bankAccounts} />
+        <ProfitLossSummaryPanel summary={profitLossSummary} />
       </section>
     </section>
   );
