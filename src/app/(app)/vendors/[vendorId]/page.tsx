@@ -1,8 +1,9 @@
 import { vendorSampleData } from "@/components/vendors/vendor-sample-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CircleDollarSign, ReceiptText } from "lucide-react";
+import { CircleDollarSign, FilePenLine, ReceiptText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -54,9 +55,15 @@ export default async function VendorDetailPage({ params }: VendorDetailPageProps
             {vendor.contactName} · {vendor.email}
           </p>
         </div>
-        <Badge className="w-fit" variant="outline">
-          Sample data
-        </Badge>
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge variant="outline">Sample data</Badge>
+          <Button asChild size="lg" variant="outline">
+            <Link href={`/vendors/${vendor.id}/edit`}>
+              <FilePenLine aria-hidden="true" />
+              Edit vendor
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
