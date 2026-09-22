@@ -33,6 +33,9 @@ src/app/
     layout.tsx     # Shared application shell
     page.tsx       # Route for /
 
+src/features/
+  invoices/        # Frontend invoice domain contracts
+
 public/          # Static files served by Next.js
 ```
 
@@ -48,11 +51,14 @@ contains no business logic, data fetching, or client-side state.
 - **Routing and layout:** Next.js App Router owns route composition and shared UI
   structure.
 - **Styling:** Tailwind CSS and global CSS provide the visual layer.
+- **Invoice domain contracts:** Frontend-only types describe invoices, line items,
+  payments, and money representations before calculation logic is introduced.
 - **Quality checks:** Prettier, ESLint, TypeScript, and production builds provide
   the initial feedback loop.
 
 There is currently no API layer, database, authentication, authorization, or
-financial domain module. The UI must not pretend that these systems already exist.
+financial business-logic module. The invoice types are contracts only; the UI must
+not pretend that persistence or financial calculations already exist.
 
 ## Planned Evolution
 
