@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { invoiceStatuses } from "@/features/invoices/invoice-types";
 import { FileText, FilterX } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 type InvoiceStatusFilter = "all" | InvoiceStatus;
@@ -127,7 +128,12 @@ function InvoicesList({ invoices }: InvoicesListProps) {
                   {filteredInvoices.map((invoice) => (
                     <tr key={invoice.id}>
                       <td className="py-4 pr-4 font-medium text-foreground">
-                        {invoice.invoiceNumber}
+                        <Link
+                          className="underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          href={`/invoices/${invoice.id}`}
+                        >
+                          {invoice.invoiceNumber}
+                        </Link>
                       </td>
                       <td className="py-4 pr-4 text-muted-foreground">{invoice.customerName}</td>
                       <td className="py-4 pr-4 text-muted-foreground">{invoice.issueDate}</td>
@@ -152,7 +158,12 @@ function InvoicesList({ invoices }: InvoicesListProps) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-medium text-foreground">{invoice.invoiceNumber}</p>
+                      <Link
+                        className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        href={`/invoices/${invoice.id}`}
+                      >
+                        {invoice.invoiceNumber}
+                      </Link>
                       <p className="mt-0.5 truncate text-sm text-muted-foreground">
                         {invoice.customerName}
                       </p>
