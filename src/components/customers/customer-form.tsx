@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   useForm,
   type SubmitErrorHandler,
@@ -18,7 +19,14 @@ import {
   type UseFormRegisterReturn,
 } from "react-hook-form";
 
+type CustomerFormMode = "create" | "edit";
 type FormStatus = "idle" | "invalid" | "valid";
+
+type CustomerFormProps = {
+  initialValues?: CustomerFormValues;
+  mode: CustomerFormMode;
+  returnHref: string;
+};
 
 type CustomerFormFieldProps = {
   autoComplete: string;
@@ -67,18 +75,44 @@ function CustomerFormField({
   );
 }
 
-function CustomerCreateForm() {
+function CustomerForm({
+  initialValues = customerFormDefaultValues,
+  mode,
+  returnHref,
+}: CustomerFormProps) {
   const [formStatus, setFormStatus] = useState<FormStatus>("idle");
+  const [isDiscardConfirmationVisible, setIsDiscardConfirmationVisible] = useState(false);
+  const router = useRouter();
   const {
-    formState: { errors },
+    formState: { errors, isDirty },
     handleSubmit,
     register,
+    reset,
   } = useForm<CustomerFormValues>({
-    defaultValues: customerFormDefaultValues,
+    defaultValues: initialValues,
     mode: "onBlur",
     reValidateMode: "onChange",
     resolver: zodResolver(customerFormSchema),
   });
+  const hasUnsavedChanges = mode === "edit" && isDirty;
+  const isEditing = mode === "edit";
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return;
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
 
   const onSubmit: SubmitHandler<CustomerFormValues> = () => {
     setFormStatus("valid");
@@ -88,21 +122,50 @@ function CustomerCreateForm() {
     setFormStatus("invalid");
   };
 
+  const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      setIsDiscardConfirmationVisible(true);
+      return;
+    }
+
+    router.push(returnHref);
+  };
+
+  const handleDiscardChanges = () => {
+    reset(initialValues);
+    router.push(returnHref);
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle as="h2">Customer details</CardTitle>
         <CardDescription>
-          Enter the contact information for the customer you want to add.
+          {isEditing
+            ? "Update the contact information for this customer."
+            : "Enter the contact information for the customer you want to add."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form
           className="space-y-6"
           noValidate
-          onChange={() => setFormStatus("idle")}
+          onChange={() => {
+            setFormStatus("idle");
+            setIsDiscardConfirmationVisible(false);
+          }}
           onSubmit={handleSubmit(onSubmit, onInvalid)}
         >
+          {hasUnsavedChanges && formStatus !== "valid" ? (
+            <p
+              aria-live="polite"
+              className="rounded-control border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-foreground"
+              role="status"
+            >
+              You have unsaved changes.
+            </p>
+          ) : null}
+
           {formStatus === "invalid" ? (
             <p
               className="rounded-control border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
@@ -118,8 +181,10 @@ function CustomerCreateForm() {
               className="rounded-control border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground"
               role="status"
             >
-              The details are valid. Customer records cannot be saved until the API and database are
-              introduced.
+              {isEditing
+                ? "The changes are valid but remain unsaved."
+                : "The details are valid but remain unsaved."}{" "}
+              Customer records cannot be saved until the API and database are introduced.
             </p>
           ) : null}
 
@@ -151,12 +216,44 @@ function CustomerCreateForm() {
             type="email"
           />
 
+          {isDiscardConfirmationVisible ? (
+            <div
+              className="rounded-control border border-amber-500/30 bg-amber-500/10 p-3"
+              role="alert"
+            >
+              <div className="flex gap-3">
+                <AlertTriangle
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-amber-700"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Discard unsaved changes?</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                    Your edits will be lost because customer records are not saved yet.
+                  </p>
+                  <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row">
+                    <Button
+                      onClick={() => setIsDiscardConfirmationVisible(false)}
+                      type="button"
+                      variant="outline"
+                    >
+                      Keep editing
+                    </Button>
+                    <Button onClick={handleDiscardChanges} type="button" variant="destructive">
+                      Discard changes
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-            <Button asChild size="lg" variant="outline">
-              <Link href="/customers">Cancel</Link>
+            <Button onClick={handleCancel} size="lg" type="button" variant="outline">
+              Cancel
             </Button>
             <Button size="lg" type="submit">
-              Validate customer details
+              {isEditing ? "Validate changes" : "Validate customer details"}
             </Button>
           </div>
         </form>
@@ -165,4 +262,4 @@ function CustomerCreateForm() {
   );
 }
 
-export { CustomerCreateForm };
+export { CustomerForm };

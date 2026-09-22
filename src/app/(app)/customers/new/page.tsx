@@ -1,4 +1,4 @@
-import { CustomerCreateForm } from "@/components/customers/customer-create-form";
+import { CustomerForm } from "@/components/customers/customer-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +40,7 @@ export default function NewCustomerPage() {
       </header>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
-        <CustomerCreateForm />
+        <CustomerForm mode="create" returnHref="/customers" />
 
         <Card>
           <CardHeader>
