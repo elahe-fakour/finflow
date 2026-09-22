@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Building2, ChevronDown, Search, SearchX, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 type VendorFilter = "all" | VendorCategory;
@@ -158,7 +159,12 @@ function VendorsList({ vendors }: VendorsListProps) {
                   {filteredVendors.map((vendor) => (
                     <tr key={vendor.id}>
                       <td className="py-4 pr-4">
-                        <p className="font-medium text-foreground">{vendor.name}</p>
+                        <Link
+                          className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          href={`/vendors/${vendor.id}`}
+                        >
+                          {vendor.name}
+                        </Link>
                         <p className="mt-0.5 text-muted-foreground">{vendor.email}</p>
                       </td>
                       <td className="py-4 pr-4 text-muted-foreground">{vendor.contactName}</td>
@@ -183,7 +189,12 @@ function VendorsList({ vendors }: VendorsListProps) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{vendor.name}</p>
+                      <Link
+                        className="block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        href={`/vendors/${vendor.id}`}
+                      >
+                        {vendor.name}
+                      </Link>
                       <p className="mt-0.5 truncate text-sm text-muted-foreground">
                         {vendor.email}
                       </p>
