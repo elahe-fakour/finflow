@@ -1,5 +1,6 @@
 "use client";
 
+import type { Customer } from "@/components/customers/customer-sample-data";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -12,16 +13,8 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Search, SearchX, Users } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-
-type Customer = {
-  contactName: string;
-  email: string;
-  id: string;
-  name: string;
-  openInvoices: number;
-  outstandingBalance: string;
-};
 
 type CustomersListProps = {
   customers: Customer[];
@@ -106,7 +99,12 @@ function CustomersList({ customers }: CustomersListProps) {
                   {filteredCustomers.map((customer) => (
                     <tr key={customer.id}>
                       <td className="py-4 pr-4">
-                        <p className="font-medium text-foreground">{customer.name}</p>
+                        <Link
+                          className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          href={`/customers/${customer.id}`}
+                        >
+                          {customer.name}
+                        </Link>
                         <p className="mt-0.5 text-muted-foreground">{customer.email}</p>
                       </td>
                       <td className="py-4 pr-4 text-muted-foreground">{customer.contactName}</td>
@@ -130,7 +128,12 @@ function CustomersList({ customers }: CustomersListProps) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">{customer.name}</p>
+                      <Link
+                        className="block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        href={`/customers/${customer.id}`}
+                      >
+                        {customer.name}
+                      </Link>
                       <p className="mt-0.5 truncate text-sm text-muted-foreground">
                         {customer.email}
                       </p>
@@ -164,4 +167,4 @@ function CustomersList({ customers }: CustomersListProps) {
   );
 }
 
-export { CustomersList, type Customer };
+export { CustomersList };
