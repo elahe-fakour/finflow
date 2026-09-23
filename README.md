@@ -5,8 +5,9 @@ It is being built as a production-minded portfolio project that combines practic
 accounting workflows with modern web engineering.
 
 > **Project status:** Phase 6 — Backend Foundation is in progress. The repository
-> contains a frontend workflow preview and a bootstrapped API, but no database,
-> authentication, or persisted financial workflows yet.
+> contains a frontend workflow preview, a bootstrapped API, and local PostgreSQL
+> Compose configuration, but no database integration, authentication, or
+> persisted financial workflows yet.
 
 ## Product Direction
 
@@ -38,6 +39,7 @@ Repeatable manual payment-preview checks are in [docs/testing.md](./docs/testing
 
 - Node.js `24.21.0` (the version is pinned in `.nvmrc`)
 - npm
+- Docker Desktop (only for the local PostgreSQL service)
 
 Verify your Node.js version:
 
@@ -69,6 +71,13 @@ npm run dev:api
 The API starts on port `3001`. It has no feature or health endpoint yet; those
 are introduced in later backend-foundation tasks.
 
+### Run local PostgreSQL
+
+PostgreSQL is the only service currently managed by Docker. Follow the
+[local database guide](./docs/local-database.md) to create `.env.local`, start
+the service, and verify its health. FinFlow does not connect to it until the
+upcoming Prisma task.
+
 ## Available Commands
 
 | Command                 | Purpose                                                 |
@@ -93,6 +102,7 @@ are introduced in later backend-foundation tasks.
 ```text
 src/app/       # App Router routes, layouts, and global styles
 apps/api/      # NestJS API workspace
+compose.yaml    # Local PostgreSQL service definition
 public/        # Static assets
 .vscode/       # Shared VS Code workspace settings and recommendations
 plan.md        # Product roadmap, architecture direction, and delivery plan

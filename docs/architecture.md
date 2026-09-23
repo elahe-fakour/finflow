@@ -3,9 +3,9 @@
 ## Status and Scope
 
 This document describes the architecture that exists today and the boundaries that
-will guide its evolution. FinFlow currently contains a Next.js web application
-and a bootstrapped NestJS API. The API has no database, authentication, or
-financial endpoints yet.
+will guide its evolution. FinFlow currently contains a Next.js web application,
+a bootstrapped NestJS API, and a local PostgreSQL Compose definition. The API has
+no database integration, authentication, or financial endpoints yet.
 
 The complete delivery sequence is maintained in [plan.md](../plan.md).
 
@@ -25,6 +25,11 @@ NestJS API (`apps/api`)
   ├─ Module composition and dependency injection
   ├─ HTTP application bootstrap on port 3001
   └─ No feature endpoints until the health-check milestone
+
+Local PostgreSQL (`compose.yaml`)
+  ├─ Docker Compose service on port 5432 by default
+  ├─ Configuration from ignored `.env.local`
+  └─ Named volume for local development data
 ```
 
 The web source lives in `src/`, with the App Router in `src/app`. The API lives
@@ -67,10 +72,15 @@ contains no business logic, data fetching, or client-side state.
 - **API bootstrap:** `apps/api` is a separate NestJS application that will own
   backend financial workflows. It uses its own TypeScript 6 toolchain so the
   existing Next.js application can remain on TypeScript 5.
+- **Local database runtime:** `compose.yaml` defines PostgreSQL only. It is not
+  connected to the API yet, and neither the API nor the web application is
+  containerized at this stage.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop.
 
-There is no API feature layer, database, authentication, or authorization yet.
+There is no API feature layer, database integration, authentication, or
+authorization yet. The local PostgreSQL startup and data-retention procedure is
+documented in [local-database.md](./local-database.md).
 The pure invoice calculation module is covered by focused unit tests; the UI
 must not pretend that persistence or complete financial workflows already exist.
 
