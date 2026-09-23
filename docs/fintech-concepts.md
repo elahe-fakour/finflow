@@ -8,11 +8,9 @@ FinFlow grows. It complements the architectural boundaries in
 
 ### Scope
 
-This is the contract for FinFlow's future money utility. It defines the
-representation and invariants before financial calculation functions are
-implemented. The utility will live in `src/features/invoices/money.ts`; its
-first executable arithmetic functions are intentionally deferred to the next
-task.
+This is the contract for FinFlow's money utility and invoice calculation module.
+The utility lives in `src/features/invoices/money.ts`, while pure invoice
+calculations live in `src/features/invoices/invoice-calculations.ts`.
 
 ### Representation
 
@@ -52,7 +50,8 @@ range.
 
 ### Invariants
 
-The future utility and backend validation must enforce these rules:
+The utility enforces these rules today; the backend must enforce the same rules
+when it is introduced:
 
 - `amountMinorUnits` is a finite safe integer. It cannot be `NaN`, infinite,
   or fractional.
@@ -70,28 +69,55 @@ The future utility and backend validation must enforce these rules:
 
 ### Utility Contract
 
-The first implementation of the money utility will provide small, pure helpers
-with these responsibilities:
+The money utility provides small, pure helpers with these responsibilities:
 
-| Helper               | Responsibility                                                                     |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `createMoney`        | Validate an integer minor-unit amount and pair it with a currency.                 |
-| `assertSameCurrency` | Reject an operation involving different currencies.                                |
-| `addMoney`           | Return a new exact minor-unit sum for one currency.                                |
-| `subtractMoney`      | Return a new exact minor-unit difference for one currency.                         |
-| `formatMoney`        | Produce display text only at the UI boundary; it performs no business calculation. |
+| Helper               | Responsibility                                                           |
+| -------------------- | ------------------------------------------------------------------------ |
+| `createMoney`        | Validate an integer minor-unit amount and pair it with a currency.       |
+| `assertSameCurrency` | Reject an operation involving different currencies.                      |
+| `addMoney`           | Return a new exact minor-unit sum for one currency.                      |
+| `subtractMoney`      | Return a new exact minor-unit difference for one currency.               |
+| `toSafeInteger`      | Reject a `BigInt` result that cannot safely become a JavaScript integer. |
 
-The calculation module will build invoice subtotals, discounts, taxes, and
-totals from these primitives. React components will display those results but
-will not calculate them.
+Formatting remains a UI-boundary concern and is intentionally not part of the
+financial calculation module.
+
+### Invoice Calculation Rules
+
+`invoice-calculations.ts` is pure: it accepts invoice line-item data and returns
+new `Money` values without changing its inputs or touching React, browser state,
+or persistence.
+
+For each line item, FinFlow uses this order:
+
+1. Calculate `subtotal` from `unitPrice × quantity`.
+2. Calculate the discount from that rounded subtotal.
+3. Calculate tax from `subtotal - discount`.
+4. Calculate `total` as `subtotal - discount + tax`.
+
+Quantities are positive decimal strings with at most six fractional decimal
+places. Intermediate calculations use `BigInt`, not decimal JavaScript numbers.
+When a calculation results in a fraction of a minor unit, it rounds **half up**
+to the nearest minor unit. For example, `0.5` cents becomes `1` cent.
+FinFlow's TypeScript target is ES2020 so the runtime contract can rely on the
+standard `BigInt` feature.
+
+Percentage discounts and tax rates use basis points: `1%` is `100` basis points
+and `100%` is `10,000` basis points. A percentage discount cannot exceed 100%.
+Tax may be any non-negative safe-integer basis-point value because tax policy is
+not yet jurisdiction-specific.
+
+Each line is rounded before invoice totals are calculated. Invoice totals are
+the exact sum of the rounded line subtotals, discounts, taxes, and totals. This
+line-level approach keeps the resulting invoice traceable.
 
 ### Parsing, Rounding, and Formatting Boundaries
 
 - Parsing a user-entered value such as `"12.50"` into minor units is an input
   validation concern. It must not use `parseFloat` as the source of truth.
-- Rounding rules for fractional quantities, percentage discounts, and tax will
-  be defined alongside the line-item calculation functions. They must be
-  explicit and covered by unit tests before editable line items exist.
+- Rounding rules for fractional quantities, percentage discounts, and tax are
+  defined above. They will receive unit tests in the next task before editable
+  line items exist.
 - `formatMoney` is presentation-only. A formatted value must never be parsed
   back into a financial value.
 - `toFixed`, `Math.round`, and decimal JavaScript arithmetic must not be used

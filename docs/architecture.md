@@ -54,8 +54,10 @@ contains no business logic, data fetching, or client-side state.
 - **Invoice domain contracts:** Frontend-only types describe invoices, line items,
   payments, and money representations before calculation logic is introduced.
 - **Money contract:** `src/features/invoices/money.ts` is the single source for
-  the `Money` representation; its documented invariants guide the future pure
-  calculation module and backend validation.
+  the `Money` representation and safe same-currency arithmetic.
+- **Invoice calculations:** `src/features/invoices/invoice-calculations.ts`
+  contains pure subtotal, discount, tax, and invoice-total functions; React
+  components must consume their results rather than reproduce their logic.
 - **Quality checks:** Prettier, ESLint, TypeScript, and production builds provide
   the initial feedback loop.
 
