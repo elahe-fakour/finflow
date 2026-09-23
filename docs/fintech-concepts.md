@@ -114,6 +114,27 @@ Each line is rounded before invoice totals are calculated. Invoice totals are
 the exact sum of the rounded line subtotals, discounts, taxes, and totals. This
 line-level approach keeps the resulting invoice traceable.
 
+### Invoice Balances and Statuses
+
+`invoice-status.ts` derives an invoice's `paid`, `outstanding`, and financial
+status from the invoice total, recorded payment amounts, its due date, and an
+explicit as-of date. It does not persist anything or use the current system
+clock, which keeps a report for a particular date reproducible.
+
+- `paid` is the exact sum of non-negative payment amounts in the invoice
+  currency.
+- `outstanding` is `invoice total - paid`. Payments that exceed the invoice
+  total are rejected instead of being silently capped.
+- `draft` and `cancelled` are explicit workflow states and remain unchanged.
+- For a non-terminal invoice, an outstanding amount of zero derives `paid`.
+  This includes a valid zero-total invoice.
+- With a positive outstanding amount, an as-of date strictly after the due date
+  derives `overdue`; the due date itself remains `sent`.
+
+The payment-recording API will later enforce allowed workflow transitions and
+run payment creation, balance updates, status derivation, and audit recording
+inside one database transaction.
+
 ### Parsing, Rounding, and Formatting Boundaries
 
 - `parseMoneyInput` converts a user-entered USD value such as `"12.50"` into
