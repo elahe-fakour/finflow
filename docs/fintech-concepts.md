@@ -75,12 +75,15 @@ The money utility provides small, pure helpers with these responsibilities:
 | -------------------- | ------------------------------------------------------------------------ |
 | `createMoney`        | Validate an integer minor-unit amount and pair it with a currency.       |
 | `assertSameCurrency` | Reject an operation involving different currencies.                      |
+| `parseMoneyInput`    | Convert a validated decimal input into configured currency minor units.  |
+| `formatMoney`        | Format a validated `Money` value only at the UI display boundary.        |
 | `addMoney`           | Return a new exact minor-unit sum for one currency.                      |
 | `subtractMoney`      | Return a new exact minor-unit difference for one currency.               |
 | `toSafeInteger`      | Reject a `BigInt` result that cannot safely become a JavaScript integer. |
 
-Formatting remains a UI-boundary concern and is intentionally not part of the
-financial calculation module.
+`parseMoneyInput` and `formatMoney` stay outside the financial calculation
+module. The former is a validation boundary between browser text and `Money`;
+the latter is a one-way presentation boundary.
 
 ### Invoice Calculation Rules
 
@@ -113,8 +116,10 @@ line-level approach keeps the resulting invoice traceable.
 
 ### Parsing, Rounding, and Formatting Boundaries
 
-- Parsing a user-entered value such as `"12.50"` into minor units is an input
-  validation concern. It must not use `parseFloat` as the source of truth.
+- `parseMoneyInput` converts a user-entered USD value such as `"12.50"` into
+  minor units with `BigInt`, not `parseFloat`. It accepts only a non-negative
+  decimal value without separators and at most two fractional digits. For
+  example, enter `"1250.00"`, not `"1,250.00"`.
 - Rounding rules for fractional quantities, percentage discounts, and tax are
   defined above and protected by focused unit tests before editable line items
   exist.

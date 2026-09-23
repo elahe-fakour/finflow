@@ -17,6 +17,10 @@ type Money = {
 };
 
 const currencyCodePattern = /^[A-Z]{3}$/;
+const currencyFractionDigits: Record<string, number> = {
+  USD: 2,
+};
+const moneyInputPattern = /^(\d+)(?:\.(\d+))?$/;
 const maximumSafeInteger = BigInt(Number.MAX_SAFE_INTEGER);
 const minimumSafeInteger = BigInt(Number.MIN_SAFE_INTEGER);
 
@@ -61,6 +65,53 @@ function toSafeInteger(value: bigint) {
   return Number(value);
 }
 
+function getCurrencyFractionDigits(currency: CurrencyCode) {
+  assertCurrencyCode(currency);
+
+  const fractionDigits = currencyFractionDigits[currency];
+
+  if (fractionDigits === undefined) {
+    throw new RangeError(`Currency ${currency} does not have a configured minor-unit definition.`);
+  }
+
+  return fractionDigits;
+}
+
+function parseMoneyInput(value: string, currency: CurrencyCode): Money {
+  const normalizedValue = value.trim();
+  const match = moneyInputPattern.exec(normalizedValue);
+  const fractionDigits = getCurrencyFractionDigits(currency);
+
+  if (!match) {
+    throw new TypeError("Money input must be a non-negative decimal value without separators.");
+  }
+
+  const wholePart = match[1];
+  const fractionalPart = match[2] ?? "";
+
+  if (fractionalPart.length > fractionDigits) {
+    throw new RangeError(`Money input cannot have more than ${fractionDigits} decimal places.`);
+  }
+
+  const minorUnitFactor = 10n ** BigInt(fractionDigits);
+  const minorUnits =
+    BigInt(wholePart) * minorUnitFactor + BigInt(fractionalPart.padEnd(fractionDigits, "0") || "0");
+
+  return createMoney(toSafeInteger(minorUnits), currency);
+}
+
+function formatMoney(money: Money, locale = "en-US") {
+  assertMoney(money);
+
+  const fractionDigits = getCurrencyFractionDigits(money.currency);
+  const majorUnitValue = money.amountMinorUnits / 10 ** fractionDigits;
+
+  return new Intl.NumberFormat(locale, {
+    currency: money.currency,
+    style: "currency",
+  }).format(majorUnitValue);
+}
+
 function addMoney(left: Money, right: Money): Money {
   assertSameCurrency(left, right);
 
@@ -83,6 +134,8 @@ export {
   addMoney,
   assertSameCurrency,
   createMoney,
+  formatMoney,
+  parseMoneyInput,
   subtractMoney,
   toSafeInteger,
   type CurrencyCode,

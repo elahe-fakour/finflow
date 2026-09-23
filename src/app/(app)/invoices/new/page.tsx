@@ -32,8 +32,7 @@ export default function NewInvoicePage() {
             New invoice
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Start an invoice with its customer and key dates. Financial line items are added after
-            their calculation rules are tested.
+            Add billable line items and review live totals before invoice persistence is available.
           </p>
         </div>
         <Badge className="w-fit" variant="outline">
@@ -53,9 +52,8 @@ export default function NewInvoicePage() {
             <div className="flex gap-3 rounded-control border border-border bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
               <Database aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-primary" />
               <p>
-                Invoice drafts cannot be created until the API and database are introduced. Line
-                items and financial totals are intentionally deferred until their calculation rules
-                have automated tests.
+                This editor validates line inputs and calculates live sample totals in the browser.
+                Creating an invoice draft requires the API and database introduced in a later phase.
               </p>
             </div>
           </CardContent>

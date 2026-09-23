@@ -1,4 +1,4 @@
-import { addMoney, createMoney, subtractMoney } from "./money";
+import { addMoney, createMoney, formatMoney, parseMoneyInput, subtractMoney } from "./money";
 import { describe, expect, it } from "vitest";
 
 describe("money", () => {
@@ -9,6 +9,17 @@ describe("money", () => {
   it("rejects fractional minor units and invalid currency codes", () => {
     expect(() => createMoney(12.5, "USD")).toThrow("safe integer");
     expect(() => createMoney(1250, "usd")).toThrow("normalized three-letter ISO 4217 code");
+  });
+
+  it("parses decimal user input into minor units without floating-point arithmetic", () => {
+    expect(parseMoneyInput("12.50", "USD")).toEqual(createMoney(1250, "USD"));
+    expect(parseMoneyInput("12.5", "USD")).toEqual(createMoney(1250, "USD"));
+    expect(() => parseMoneyInput("12.500", "USD")).toThrow("more than 2 decimal places");
+    expect(() => parseMoneyInput("1,250.00", "USD")).toThrow("without separators");
+  });
+
+  it("formats money only at the display boundary", () => {
+    expect(formatMoney(createMoney(1250, "USD"))).toBe("$12.50");
   });
 
   it("adds matching currencies without mutating either input", () => {
