@@ -1,5 +1,6 @@
 import { invoiceDetailSampleData } from "@/components/invoices/invoice-sample-data";
 import { InvoiceStatusBadge } from "@/components/invoices/invoice-status-badge";
+import { RecordPaymentForm } from "@/components/invoices/record-payment-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -135,6 +136,15 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
             </dl>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-6">
+        <RecordPaymentForm
+          existingPayments={invoice.paymentHistory}
+          invoiceNumber={invoice.invoiceNumber}
+          invoiceStatus={invoice.status}
+          invoiceTotal={invoice.totals.total}
+        />
       </div>
 
       <Card className="mt-6">

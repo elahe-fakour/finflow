@@ -135,6 +135,11 @@ The payment-recording API will later enforce allowed workflow transitions and
 run payment creation, balance updates, status derivation, and audit recording
 inside one database transaction.
 
+The initial Record payment form reuses the same money parser and balance rule
+to give immediate feedback for an invalid or overpaid amount. This client-side
+check does not create a payment and is never the authorization boundary; the
+future API must repeat the validation inside its database transaction.
+
 ### Parsing, Rounding, and Formatting Boundaries
 
 - `parseMoneyInput` converts a user-entered USD value such as `"12.50"` into
