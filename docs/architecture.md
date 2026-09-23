@@ -53,6 +53,9 @@ contains no business logic, data fetching, or client-side state.
 - **Styling:** Tailwind CSS and global CSS provide the visual layer.
 - **Invoice domain contracts:** Frontend-only types describe invoices, line items,
   payments, and money representations before calculation logic is introduced.
+- **Money contract:** `src/features/invoices/money.ts` is the single source for
+  the `Money` representation; its documented invariants guide the future pure
+  calculation module and backend validation.
 - **Quality checks:** Prettier, ESLint, TypeScript, and production builds provide
   the initial feedback loop.
 
@@ -95,6 +98,8 @@ When financial features are introduced:
 
 - Monetary values will use integer minor units and an ISO currency code, not
   JavaScript floating-point arithmetic.
+- Money representation and arithmetic invariants are documented in
+  [fintech-concepts.md](./fintech-concepts.md).
 - Financial business rules will live outside React components.
 - Multi-record financial changes will use database transactions.
 - Workspace access control will be enforced by the backend, not only hidden in the
