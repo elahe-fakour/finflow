@@ -140,6 +140,11 @@ to give immediate feedback for an invalid or overpaid amount. This client-side
 check does not create a payment and is never the authorization boundary; the
 future API must repeat the validation inside its database transaction.
 
+Before that API exists, a successful payment validation can update a
+browser-session preview of the invoice balance, status, and payment history.
+The preview uses the selected received date as an explicit as-of date for the
+status rule and is discarded on refresh; it is not a financial record.
+
 ### Parsing, Rounding, and Formatting Boundaries
 
 - `parseMoneyInput` converts a user-entered USD value such as `"12.50"` into

@@ -17,13 +17,21 @@ import { useMemo, useState } from "react";
 import { useForm, type SubmitErrorHandler, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 
-type FormStatus = "idle" | "invalid" | "valid";
+type FormStatus = "idle" | "invalid";
+
+type ValidatedPaymentInput = {
+  amount: Money;
+  method: PaymentMethod;
+  receivedAt: string;
+  reference?: string;
+};
 
 type RecordPaymentFormProps = {
   existingPayments: readonly Pick<Payment, "amount">[];
   invoiceNumber: string;
   invoiceStatus: InvoiceStatus;
   invoiceTotal: Money;
+  onPaymentValidated: (payment: ValidatedPaymentInput) => void;
 };
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
@@ -90,7 +98,7 @@ function createRecordPaymentFormSchema(
         }
       }),
     method: z.enum(paymentMethods, "Select a payment method."),
-    receivedAt: z.string().min(1, "Select the date the payment was received."),
+    receivedAt: z.iso.date("Select a valid received date."),
     reference: z.string().trim().max(120, "Reference must be 120 characters or fewer."),
   });
 }
@@ -100,6 +108,7 @@ function RecordPaymentForm({
   invoiceNumber,
   invoiceStatus,
   invoiceTotal,
+  onPaymentValidated,
 }: RecordPaymentFormProps) {
   const [formStatus, setFormStatus] = useState<FormStatus>("idle");
   const outstanding = useMemo(
@@ -116,6 +125,7 @@ function RecordPaymentForm({
     formState: { errors },
     handleSubmit,
     register,
+    reset,
   } = useForm<RecordPaymentFormValues>({
     defaultValues: {
       amount: "",
@@ -128,8 +138,15 @@ function RecordPaymentForm({
     resolver: zodResolver(paymentFormSchema),
   });
 
-  const onSubmit: SubmitHandler<RecordPaymentFormValues> = () => {
-    setFormStatus("valid");
+  const onSubmit: SubmitHandler<RecordPaymentFormValues> = (values) => {
+    onPaymentValidated({
+      amount: parseMoneyInput(values.amount, invoiceTotal.currency),
+      method: values.method,
+      receivedAt: values.receivedAt,
+      reference: values.reference || undefined,
+    });
+    reset();
+    setFormStatus("idle");
   };
 
   const onInvalid: SubmitErrorHandler<RecordPaymentFormValues> = () => {
@@ -168,17 +185,6 @@ function RecordPaymentForm({
                 role="alert"
               >
                 Review the highlighted payment fields before continuing.
-              </p>
-            ) : null}
-
-            {formStatus === "valid" ? (
-              <p
-                aria-live="polite"
-                className="rounded-control border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-foreground"
-                role="status"
-              >
-                The payment is valid but has not been recorded. Payment persistence is introduced in
-                a later task.
               </p>
             ) : null}
 
@@ -306,4 +312,4 @@ function RecordPaymentForm({
   );
 }
 
-export { RecordPaymentForm };
+export { RecordPaymentForm, type ValidatedPaymentInput };
