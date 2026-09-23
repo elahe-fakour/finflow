@@ -3,9 +3,9 @@
 ## Status and Scope
 
 This document describes the architecture that exists today and the boundaries that
-will guide its evolution. FinFlow is currently a frontend-only Next.js application.
-The NestJS API, PostgreSQL database, authentication, and financial workflows are
-planned but have not been implemented.
+will guide its evolution. FinFlow currently contains a Next.js web application
+and a bootstrapped NestJS API. The API has no database, authentication, or
+financial endpoints yet.
 
 The complete delivery sequence is maintained in [plan.md](../plan.md).
 
@@ -20,10 +20,15 @@ Next.js web application
   ├─ React UI components
   ├─ Tailwind CSS styles
   └─ Static assets
+
+NestJS API (`apps/api`)
+  ├─ Module composition and dependency injection
+  ├─ HTTP application bootstrap on port 3001
+  └─ No feature endpoints until the health-check milestone
 ```
 
-The application is a single Next.js project. Its source lives in `src/`, with the
-App Router in `src/app`:
+The web source lives in `src/`, with the App Router in `src/app`. The API lives
+beside it as an npm workspace in `apps/api`:
 
 ```text
 src/app/
@@ -37,6 +42,7 @@ src/features/
   invoices/        # Frontend invoice domain contracts
 
 public/          # Static files served by Next.js
+apps/api/         # NestJS API application
 ```
 
 The `(app)` route group does not affect URLs. It scopes the application shell to
@@ -58,12 +64,15 @@ contains no business logic, data fetching, or client-side state.
 - **Invoice calculations:** `src/features/invoices/invoice-calculations.ts`
   contains pure subtotal, discount, tax, and invoice-total functions; React
   components must consume their results rather than reproduce their logic.
-- **Quality checks:** Prettier, ESLint, TypeScript, Vitest unit tests, and
-  production builds provide the initial feedback loop.
+- **API bootstrap:** `apps/api` is a separate NestJS application that will own
+  backend financial workflows. It uses its own TypeScript 6 toolchain so the
+  existing Next.js application can remain on TypeScript 5.
+- **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
+  and production builds provide the initial feedback loop.
 
-There is currently no API layer, database, authentication, or authorization. The
-pure invoice calculation module is covered by focused unit tests; the UI must not
-pretend that persistence or complete financial workflows already exist.
+There is no API feature layer, database, authentication, or authorization yet.
+The pure invoice calculation module is covered by focused unit tests; the UI
+must not pretend that persistence or complete financial workflows already exist.
 
 ## Planned Evolution
 
