@@ -116,8 +116,8 @@ line-level approach keeps the resulting invoice traceable.
 - Parsing a user-entered value such as `"12.50"` into minor units is an input
   validation concern. It must not use `parseFloat` as the source of truth.
 - Rounding rules for fractional quantities, percentage discounts, and tax are
-  defined above. They will receive unit tests in the next task before editable
-  line items exist.
+  defined above and protected by focused unit tests before editable line items
+  exist.
 - `formatMoney` is presentation-only. A formatted value must never be parsed
   back into a financial value.
 - `toFixed`, `Math.round`, and decimal JavaScript arithmetic must not be used

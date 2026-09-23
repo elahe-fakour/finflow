@@ -28,6 +28,7 @@ The complete, incremental delivery plan is available in [plan.md](./plan.md).
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - ESLint
+- [Vitest](https://vitest.dev/) for financial unit tests
 
 ## Getting Started
 
@@ -57,16 +58,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Commands
 
-| Command                | Purpose                                               |
-| ---------------------- | ----------------------------------------------------- |
-| `npm run dev`          | Start the development server.                         |
-| `npm run lint`         | Run ESLint checks.                                    |
-| `npm run typecheck`    | Run TypeScript checks without generating files.       |
-| `npm run format`       | Format supported files with Prettier.                 |
-| `npm run format:check` | Verify supported files match the Prettier convention. |
-| `npm run build`        | Create an optimized production build.                 |
-| `npm run check`        | Run lint, typecheck, and build in sequence.           |
-| `npm run start`        | Start the production server after a successful build. |
+| Command                | Purpose                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| `npm run dev`          | Start the development server.                           |
+| `npm run lint`         | Run ESLint checks.                                      |
+| `npm run typecheck`    | Run TypeScript checks without generating files.         |
+| `npm run test`         | Run unit tests in watch mode.                           |
+| `npm run test:run`     | Run unit tests once.                                    |
+| `npm run format`       | Format supported files with Prettier.                   |
+| `npm run format:check` | Verify supported files match the Prettier convention.   |
+| `npm run build`        | Create an optimized production build.                   |
+| `npm run check`        | Run lint, typecheck, unit tests, and build in sequence. |
+| `npm run start`        | Start the production server after a successful build.   |
 
 ## Project Structure
 

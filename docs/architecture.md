@@ -58,12 +58,12 @@ contains no business logic, data fetching, or client-side state.
 - **Invoice calculations:** `src/features/invoices/invoice-calculations.ts`
   contains pure subtotal, discount, tax, and invoice-total functions; React
   components must consume their results rather than reproduce their logic.
-- **Quality checks:** Prettier, ESLint, TypeScript, and production builds provide
-  the initial feedback loop.
+- **Quality checks:** Prettier, ESLint, TypeScript, Vitest unit tests, and
+  production builds provide the initial feedback loop.
 
-There is currently no API layer, database, authentication, authorization, or
-financial business-logic module. The invoice types are contracts only; the UI must
-not pretend that persistence or financial calculations already exist.
+There is currently no API layer, database, authentication, or authorization. The
+pure invoice calculation module is covered by focused unit tests; the UI must not
+pretend that persistence or complete financial workflows already exist.
 
 ## Planned Evolution
 
