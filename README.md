@@ -20,6 +20,7 @@ one workspace, including:
 - Financial reports such as Profit & Loss and Cash Flow
 
 The complete, incremental delivery plan is available in [plan.md](./plan.md).
+Repeatable manual payment-preview checks are in [docs/testing.md](./docs/testing.md).
 
 ## Current Technology
 
