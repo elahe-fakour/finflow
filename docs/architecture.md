@@ -25,7 +25,7 @@ Next.js web application
 NestJS API (`apps/api`)
   ├─ Module composition and dependency injection
   ├─ HTTP application bootstrap on port 3001
-  └─ No feature endpoints until the health-check milestone
+  └─ Liveness endpoint at GET /health
 
 Local PostgreSQL (`compose.yaml`)
   ├─ Docker Compose service on port 5432 by default
@@ -78,6 +78,9 @@ contains no business logic, data fetching, or client-side state.
 - **API bootstrap:** `apps/api` is a separate NestJS application that will own
   backend financial workflows. It uses its own TypeScript 6 toolchain so the
   existing Next.js application can remain on TypeScript 5.
+- **API liveness contract:** `GET /health` confirms that NestJS can accept HTTP
+  requests. Its integration test bootstraps the real module graph and sends an
+  HTTP request in memory; it does not depend on a running PostgreSQL instance.
 - **Local database runtime:** `compose.yaml` defines PostgreSQL only. It is not
   connected to the API yet, and neither the API nor the web application is
   containerized at this stage.
@@ -89,7 +92,8 @@ contains no business logic, data fetching, or client-side state.
 
 There is no API feature layer, runtime database integration, authentication, or
 authorization yet. The local PostgreSQL startup and data-retention procedure is
-documented in [local-database.md](./local-database.md).
+documented in [local-database.md](./local-database.md). Database readiness will
+be added to the health contract only once API database access exists.
 The pure invoice calculation module is covered by focused unit tests; the UI
 must not pretend that persistence or complete financial workflows already exist.
 

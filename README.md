@@ -5,9 +5,9 @@ It is being built as a production-minded portfolio project that combines practic
 accounting workflows with modern web engineering.
 
 > **Project status:** Phase 6 — Backend Foundation is in progress. The repository
-> contains a frontend workflow preview, a bootstrapped API, and local PostgreSQL
-> Compose configuration, but no database integration, authentication, or
-> persisted financial workflows yet.
+> contains a frontend workflow preview, a bootstrapped API with a liveness
+> endpoint, and local PostgreSQL Compose configuration, but no runtime database
+> integration, authentication, or persisted financial workflows yet.
 
 ## Product Direction
 
@@ -70,8 +70,10 @@ In a second terminal:
 npm run dev:api
 ```
 
-The API starts on port `3001`. It has no feature or health endpoint yet; those
-are introduced in later backend-foundation tasks.
+The API starts on port `3001`. Its liveness endpoint is available at
+`GET /health` and responds with `{ "status": "ok" }`. It does not check the
+database yet; database readiness is added only after Prisma is connected to the
+NestJS runtime.
 
 ### Run local PostgreSQL
 
@@ -109,6 +111,7 @@ reviewable migrations.
 | `npm run build:api`             | Build the NestJS API.                                   |
 | `npm run typecheck:api`         | Type-check the NestJS API.                              |
 | `npm run check:api`             | Lint, type-check, and build the NestJS API.             |
+| `npm run test:api`              | Run API HTTP integration tests.                         |
 | `npm run prisma:generate`       | Generate the Prisma Client from the API schema.         |
 | `npm run prisma:validate`       | Validate the Prisma schema and configuration.           |
 | `npm run prisma:migrate:dev`    | Create and apply a local development migration.         |

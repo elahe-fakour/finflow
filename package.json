@@ -23,6 +23,7 @@
     "build:api": "npm run build --workspace @finflow/api",
     "typecheck:api": "npm run typecheck --workspace @finflow/api",
     "check:api": "npm run check --workspace @finflow/api",
+    "test:api": "npm run test --workspace @finflow/api",
     "prisma:generate": "npm run prisma:generate --workspace @finflow/api",
     "prisma:validate": "npm run prisma:validate --workspace @finflow/api",
     "prisma:migrate:dev": "npm run prisma:migrate:dev --workspace @finflow/api",
