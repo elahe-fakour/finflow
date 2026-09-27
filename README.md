@@ -91,9 +91,10 @@ npm run prisma:generate
 npm run prisma:validate
 ```
 
-The initial workspace-access and contact migrations are committed in
-`apps/api/prisma/migrations/`. The local database guide documents how future
-schema changes create reviewable migrations.
+The committed migrations define workspace access, contacts, and the invoice,
+line-item, and payment persistence contract. Financial amounts are stored as
+integer minor units; the local database guide documents how future schema changes
+create reviewable migrations.
 
 ## Available Commands
 

@@ -66,9 +66,10 @@ npm run prisma:generate
 npm run prisma:validate
 ```
 
-FinFlow's initial migrations create users, workspaces, workspace memberships,
-customers, and vendors. When a later schema task introduces a real change,
-create and apply a reviewable migration with a descriptive name:
+FinFlow's committed migrations create users, workspaces, workspace memberships,
+customers, vendors, invoices, invoice line items, and payments. When a later
+schema task introduces a real change, create and apply a reviewable migration
+with a descriptive name:
 
 ```bash
 npm run prisma:migrate:dev -- --name add-workspaces

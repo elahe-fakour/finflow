@@ -85,9 +85,9 @@ contains no business logic, data fetching, or client-side state.
   connected to the API yet, and neither the API nor the web application is
   containerized at this stage.
 - **Database schema and migrations:** Prisma owns the PostgreSQL datasource,
-  generated client configuration, and SQL migration history. The initial
+  generated client configuration, and SQL migration history. The current
   migrations model users, workspaces, explicit workspace memberships with roles,
-  and workspace-scoped customers and vendors.
+  workspace-scoped contacts, invoices, invoice line items, and payments.
 - **Workspace access boundary:** Every future financial record will belong to a
   workspace. `WorkspaceMembership` is the backend authorization lookup between
   a user, a workspace, and its role; it uses database constraints and indexes,
@@ -95,6 +95,12 @@ contains no business logic, data fetching, or client-side state.
 - **Contact-data boundary:** Customer and vendor records belong to exactly one
   workspace. Their names are unique within that workspace, while shared finance
   email addresses remain valid across distinct records.
+- **Invoice persistence boundary:** Invoice and payment amounts use PostgreSQL
+  `BIGINT` minor units (Prisma `bigint`), quantities use `DECIMAL(18,6)`, and
+  rates use integer basis points. Composite foreign keys prevent associating an
+  invoice with a customer from another workspace or a payment with an invoice
+  from another workspace. Database constraints also protect non-negative money,
+  valid discounts, and invoice total arithmetic.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop.
 

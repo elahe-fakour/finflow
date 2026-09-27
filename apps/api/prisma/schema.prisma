@@ -14,6 +14,26 @@ enum WorkspaceRole {
   MEMBER
 }
 
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvoiceLineDiscountKind {
+  FLAT
+  PERCENTAGE
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  CARD
+  OTHER
+}
+
 model User {
   id          String                @id @default(uuid()) @db.Uuid
   email       String                @unique(map: "users_email_key") @db.VarChar(320)
@@ -32,7 +52,9 @@ model Workspace {
   createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
   customers   Customer[]
+  invoices    Invoice[]
   memberships WorkspaceMembership[]
+  payments    Payment[]
   vendors     Vendor[]
 
   @@map("workspaces")
@@ -64,7 +86,9 @@ model Customer {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  invoices  Invoice[]
 
+  @@unique([workspaceId, id], map: "customers_workspace_id_id_key")
   @@unique([workspaceId, name], map: "customers_workspace_id_name_key")
   @@map("customers")
 }
@@ -84,4 +108,76 @@ model Vendor {
   @@unique([workspaceId, name], map: "vendors_workspace_id_name_key")
   @@index([workspaceId, category], map: "vendors_workspace_id_category_idx")
   @@map("vendors")
+}
+
+model Invoice {
+  id                 String        @id @default(uuid()) @db.Uuid
+  workspaceId        String        @map("workspace_id") @db.Uuid
+  customerId         String        @map("customer_id") @db.Uuid
+  invoiceNumber      String        @map("invoice_number") @db.VarChar(64)
+  status             InvoiceStatus @default(DRAFT)
+  issueDate          DateTime      @map("issue_date") @db.Date
+  dueDate            DateTime      @map("due_date") @db.Date
+  currency           String        @db.Char(3)
+  subtotalMinorUnits BigInt        @map("subtotal_minor_units") @db.BigInt
+  discountMinorUnits BigInt        @map("discount_minor_units") @db.BigInt
+  taxMinorUnits      BigInt        @map("tax_minor_units") @db.BigInt
+  totalMinorUnits    BigInt        @map("total_minor_units") @db.BigInt
+  notes              String?       @db.Text
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  customer  Customer          @relation(fields: [workspaceId, customerId], references: [workspaceId, id], onDelete: Restrict)
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, id], map: "invoices_workspace_id_id_key")
+  @@unique([workspaceId, invoiceNumber], map: "invoices_workspace_id_invoice_number_key")
+  @@index([workspaceId, customerId], map: "invoices_workspace_id_customer_id_idx")
+  @@index([workspaceId, status, dueDate], map: "invoices_workspace_id_status_due_date_idx")
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  invoiceId               String                   @map("invoice_id") @db.Uuid
+  position                Int
+  description             String                   @db.VarChar(1000)
+  quantity                Decimal                  @db.Decimal(18, 6)
+  unitPriceMinorUnits     BigInt                   @map("unit_price_minor_units") @db.BigInt
+  taxRateBasisPoints      Int                      @default(0) @map("tax_rate_basis_points")
+  discountKind            InvoiceLineDiscountKind? @map("discount_kind")
+  discountFlatMinorUnits  BigInt?                  @map("discount_flat_minor_units") @db.BigInt
+  discountRateBasisPoints Int?                     @map("discount_rate_basis_points")
+  subtotalMinorUnits      BigInt                   @map("subtotal_minor_units") @db.BigInt
+  discountMinorUnits      BigInt                   @map("discount_minor_units") @db.BigInt
+  taxMinorUnits           BigInt                   @map("tax_minor_units") @db.BigInt
+  totalMinorUnits         BigInt                   @map("total_minor_units") @db.BigInt
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@unique([invoiceId, position], map: "invoice_line_items_invoice_id_position_key")
+  @@map("invoice_line_items")
+}
+
+model Payment {
+  id               String        @id @default(uuid()) @db.Uuid
+  workspaceId      String        @map("workspace_id") @db.Uuid
+  invoiceId        String        @map("invoice_id") @db.Uuid
+  amountMinorUnits BigInt        @map("amount_minor_units") @db.BigInt
+  receivedAt       DateTime      @map("received_at") @db.Timestamptz(3)
+  method           PaymentMethod
+  reference        String?       @db.VarChar(100)
+  notes            String?       @db.Text
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  invoice   Invoice   @relation(fields: [workspaceId, invoiceId], references: [workspaceId, id], onDelete: Restrict)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@index([workspaceId, invoiceId], map: "payments_workspace_id_invoice_id_idx")
+  @@index([workspaceId, receivedAt], map: "payments_workspace_id_received_at_idx")
+  @@map("payments")
 }
