@@ -91,7 +91,7 @@ npm run prisma:generate
 npm run prisma:validate
 ```
 
-The initial workspace-access migration is committed in
+The initial workspace-access and contact migrations are committed in
 `apps/api/prisma/migrations/`. The local database guide documents how future
 schema changes create reviewable migrations.
 

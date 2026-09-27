@@ -31,7 +31,9 @@ model Workspace {
   slug        String                @unique(map: "workspaces_slug_key") @db.VarChar(100)
   createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  customers   Customer[]
   memberships WorkspaceMembership[]
+  vendors     Vendor[]
 
   @@map("workspaces")
 }
@@ -50,4 +52,36 @@ model WorkspaceMembership {
   @@index([userId], map: "workspace_memberships_user_id_idx")
   @@index([workspaceId, role], map: "workspace_memberships_workspace_id_role_idx")
   @@map("workspace_memberships")
+}
+
+model Customer {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  name        String   @db.VarChar(120)
+  contactName String   @map("contact_name") @db.VarChar(120)
+  email       String   @db.VarChar(254)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, name], map: "customers_workspace_id_name_key")
+  @@map("customers")
+}
+
+model Vendor {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  name        String   @db.VarChar(120)
+  contactName String   @map("contact_name") @db.VarChar(120)
+  email       String   @db.VarChar(254)
+  category    String   @db.VarChar(80)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, name], map: "vendors_workspace_id_name_key")
+  @@index([workspaceId, category], map: "vendors_workspace_id_category_idx")
+  @@map("vendors")
 }
