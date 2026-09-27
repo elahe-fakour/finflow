@@ -22,6 +22,7 @@ node_modules/
 /build
 /apps/api/dist
 /apps/api/coverage
+/apps/api/src/generated
 
 # misc
 .DS_Store

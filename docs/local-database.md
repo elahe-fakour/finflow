@@ -24,7 +24,9 @@ cp .env.example .env.local
 ```
 
 `.env.local` is ignored by Git. Do not commit it or use a real production
-password in it.
+password in it. Update both `POSTGRES_PASSWORD` and the password portion of
+`DATABASE_URL` with the same local value. If the password includes URL-reserved
+characters such as `@`, `:`, `/`, or `#`, percent-encode it in `DATABASE_URL`.
 
 Start PostgreSQL and wait for its health check:
 
@@ -51,9 +53,41 @@ docker compose --env-file .env.local exec postgres sh -c 'pg_isready -U "$POSTGR
 ```
 
 The service listens on `localhost:5432` by default. Change `POSTGRES_PORT` in
-`.env.local` if that port is already in use. Prisma and `DATABASE_URL` are
-deliberately introduced in the next task, so no application currently connects
-to this database.
+`.env.local` if that port is already in use, and make the same port change in
+`DATABASE_URL`.
+
+## Prisma workflow
+
+Prisma's schema and migration configuration live in `apps/api`. Generate the
+type-safe Prisma Client and validate the schema from the repository root:
+
+```bash
+npm run prisma:generate
+npm run prisma:validate
+```
+
+FinFlow has no database models yet, so this task intentionally creates no empty
+migration. When a later schema task introduces a real change, create and apply a
+reviewable migration with a descriptive name:
+
+```bash
+npm run prisma:migrate:dev -- --name add-workspaces
+```
+
+Commit the generated `apps/api/prisma/migrations/` directory with that schema
+change. Until that first migration exists, `npm run prisma:migrate:status` exits
+with `No migration found` and an exit code of `1`; this is expected and does not
+mean that the PostgreSQL connection is broken. Use that command only after the
+first migration has been committed. In deployment environments, apply committed
+migrations only:
+
+```bash
+npm run prisma:migrate:deploy
+```
+
+Do not use `prisma db push` for FinFlow's tracked financial schema. It changes a
+database without creating the SQL migration history that reviewers and future
+deployments need.
 
 ## Stop or reset
 

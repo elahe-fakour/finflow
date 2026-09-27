@@ -4,8 +4,9 @@
 
 This document describes the architecture that exists today and the boundaries that
 will guide its evolution. FinFlow currently contains a Next.js web application,
-a bootstrapped NestJS API, and a local PostgreSQL Compose definition. The API has
-no database integration, authentication, or financial endpoints yet.
+a bootstrapped NestJS API, local PostgreSQL Compose definition, and Prisma
+schema/migration configuration. The API has no runtime database integration,
+authentication, or financial endpoints yet.
 
 The complete delivery sequence is maintained in [plan.md](../plan.md).
 
@@ -30,6 +31,11 @@ Local PostgreSQL (`compose.yaml`)
   ├─ Docker Compose service on port 5432 by default
   ├─ Configuration from ignored `.env.local`
   └─ Named volume for local development data
+
+Prisma (`apps/api/prisma`)
+  ├─ PostgreSQL datasource and generated client configuration
+  ├─ Version-controlled migrations (when models are introduced)
+  └─ Connection URL from ignored root `.env.local`
 ```
 
 The web source lives in `src/`, with the App Router in `src/app`. The API lives
@@ -75,10 +81,13 @@ contains no business logic, data fetching, or client-side state.
 - **Local database runtime:** `compose.yaml` defines PostgreSQL only. It is not
   connected to the API yet, and neither the API nor the web application is
   containerized at this stage.
+- **Database schema and migrations:** Prisma owns the PostgreSQL datasource,
+  generated client configuration, and future SQL migration history. The schema
+  intentionally has no models until the core-schema milestone.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop.
 
-There is no API feature layer, database integration, authentication, or
+There is no API feature layer, runtime database integration, authentication, or
 authorization yet. The local PostgreSQL startup and data-retention procedure is
 documented in [local-database.md](./local-database.md).
 The pure invoice calculation module is covered by focused unit tests; the UI

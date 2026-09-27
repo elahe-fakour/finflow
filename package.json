@@ -22,7 +22,12 @@
     "dev:api": "npm run dev --workspace @finflow/api",
     "build:api": "npm run build --workspace @finflow/api",
     "typecheck:api": "npm run typecheck --workspace @finflow/api",
-    "check:api": "npm run check --workspace @finflow/api"
+    "check:api": "npm run check --workspace @finflow/api",
+    "prisma:generate": "npm run prisma:generate --workspace @finflow/api",
+    "prisma:validate": "npm run prisma:validate --workspace @finflow/api",
+    "prisma:migrate:dev": "npm run prisma:migrate:dev --workspace @finflow/api",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy --workspace @finflow/api",
+    "prisma:migrate:status": "npm run prisma:migrate:status --workspace @finflow/api"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

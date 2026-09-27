@@ -30,6 +30,8 @@ Repeatable manual payment-preview checks are in [docs/testing.md](./docs/testing
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/) 4
 - [NestJS](https://nestjs.com/) 12 in `apps/api`
+- [PostgreSQL](https://www.postgresql.org/) 18 for local development via Docker Compose
+- [Prisma ORM](https://www.prisma.io/) 7 for schema, migrations, and type-safe database access
 - ESLint
 - [Vitest](https://vitest.dev/) for financial unit tests
 
@@ -76,26 +78,44 @@ are introduced in later backend-foundation tasks.
 PostgreSQL is the only service currently managed by Docker. Follow the
 [local database guide](./docs/local-database.md) to create `.env.local`, start
 the service, and verify its health. FinFlow does not connect to it until the
-upcoming Prisma task.
+upcoming runtime-database task.
+
+### Prisma commands
+
+After PostgreSQL is healthy and `DATABASE_URL` is configured in `.env.local`:
+
+```bash
+npm run prisma:generate
+npm run prisma:validate
+```
+
+The schema contains no business models yet, so no migration is created in this
+task. The local database guide documents how future schema changes create
+reviewable migrations.
 
 ## Available Commands
 
-| Command                 | Purpose                                                 |
-| ----------------------- | ------------------------------------------------------- |
-| `npm run dev`           | Start the development server.                           |
-| `npm run dev:api`       | Start the NestJS API in watch mode on port 3001.        |
-| `npm run lint`          | Run ESLint checks.                                      |
-| `npm run typecheck`     | Run TypeScript checks without generating files.         |
-| `npm run test`          | Run unit tests in watch mode.                           |
-| `npm run test:run`      | Run unit tests once.                                    |
-| `npm run format`        | Format supported files with Prettier.                   |
-| `npm run format:check`  | Verify supported files match the Prettier convention.   |
-| `npm run build`         | Create an optimized production build.                   |
-| `npm run build:api`     | Build the NestJS API.                                   |
-| `npm run typecheck:api` | Type-check the NestJS API.                              |
-| `npm run check:api`     | Lint, type-check, and build the NestJS API.             |
-| `npm run check`         | Run lint, typecheck, unit tests, and build in sequence. |
-| `npm run start`         | Start the production server after a successful build.   |
+| Command                         | Purpose                                                 |
+| ------------------------------- | ------------------------------------------------------- |
+| `npm run dev`                   | Start the development server.                           |
+| `npm run dev:api`               | Start the NestJS API in watch mode on port 3001.        |
+| `npm run lint`                  | Run ESLint checks.                                      |
+| `npm run typecheck`             | Run TypeScript checks without generating files.         |
+| `npm run test`                  | Run unit tests in watch mode.                           |
+| `npm run test:run`              | Run unit tests once.                                    |
+| `npm run format`                | Format supported files with Prettier.                   |
+| `npm run format:check`          | Verify supported files match the Prettier convention.   |
+| `npm run build`                 | Create an optimized production build.                   |
+| `npm run build:api`             | Build the NestJS API.                                   |
+| `npm run typecheck:api`         | Type-check the NestJS API.                              |
+| `npm run check:api`             | Lint, type-check, and build the NestJS API.             |
+| `npm run prisma:generate`       | Generate the Prisma Client from the API schema.         |
+| `npm run prisma:validate`       | Validate the Prisma schema and configuration.           |
+| `npm run prisma:migrate:dev`    | Create and apply a local development migration.         |
+| `npm run prisma:migrate:deploy` | Apply committed migrations in a deployment.             |
+| `npm run prisma:migrate:status` | Show migration status after the first migration exists. |
+| `npm run check`                 | Run lint, typecheck, unit tests, and build in sequence. |
+| `npm run start`                 | Start the production server after a successful build.   |
 
 ## Project Structure
 
