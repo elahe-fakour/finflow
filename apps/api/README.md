@@ -5,8 +5,9 @@ port `3001`, separately from the Next.js web application on port `3000`.
 
 At this milestone the API bootstraps its Nest module graph, owns the Prisma
 schema and migration configuration, and provides a liveness endpoint at
-`GET /health`. Database models, runtime database access, authentication, and
-financial feature endpoints are introduced in their planned follow-up tasks.
+`GET /health`. The schema includes users, workspaces, memberships, and workspace
+roles, but runtime database access, authentication, and financial feature
+endpoints are introduced in their planned follow-up tasks.
 
 From the repository root:
 

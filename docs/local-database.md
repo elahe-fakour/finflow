@@ -66,20 +66,18 @@ npm run prisma:generate
 npm run prisma:validate
 ```
 
-FinFlow has no database models yet, so this task intentionally creates no empty
-migration. When a later schema task introduces a real change, create and apply a
-reviewable migration with a descriptive name:
+FinFlow's first migration creates users, workspaces, and workspace memberships.
+When a later schema task introduces a real change, create and apply a reviewable
+migration with a descriptive name:
 
 ```bash
 npm run prisma:migrate:dev -- --name add-workspaces
 ```
 
 Commit the generated `apps/api/prisma/migrations/` directory with that schema
-change. Until that first migration exists, `npm run prisma:migrate:status` exits
-with `No migration found` and an exit code of `1`; this is expected and does not
-mean that the PostgreSQL connection is broken. Use that command only after the
-first migration has been committed. In deployment environments, apply committed
-migrations only:
+change. Use `npm run prisma:migrate:status` to confirm that a local database is
+up to date with committed migrations. In deployment environments, apply
+committed migrations only:
 
 ```bash
 npm run prisma:migrate:deploy

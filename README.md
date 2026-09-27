@@ -91,9 +91,9 @@ npm run prisma:generate
 npm run prisma:validate
 ```
 
-The schema contains no business models yet, so no migration is created in this
-task. The local database guide documents how future schema changes create
-reviewable migrations.
+The initial workspace-access migration is committed in
+`apps/api/prisma/migrations/`. The local database guide documents how future
+schema changes create reviewable migrations.
 
 ## Available Commands
 

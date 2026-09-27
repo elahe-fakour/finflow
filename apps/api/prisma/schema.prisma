@@ -7,4 +7,47 @@ datasource db {
   provider = "postgresql"
 }
 
-// Database models are intentionally introduced in Milestone 6.2.
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  ACCOUNTANT
+  MEMBER
+}
+
+model User {
+  id          String                @id @default(uuid()) @db.Uuid
+  email       String                @unique(map: "users_email_key") @db.VarChar(320)
+  displayName String?               @map("display_name") @db.VarChar(120)
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships WorkspaceMembership[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id          String                @id @default(uuid()) @db.Uuid
+  name        String                @db.VarChar(120)
+  slug        String                @unique(map: "workspaces_slug_key") @db.VarChar(100)
+  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships WorkspaceMembership[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMembership {
+  workspaceId String        @map("workspace_id") @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@id([workspaceId, userId], map: "workspace_memberships_pkey")
+  @@index([userId], map: "workspace_memberships_user_id_idx")
+  @@index([workspaceId, role], map: "workspace_memberships_workspace_id_role_idx")
+  @@map("workspace_memberships")
+}

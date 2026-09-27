@@ -85,8 +85,12 @@ contains no business logic, data fetching, or client-side state.
   connected to the API yet, and neither the API nor the web application is
   containerized at this stage.
 - **Database schema and migrations:** Prisma owns the PostgreSQL datasource,
-  generated client configuration, and future SQL migration history. The schema
-  intentionally has no models until the core-schema milestone.
+  generated client configuration, and SQL migration history. The first migration
+  models users, workspaces, and explicit workspace memberships with roles.
+- **Workspace access boundary:** Every future financial record will belong to a
+  workspace. `WorkspaceMembership` is the backend authorization lookup between
+  a user, a workspace, and its role; it uses database constraints and indexes,
+  not UI-only checks.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop.
 
