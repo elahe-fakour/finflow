@@ -1,14 +1,20 @@
 import { Injectable } from "@nestjs/common";
-import type { Customer } from "../generated/prisma/client.js";
+import type { Customer, PrismaClient } from "../generated/prisma/client.js";
+import type { TransactionClient } from "../database/financial-transaction.js";
 import { PrismaService } from "../database/prisma.service.js";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
+
+type CustomerQueryClient = Pick<PrismaClient, "customer">;
 
 @Injectable()
 export class CustomersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(scope: WorkspaceScope): Promise<Customer[]> {
-    return this.prisma.database.customer.findMany({
+  list(
+    scope: WorkspaceScope,
+    database: CustomerQueryClient | TransactionClient = this.prisma.database,
+  ): Promise<Customer[]> {
+    return database.customer.findMany({
       where: {
         workspaceId: scope.workspaceId,
       },
@@ -18,8 +24,12 @@ export class CustomersRepository {
     });
   }
 
-  findById(scope: WorkspaceScope, customerId: string): Promise<Customer | null> {
-    return this.prisma.database.customer.findUnique({
+  findById(
+    scope: WorkspaceScope,
+    customerId: string,
+    database: CustomerQueryClient | TransactionClient = this.prisma.database,
+  ): Promise<Customer | null> {
+    return database.customer.findUnique({
       where: {
         workspaceId_id: {
           workspaceId: scope.workspaceId,

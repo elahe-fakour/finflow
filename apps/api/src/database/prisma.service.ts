@@ -1,6 +1,11 @@
 import { Injectable, type OnModuleDestroy } from "@nestjs/common";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.js";
+import {
+  runFinancialTransaction,
+  type FinancialTransactionOptions,
+  type FinancialTransactionWork,
+} from "./financial-transaction.js";
 
 @Injectable()
 export class PrismaService implements OnModuleDestroy {
@@ -26,6 +31,13 @@ export class PrismaService implements OnModuleDestroy {
     }
 
     return this.client;
+  }
+
+  withTransaction<Result>(
+    work: FinancialTransactionWork<Result>,
+    options?: FinancialTransactionOptions,
+  ): Promise<Result> {
+    return runFinancialTransaction(this.database, work, options);
   }
 
   async onModuleDestroy(): Promise<void> {

@@ -157,6 +157,12 @@ where multiple records change:
   event for it.
 - Validate supported ISO currency codes and any jurisdiction-specific tax rules.
 
+FinFlow's transaction helper uses PostgreSQL `Serializable` isolation for these
+multi-record financial workflows. It retries the known Prisma write-conflict
+code (`P2034`) a bounded number of times. Transaction callbacks must contain
+only database work: external side effects are not retry-safe and belong after a
+successful commit.
+
 The database model is deliberately not a double-entry general ledger. That is a
 separate accounting architecture decision outside this MVP.
 

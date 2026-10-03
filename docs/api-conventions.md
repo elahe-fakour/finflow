@@ -44,6 +44,23 @@ Phase 7 authorization guards will verify the authenticated actor's membership
 and role before calling a feature service with a scope. Until then, there are no
 database-backed HTTP endpoints that accept a workspace ID from a client.
 
+## Transactional Financial Workflows
+
+Any service operation that changes more than one financial fact uses
+`PrismaService.withTransaction`. It runs the callback with PostgreSQL
+`Serializable` isolation, a bounded wait and timeout, and up to two retries for
+Prisma's `P2034` write-conflict/deadlock error.
+
+Repositories receive the transaction client as their final optional argument
+when they participate in a transaction. All reads and writes that must be
+atomic use that same client. Do not start a transaction for a simple independent
+read or write.
+
+The transaction callback must contain only retry-safe database work. It must not
+send email, call a payment provider, or publish an external message, because a
+serialization conflict can run it more than once. A later outbox design will
+handle durable external side effects after commit.
+
 ## Error Response Contract
 
 Every HTTP error uses the following JSON shape:

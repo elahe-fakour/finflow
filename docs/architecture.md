@@ -107,6 +107,11 @@ contains no business logic, data fetching, or client-side state.
   lookups and always filters lists by `workspaceId`. `PrismaService` constructs
   its client lazily, so the liveness endpoint remains independent of PostgreSQL.
   Phase 7 guards will provide an authorized scope before feature services run.
+- **Transactional workflow boundary:** Multi-record financial workflows use
+  `PrismaService.withTransaction`, which provides serializable isolation and a
+  bounded retry for database write conflicts. Repositories receive the same
+  transaction client so their related reads and writes are atomic; external
+  side effects remain outside the retried callback.
 - **Contact-data boundary:** Customer and vendor records belong to exactly one
   workspace. Their names are unique within that workspace, while shared finance
   email addresses remain valid across distinct records.

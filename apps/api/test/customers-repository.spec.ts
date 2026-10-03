@@ -1,6 +1,7 @@
 import type { Customer } from "../src/generated/prisma/client.js";
 import { CustomersRepository } from "../src/customers/customers.repository.js";
 import { CustomersService } from "../src/customers/customers.service.js";
+import type { TransactionClient } from "../src/database/financial-transaction.js";
 import type { PrismaService } from "../src/database/prisma.service.js";
 import type { WorkspaceScope } from "../src/workspaces/workspace-scope.js";
 import { describe, expect, it, vi } from "vitest";
@@ -50,6 +51,33 @@ describe("CustomersRepository", () => {
       },
       orderBy: {
         name: "asc",
+      },
+    });
+  });
+
+  it("uses the supplied transaction client for a transaction-bound query", async () => {
+    const transactionFindUnique = vi.fn().mockResolvedValue(null);
+    const repository = new CustomersRepository({
+      database: {
+        customer: {
+          findUnique: vi.fn(),
+        },
+      },
+    } as unknown as PrismaService);
+    const transaction = {
+      customer: {
+        findUnique: transactionFindUnique,
+      },
+    } as unknown as TransactionClient;
+
+    await repository.findById(workspaceScope, "customer-a", transaction);
+
+    expect(transactionFindUnique).toHaveBeenCalledWith({
+      where: {
+        workspaceId_id: {
+          workspaceId: "workspace-a",
+          id: "customer-a",
+        },
       },
     });
   });
