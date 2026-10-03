@@ -25,6 +25,8 @@ The complete, incremental delivery plan is available in [plan.md](./plan.md).
 Repeatable manual payment-preview checks are in [docs/testing.md](./docs/testing.md).
 The current database contract and financial persistence invariants are in
 [docs/database.md](./docs/database.md).
+The approved backend-owned session design is in
+[docs/authentication.md](./docs/authentication.md).
 
 ## Current Technology
 

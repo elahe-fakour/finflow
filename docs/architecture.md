@@ -79,6 +79,11 @@ contains no business logic, data fetching, or client-side state.
 - **API bootstrap:** `apps/api` is a separate NestJS application that will own
   backend financial workflows. It uses its own TypeScript 6 toolchain so the
   existing Next.js application can remain on TypeScript 5.
+- **Authentication boundary:** The approved authentication design uses the
+  NestJS API as the session authority and database-backed opaque cookies rather
+  than browser-stored bearer tokens. Authentication identifies a user; Phase 7
+  workspace guards will still authorize every workspace action. The design and
+  rollout sequence are documented in [authentication.md](./authentication.md).
 - **API HTTP boundary:** All API routes use URI versioning under `/api/v1`.
   A global validation pipe rejects undeclared request fields and avoids implicit
   type coercion. A global exception filter returns a documented, consistent JSON
