@@ -91,10 +91,10 @@ npm run prisma:generate
 npm run prisma:validate
 ```
 
-The committed migrations define workspace access, contacts, and the invoice,
-line-item, and payment persistence contract. Financial amounts are stored as
-integer minor units; the local database guide documents how future schema changes
-create reviewable migrations.
+The committed migrations define workspace access, contacts, invoices, manual
+income/expense entries, bank accounts, bank transactions, and reconciliation
+records. Financial amounts are stored as integer minor units; the local database
+guide documents how future schema changes create reviewable migrations.
 
 ## Available Commands
 

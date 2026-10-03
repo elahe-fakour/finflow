@@ -34,6 +34,34 @@ enum PaymentMethod {
   OTHER
 }
 
+enum IncomeExpenseType {
+  INCOME
+  EXPENSE
+}
+
+enum BankAccountType {
+  CHECKING
+  SAVINGS
+  CASH
+  PAYMENT_PROCESSOR
+  OTHER
+}
+
+enum BankAccountStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ReconciliationStatus {
+  CONFIRMED
+  REVERSED
+}
+
+enum ReconciliationMatchType {
+  SUGGESTED
+  MANUAL
+}
+
 model User {
   id          String                @id @default(uuid()) @db.Uuid
   email       String                @unique(map: "users_email_key") @db.VarChar(320)
@@ -46,16 +74,20 @@ model User {
 }
 
 model Workspace {
-  id          String                @id @default(uuid()) @db.Uuid
-  name        String                @db.VarChar(120)
-  slug        String                @unique(map: "workspaces_slug_key") @db.VarChar(100)
-  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
-  customers   Customer[]
-  invoices    Invoice[]
-  memberships WorkspaceMembership[]
-  payments    Payment[]
-  vendors     Vendor[]
+  id                   String                @id @default(uuid()) @db.Uuid
+  name                 String                @db.VarChar(120)
+  slug                 String                @unique(map: "workspaces_slug_key") @db.VarChar(100)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  bankAccounts         BankAccount[]
+  bankTransactions     BankTransaction[]
+  customers            Customer[]
+  incomeExpenseEntries IncomeExpenseEntry[]
+  invoices             Invoice[]
+  memberships          WorkspaceMembership[]
+  payments             Payment[]
+  reconciliations      Reconciliation[]
+  vendors              Vendor[]
 
   @@map("workspaces")
 }
@@ -103,8 +135,10 @@ model Vendor {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  workspace            Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  incomeExpenseEntries IncomeExpenseEntry[]
 
+  @@unique([workspaceId, id], map: "vendors_workspace_id_id_key")
   @@unique([workspaceId, name], map: "vendors_workspace_id_name_key")
   @@index([workspaceId, category], map: "vendors_workspace_id_category_idx")
   @@map("vendors")
@@ -174,10 +208,101 @@ model Payment {
   notes            String?       @db.Text
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  invoice   Invoice   @relation(fields: [workspaceId, invoiceId], references: [workspaceId, id], onDelete: Restrict)
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  invoice         Invoice          @relation(fields: [workspaceId, invoiceId], references: [workspaceId, id], onDelete: Restrict)
+  reconciliations Reconciliation[]
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
+  @@unique([workspaceId, id], map: "payments_workspace_id_id_key")
   @@index([workspaceId, invoiceId], map: "payments_workspace_id_invoice_id_idx")
   @@index([workspaceId, receivedAt], map: "payments_workspace_id_received_at_idx")
   @@map("payments")
+}
+
+model IncomeExpenseEntry {
+  id               String            @id @default(uuid()) @db.Uuid
+  workspaceId      String            @map("workspace_id") @db.Uuid
+  vendorId         String?           @map("vendor_id") @db.Uuid
+  type             IncomeExpenseType @map("entry_type")
+  amountMinorUnits BigInt            @map("amount_minor_units") @db.BigInt
+  currency         String            @db.Char(3)
+  occurredOn       DateTime          @map("occurred_on") @db.Date
+  description      String            @db.VarChar(1000)
+  reference        String?           @db.VarChar(100)
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  vendor    Vendor?   @relation(fields: [workspaceId, vendorId], references: [workspaceId, id], onDelete: Restrict)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@index([workspaceId, occurredOn], map: "income_expense_entries_workspace_id_occurred_on_idx")
+  @@index([workspaceId, type, occurredOn], map: "income_expense_entries_workspace_id_type_occurred_on_idx")
+  @@index([workspaceId, vendorId], map: "income_expense_entries_workspace_id_vendor_id_idx")
+  @@map("income_expense_entries")
+}
+
+model BankAccount {
+  id                       String            @id @default(uuid()) @db.Uuid
+  workspaceId              String            @map("workspace_id") @db.Uuid
+  name                     String            @db.VarChar(120)
+  type                     BankAccountType   @map("account_type")
+  status                   BankAccountStatus @default(ACTIVE)
+  currency                 String            @db.Char(3)
+  institutionName          String?           @map("institution_name") @db.VarChar(120)
+  accountLastFour          String?           @map("account_last_four") @db.VarChar(4)
+  openingBalanceMinorUnits BigInt            @default(0) @map("opening_balance_minor_units") @db.BigInt
+  openingBalanceDate       DateTime?         @map("opening_balance_date") @db.Date
+  createdAt                DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  transactions BankTransaction[]
+  workspace    Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, id], map: "bank_accounts_workspace_id_id_key")
+  @@unique([workspaceId, name], map: "bank_accounts_workspace_id_name_key")
+  @@index([workspaceId, status], map: "bank_accounts_workspace_id_status_idx")
+  @@map("bank_accounts")
+}
+
+model BankTransaction {
+  id               String   @id @default(uuid()) @db.Uuid
+  workspaceId      String   @map("workspace_id") @db.Uuid
+  bankAccountId    String   @map("bank_account_id") @db.Uuid
+  externalId       String?  @map("external_id") @db.VarChar(255)
+  amountMinorUnits BigInt   @map("amount_minor_units") @db.BigInt
+  transactionDate  DateTime @map("transaction_date") @db.Date
+  description      String   @db.VarChar(1000)
+  reference        String?  @db.VarChar(100)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  bankAccount     BankAccount      @relation(fields: [workspaceId, bankAccountId], references: [workspaceId, id], onDelete: Restrict)
+  reconciliations Reconciliation[]
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, id], map: "bank_transactions_workspace_id_id_key")
+  @@index([workspaceId, transactionDate], map: "bank_transactions_workspace_id_transaction_date_idx")
+  @@index([bankAccountId, transactionDate], map: "bank_transactions_bank_account_id_transaction_date_idx")
+  @@map("bank_transactions")
+}
+
+model Reconciliation {
+  id                    String                  @id @default(uuid()) @db.Uuid
+  workspaceId           String                  @map("workspace_id") @db.Uuid
+  bankTransactionId     String                  @map("bank_transaction_id") @db.Uuid
+  paymentId             String                  @map("payment_id") @db.Uuid
+  status                ReconciliationStatus    @default(CONFIRMED)
+  matchType             ReconciliationMatchType @map("match_type")
+  confidenceBasisPoints Int?                    @map("confidence_basis_points")
+  reconciledAt          DateTime                @default(now()) @map("reconciled_at") @db.Timestamptz(3)
+  reversedAt            DateTime?               @map("reversed_at") @db.Timestamptz(3)
+  note                  String?                 @db.Text
+  createdAt             DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  bankTransaction BankTransaction @relation(fields: [workspaceId, bankTransactionId], references: [workspaceId, id], onDelete: Restrict)
+  payment         Payment         @relation(fields: [workspaceId, paymentId], references: [workspaceId, id], onDelete: Restrict)
+  workspace       Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@index([workspaceId, status, reconciledAt], map: "reconciliations_workspace_id_status_reconciled_at_idx")
+  @@map("reconciliations")
 }

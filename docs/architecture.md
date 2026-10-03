@@ -87,7 +87,9 @@ contains no business logic, data fetching, or client-side state.
 - **Database schema and migrations:** Prisma owns the PostgreSQL datasource,
   generated client configuration, and SQL migration history. The current
   migrations model users, workspaces, explicit workspace memberships with roles,
-  workspace-scoped contacts, invoices, invoice line items, and payments.
+  workspace-scoped contacts, invoices, invoice line items, payments,
+  income/expense entries, bank accounts, bank transactions, and reconciliation
+  records.
 - **Workspace access boundary:** Every future financial record will belong to a
   workspace. `WorkspaceMembership` is the backend authorization lookup between
   a user, a workspace, and its role; it uses database constraints and indexes,
@@ -101,6 +103,12 @@ contains no business logic, data fetching, or client-side state.
   invoice with a customer from another workspace or a payment with an invoice
   from another workspace. Database constraints also protect non-negative money,
   valid discounts, and invoice total arithmetic.
+- **Banking and reconciliation boundary:** Bank-transaction amounts are signed
+  `BIGINT` minor units, whereas recorded payments remain positive. A bank-account
+  balance is derived from its opening balance and transactions. Composite foreign
+  keys isolate transactions, payments, and reconciliations by workspace; partial
+  unique indexes allow only one confirmed reconciliation per transaction or
+  payment while retaining reversed history.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop.
 
