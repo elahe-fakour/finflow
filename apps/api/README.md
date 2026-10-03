@@ -5,7 +5,7 @@ port `3001`, separately from the Next.js web application on port `3000`.
 
 At this milestone the API bootstraps its Nest module graph, owns the Prisma
 schema and migration configuration, and provides a liveness endpoint at
-`GET /health`. The schema includes users, workspaces, memberships, and workspace
+`GET /api/v1/health`. The schema includes users, workspaces, memberships, and workspace
 roles, workspace-scoped customers and vendors, and the invoice, line-item, and
 payment persistence contract. It also models manual income/expense entries, bank
 accounts, bank transactions, and reconciliation records. Runtime database access,
@@ -38,6 +38,9 @@ npm run test:api
 The health endpoint returns `{ "status": "ok" }` when the NestJS HTTP
 application can accept requests. It is deliberately a liveness check only; it
 does not report database readiness until Prisma Client is connected to NestJS.
+All API endpoints use the `/api/v1` base path, validate request DTOs before
+reaching business logic, and return a consistent JSON error contract. See
+[the API conventions](../../docs/api-conventions.md) for the policy.
 
 Before using any Prisma command that connects to PostgreSQL, start the local
 database and configure `DATABASE_URL` in the repository root `.env.local`.

@@ -25,7 +25,8 @@ Next.js web application
 NestJS API (`apps/api`)
   ├─ Module composition and dependency injection
   ├─ HTTP application bootstrap on port 3001
-  └─ Liveness endpoint at GET /health
+  ├─ Global validation and consistent error responses
+  └─ Liveness endpoint at GET /api/v1/health
 
 Local PostgreSQL (`compose.yaml`)
   ├─ Docker Compose service on port 5432 by default
@@ -78,7 +79,12 @@ contains no business logic, data fetching, or client-side state.
 - **API bootstrap:** `apps/api` is a separate NestJS application that will own
   backend financial workflows. It uses its own TypeScript 6 toolchain so the
   existing Next.js application can remain on TypeScript 5.
-- **API liveness contract:** `GET /health` confirms that NestJS can accept HTTP
+- **API HTTP boundary:** All API routes use URI versioning under `/api/v1`.
+  A global validation pipe rejects undeclared request fields and avoids implicit
+  type coercion. A global exception filter returns a documented, consistent JSON
+  error shape without leaking unexpected server errors. See
+  [api-conventions.md](./api-conventions.md).
+- **API liveness contract:** `GET /api/v1/health` confirms that NestJS can accept HTTP
   requests. Its integration test bootstraps the real module graph and sends an
   HTTP request in memory; it does not depend on a running PostgreSQL instance.
 - **Local database runtime:** `compose.yaml` defines PostgreSQL only. It is not

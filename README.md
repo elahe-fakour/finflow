@@ -73,7 +73,7 @@ npm run dev:api
 ```
 
 The API starts on port `3001`. Its liveness endpoint is available at
-`GET /health` and responds with `{ "status": "ok" }`. It does not check the
+`GET /api/v1/health` and responds with `{ "status": "ok" }`. It does not check the
 database yet; database readiness is added only after Prisma is connected to the
 NestJS runtime.
 
