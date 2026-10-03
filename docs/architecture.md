@@ -89,7 +89,8 @@ contains no business logic, data fetching, or client-side state.
   migrations model users, workspaces, explicit workspace memberships with roles,
   workspace-scoped contacts, invoices, invoice line items, payments,
   income/expense entries, bank accounts, bank transactions, and reconciliation
-  records.
+  records. The current model map and persistence invariants are documented in
+  [database.md](./database.md).
 - **Workspace access boundary:** Every future financial record will belong to a
   workspace. `WorkspaceMembership` is the backend authorization lookup between
   a user, a workspace, and its role; it uses database constraints and indexes,

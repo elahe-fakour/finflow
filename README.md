@@ -22,6 +22,8 @@ one workspace, including:
 
 The complete, incremental delivery plan is available in [plan.md](./plan.md).
 Repeatable manual payment-preview checks are in [docs/testing.md](./docs/testing.md).
+The current database contract and financial persistence invariants are in
+[docs/database.md](./docs/database.md).
 
 ## Current Technology
 

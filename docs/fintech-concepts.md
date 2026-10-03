@@ -169,7 +169,10 @@ status rule and is discarded on refresh; it is not a financial record.
 
 ### Backend Implications
 
-When the API and database are introduced, the API will validate the same
-invariants and PostgreSQL will persist minor-unit amounts as integer values with
-the currency code beside them. Any workflow that records a payment and changes
-an invoice balance will run in a database transaction and create an audit event.
+PostgreSQL now persists minor-unit amounts as `BIGINT` values with a currency code
+beside each independent monetary fact. Prisma returns those values to the API as
+TypeScript `bigint`; future JSON responses must serialize them deliberately.
+The API will validate the same domain invariants. Any workflow that records a
+payment and changes an invoice balance will run in a database transaction and
+create an audit event. See [database.md](./database.md) for the persistence model
+and database-enforced rules.
