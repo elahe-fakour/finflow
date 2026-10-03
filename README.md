@@ -6,8 +6,9 @@ accounting workflows with modern web engineering.
 
 > **Project status:** Phase 6 — Backend Foundation is in progress. The repository
 > contains a frontend workflow preview, a bootstrapped API with a liveness
-> endpoint, and local PostgreSQL Compose configuration, but no runtime database
-> integration, authentication, or persisted financial workflows yet.
+> endpoint, local PostgreSQL Compose configuration, and a lazy Prisma database
+> boundary, but no database-backed HTTP endpoint, authentication, or persisted
+> financial workflow yet.
 
 ## Product Direction
 
@@ -74,15 +75,16 @@ npm run dev:api
 
 The API starts on port `3001`. Its liveness endpoint is available at
 `GET /api/v1/health` and responds with `{ "status": "ok" }`. It does not check the
-database yet; database readiness is added only after Prisma is connected to the
-NestJS runtime.
+database yet; database readiness is added only after a database-backed runtime
+check is introduced.
 
 ### Run local PostgreSQL
 
 PostgreSQL is the only service currently managed by Docker. Follow the
 [local database guide](./docs/local-database.md) to create `.env.local`, start
 the service, and verify its health. FinFlow does not connect to it until the
-upcoming runtime-database task.
+first database-backed API operation runs; the liveness endpoint does not access
+PostgreSQL.
 
 ### Prisma commands
 

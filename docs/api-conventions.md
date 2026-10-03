@@ -32,6 +32,18 @@ The no-implicit-conversion rule is important for financial inputs. An API must
 not silently reinterpret strings as numeric values; money parsing and currency
 rules will remain explicit domain concerns.
 
+## Workspace-Scoped Access
+
+Repository and service methods that operate on tenant-owned records receive an
+explicit `WorkspaceScope` containing `workspaceId`. Repository queries include
+that workspace ID in their `where` clause; an exact customer lookup, for
+example, uses Prisma's composite `(workspaceId, id)` key.
+
+`WorkspaceScope` is a data-selection boundary, not authorization by itself.
+Phase 7 authorization guards will verify the authenticated actor's membership
+and role before calling a feature service with a scope. Until then, there are no
+database-backed HTTP endpoints that accept a workspace ID from a client.
+
 ## Error Response Contract
 
 Every HTTP error uses the following JSON shape:

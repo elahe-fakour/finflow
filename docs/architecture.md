@@ -5,8 +5,8 @@
 This document describes the architecture that exists today and the boundaries that
 will guide its evolution. FinFlow currently contains a Next.js web application,
 a bootstrapped NestJS API, local PostgreSQL Compose definition, and Prisma
-schema/migration configuration. The API has no runtime database integration,
-authentication, or financial endpoints yet.
+schema/migration configuration. The API has a lazy Prisma database boundary but
+no database-backed HTTP endpoint, authentication, or financial workflow yet.
 
 The complete delivery sequence is maintained in [plan.md](../plan.md).
 
@@ -101,6 +101,12 @@ contains no business logic, data fetching, or client-side state.
   workspace. `WorkspaceMembership` is the backend authorization lookup between
   a user, a workspace, and its role; it uses database constraints and indexes,
   not UI-only checks.
+- **Workspace-scoped repository boundary:** `WorkspaceScope` is required by
+  tenant-owned repository and service methods. The first example,
+  `CustomersRepository`, uses a composite workspace/customer key for exact
+  lookups and always filters lists by `workspaceId`. `PrismaService` constructs
+  its client lazily, so the liveness endpoint remains independent of PostgreSQL.
+  Phase 7 guards will provide an authorized scope before feature services run.
 - **Contact-data boundary:** Customer and vendor records belong to exactly one
   workspace. Their names are unique within that workspace, while shared finance
   email addresses remain valid across distinct records.

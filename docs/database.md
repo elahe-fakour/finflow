@@ -3,17 +3,18 @@
 ## Status and Source of Truth
 
 This document describes the PostgreSQL persistence contract that exists at the
-end of Phase 6, Milestone 6.2. It is a guide for contributors and reviewers; the
-executable source of truth is:
+current Phase 6, Milestone 6.3 stage. It is a guide for contributors and
+reviewers. The executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
   models, relations, and indexes.
 - [`apps/api/prisma/migrations/`](../apps/api/prisma/migrations/) for the
   versioned PostgreSQL schema, including custom constraints and partial indexes.
 
-The NestJS API does not yet use Prisma at runtime. Authentication, authorization,
-financial CRUD endpoints, and audit-event writing are intentionally deferred to
-their planned milestones.
+The NestJS API has a lazily initialized Prisma service and a workspace-scoped
+customer repository pattern, but no database-backed HTTP endpoint yet.
+Authentication, authorization, financial CRUD endpoints, and audit-event writing
+are intentionally deferred to their planned milestones.
 
 ## Design Goals
 

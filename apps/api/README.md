@@ -8,9 +8,10 @@ schema and migration configuration, and provides a liveness endpoint at
 `GET /api/v1/health`. The schema includes users, workspaces, memberships, and workspace
 roles, workspace-scoped customers and vendors, and the invoice, line-item, and
 payment persistence contract. It also models manual income/expense entries, bank
-accounts, bank transactions, and reconciliation records. Runtime database access,
-authentication, and financial feature endpoints are introduced in their planned
-follow-up tasks.
+accounts, bank transactions, and reconciliation records. Authentication and
+financial feature endpoints are introduced in their planned follow-up tasks. A
+lazy Prisma service and workspace-scoped customer repository are available as
+backend patterns, but no HTTP endpoint calls them yet.
 
 Invoice and payment amounts are stored as PostgreSQL `BIGINT` minor units; the
 generated Prisma Client exposes them as TypeScript `bigint`. Line-item quantities
