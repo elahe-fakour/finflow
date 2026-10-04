@@ -59,15 +59,20 @@ will be designed explicitly in the reconciliation milestone.
 ## Workspace Isolation
 
 `workspace_id` exists on every tenant-owned record. This supports a simple,
-consistent authorization query shape: the future API will first verify the
-actor's `WorkspaceMembership`, then query or mutate only records for that same
-workspace.
+consistent authorization query shape: `WorkspaceMembershipGuard` first verifies
+the actor's composite `(workspaceId, userId)` membership, then a repository
+queries or mutates only records for that same workspace.
 
 `POST /workspaces` creates the initial membership as part of the same
 serializable transaction as the workspace row. The nested write creates an
 `OWNER` membership for the authenticated user; if either write fails, neither is
 committed. This is the one creation flow that does not first require an existing
 membership, because it establishes one.
+
+Membership validation and record selection are separate defense-in-depth layers:
+the guard decides whether a user may enter a workspace, while every repository
+still receives `WorkspaceScope` and includes its `workspaceId` in database
+queries. Role permissions are a further, separate layer.
 
 PostgreSQL also protects important relationships with composite foreign keys:
 

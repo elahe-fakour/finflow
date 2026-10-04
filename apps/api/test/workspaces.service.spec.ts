@@ -70,4 +70,34 @@ describe("WorkspacesService", () => {
     });
     expect(createWithOwner).toHaveBeenCalledTimes(2);
   });
+
+  it("returns workspace metadata only after a guard has supplied authorized access", async () => {
+    const findById = vi.fn().mockResolvedValue({
+      id: createdWorkspace.id,
+      name: createdWorkspace.name,
+      slug: createdWorkspace.slug,
+      createdAt: createdWorkspace.createdAt,
+    });
+    const service = new WorkspacesService(
+      {} as PrismaService,
+      { findById } as unknown as WorkspacesRepository,
+    );
+
+    await expect(
+      service.getForMember({
+        workspaceId: createdWorkspace.id,
+        role: WorkspaceRole.ACCOUNTANT,
+      }),
+    ).resolves.toEqual({
+      id: createdWorkspace.id,
+      name: createdWorkspace.name,
+      slug: createdWorkspace.slug,
+      createdAt: createdWorkspace.createdAt,
+      role: WorkspaceRole.ACCOUNTANT,
+    });
+    expect(findById).toHaveBeenCalledWith({
+      workspaceId: createdWorkspace.id,
+      role: WorkspaceRole.ACCOUNTANT,
+    });
+  });
 });

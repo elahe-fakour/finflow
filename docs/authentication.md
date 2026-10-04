@@ -133,15 +133,21 @@ Authorization answers: **may that user perform this action in this workspace?**
 
 The current `WorkspaceMembership` model remains the source for the second
 answer. A session must not embed an authorization decision that can become stale.
-Every workspace-owned endpoint will perform backend membership and role checks in
-Phase 7, Milestone 7.2. The initial `POST /workspaces` endpoint is the exception
-to that shape: it requires authentication but creates the membership it needs in
-the same transaction as the new workspace. Its caller becomes `OWNER` by
-construction.
+Every workspace-owned endpoint uses backend membership and role checks in Phase
+7, Milestone 7.2. `WorkspaceMembershipGuard` now verifies membership before a
+controller receives `@CurrentWorkspace()` and intentionally returns a non-
+disclosing 404 when membership is absent. The initial `POST /workspaces`
+endpoint is the exception to that shape: it requires authentication but creates
+the membership it needs in the same transaction as the new workspace. Its caller
+becomes `OWNER` by construction.
+
+Membership is authorization to enter a workspace, not yet permission to perform
+every action in it. The following task applies the `OWNER`, `ADMIN`,
+`ACCOUNTANT`, and `MEMBER` role rules to individual operations.
 
 ## Next Steps
 
-1. Add workspace membership and role guards in Milestone 7.2.
+1. Add workspace role permissions in Milestone 7.2.
 2. Add a browser-facing workspace onboarding flow through the same-origin BFF.
 3. Apply explicit CSRF protection to future unsafe financial workflows.
 4. Add browser integration tests once the full authenticated workspace flow has

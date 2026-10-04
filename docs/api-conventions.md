@@ -39,9 +39,17 @@ that workspace ID in their `where` clause; an exact customer lookup, for
 example, uses Prisma's composite `(workspaceId, id)` key.
 
 `WorkspaceScope` is a data-selection boundary, not authorization by itself.
-Phase 7 authorization guards will verify the authenticated actor's membership
-and role before calling a feature service with a scope. Until then, there are no
-database-backed HTTP endpoints that accept a workspace ID from a client.
+`WorkspaceMembershipGuard` verifies the authenticated actor's membership with
+the composite `(workspaceId, userId)` key before it attaches a scope to the
+request. Controllers obtain that server-authorized scope through
+`@CurrentWorkspace()` and pass it to services; they do not build a scope from a
+client-supplied body field.
+
+`GET /api/v1/workspaces/:workspaceId` is the first route using this contract.
+An absent membership returns `404 WORKSPACE_NOT_FOUND`, rather than a revealing
+`403`, so a user cannot use the API to discover another business's workspace
+identifier. Role-based permissions are intentionally deferred to the next task;
+at this stage any workspace member may pass this membership guard.
 
 ## Transactional Financial Workflows
 
@@ -126,6 +134,6 @@ never select a slug, so they cannot overwrite or claim another workspace's URL
 identifier. The unique database constraint remains the final concurrency check;
 the service retries the extremely unlikely generated-slug collision.
 
-This endpoint establishes ownership; it does not yet accept a workspace ID for
-other operations or authorize access to existing workspace data. Membership and
-role guards are the next task in this milestone.
+This endpoint establishes ownership. Existing workspace access is verified by
+`WorkspaceMembershipGuard`; role-based permission checks are the next task in
+this milestone.

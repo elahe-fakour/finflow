@@ -42,4 +42,50 @@ describe("WorkspacesRepository", () => {
       },
     });
   });
+
+  it("looks up access through the composite workspace and user key", async () => {
+    const findUnique = vi.fn().mockResolvedValue({ role: WorkspaceRole.MEMBER });
+    const repository = new WorkspacesRepository({
+      database: {
+        workspaceMembership: { findUnique },
+      },
+    } as unknown as PrismaService);
+
+    await repository.findMembership("workspace-a", "user-a");
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: {
+        workspaceId_userId: {
+          workspaceId: "workspace-a",
+          userId: "user-a",
+        },
+      },
+      select: {
+        role: true,
+      },
+    });
+  });
+
+  it("loads workspace metadata using an authorized workspace scope", async () => {
+    const findUnique = vi.fn().mockResolvedValue(null);
+    const repository = new WorkspacesRepository({
+      database: {
+        workspace: { findUnique },
+      },
+    } as unknown as PrismaService);
+
+    await repository.findById({ workspaceId: "workspace-a" });
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: {
+        id: "workspace-a",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        createdAt: true,
+      },
+    });
+  });
 });

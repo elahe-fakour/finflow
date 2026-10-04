@@ -17,7 +17,9 @@ The global authentication guard protects every endpoint except health,
 registration, login, and logout. Workspace authorization is still a separate
 task. `POST /api/v1/workspaces` requires a live session and creates a workspace
 plus an `OWNER` membership atomically. Membership checks for existing
-workspace-owned data are still a separate task. A lazy Prisma service and
+workspace-owned data use `WorkspaceMembershipGuard`, which supplies an
+authorized workspace scope after checking the composite membership key. Role-
+specific permissions are still a separate task. A lazy Prisma service and
 workspace-scoped customer repository are available as backend patterns.
 
 Invoice and payment amounts are stored as PostgreSQL `BIGINT` minor units; the

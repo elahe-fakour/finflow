@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { ConflictException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, WorkspaceRole } from "../generated/prisma/client.js";
 import { PrismaService } from "../database/prisma.service.js";
 import type { AuthenticatedUser } from "../auth/auth.service.js";
 import type { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
+import type { WorkspaceAccess } from "./workspace-access.js";
 import { WorkspacesRepository } from "./workspaces.repository.js";
 
 const MAX_SLUG_LENGTH = 100;
@@ -16,6 +17,14 @@ export type CreatedWorkspace = {
   slug: string;
   role: typeof WorkspaceRole.OWNER;
   createdAt: Date;
+};
+
+export type AccessibleWorkspace = {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: Date;
+  role: WorkspaceRole;
 };
 
 @Injectable()
@@ -71,6 +80,22 @@ export class WorkspacesService {
     }
 
     throw new Error("Workspace slug allocation unexpectedly exhausted its attempts.");
+  }
+
+  async getForMember(access: WorkspaceAccess): Promise<AccessibleWorkspace> {
+    const workspace = await this.workspacesRepository.findById(access);
+
+    if (workspace === null) {
+      throw new NotFoundException({
+        code: "WORKSPACE_NOT_FOUND",
+        message: "Workspace not found.",
+      });
+    }
+
+    return {
+      ...workspace,
+      role: access.role,
+    };
   }
 }
 

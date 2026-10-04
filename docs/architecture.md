@@ -114,7 +114,10 @@ contains no business logic, data fetching, or client-side state.
   a user, a workspace, and its role; it uses database constraints and indexes,
   not UI-only checks. The protected workspace-creation service establishes the
   first `OWNER` membership atomically with its workspace. It does not replace
-  the next task's membership and role guard for existing workspaces.
+  membership verification for existing workspaces. `WorkspaceMembershipGuard`
+  now verifies the current user against that composite membership key and
+  attaches an authorized scope before a controller invokes a service. The next
+  task adds role-specific permissions.
 - **Workspace-scoped repository boundary:** `WorkspaceScope` is required by
   tenant-owned repository and service methods. The first example,
   `CustomersRepository`, uses a composite workspace/customer key for exact

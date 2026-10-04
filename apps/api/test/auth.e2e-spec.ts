@@ -17,6 +17,7 @@ describe("Authentication HTTP endpoints", () => {
   };
   const workspacesService = {
     createForOwner: vi.fn(),
+    getForMember: vi.fn(),
   };
 
   beforeAll(async () => {
@@ -124,6 +125,20 @@ describe("Authentication HTTP endpoints", () => {
       message: "Unauthorized",
     });
     expect(workspacesService.createForOwner).toHaveBeenCalledTimes(callsBeforeRequest);
+  });
+
+  it("requires a valid session before workspace lookup reaches its controller", async () => {
+    const callsBeforeRequest = workspacesService.getForMember.mock.calls.length;
+
+    const response = await request(app.getHttpServer())
+      .get("/api/v1/workspaces/6efc89d9-c720-45f6-82cd-ee29e80314b5")
+      .expect(401);
+
+    expect(response.body).toMatchObject({
+      code: "UNAUTHENTICATED",
+      message: "Unauthorized",
+    });
+    expect(workspacesService.getForMember).toHaveBeenCalledTimes(callsBeforeRequest);
   });
 
   it("clears the cookie after logout", async () => {
