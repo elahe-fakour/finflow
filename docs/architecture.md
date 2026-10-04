@@ -5,8 +5,10 @@
 This document describes the architecture that exists today and the boundaries that
 will guide its evolution. FinFlow currently contains a Next.js web application,
 a bootstrapped NestJS API, local PostgreSQL Compose definition, and Prisma
-schema/migration configuration. The API has a lazy Prisma database boundary but
-no database-backed HTTP endpoint, authentication, or financial workflow yet.
+schema/migration configuration. The API has a lazy Prisma database boundary,
+database-backed opaque-session authentication, and a protected workspace
+creation endpoint. Financial workflows and membership checks for existing
+workspace data remain planned work.
 
 The complete delivery sequence is maintained in [plan.md](../plan.md).
 
@@ -26,6 +28,8 @@ NestJS API (`apps/api`)
   ├─ Module composition and dependency injection
   ├─ HTTP application bootstrap on port 3001
   ├─ Global validation and consistent error responses
+  ├─ Database-backed opaque session authentication
+  ├─ Protected workspace creation with an atomic owner membership
   └─ Liveness endpoint at GET /api/v1/health
 
 Local PostgreSQL (`compose.yaml`)
@@ -94,9 +98,10 @@ contains no business logic, data fetching, or client-side state.
 - **API liveness contract:** `GET /api/v1/health` confirms that NestJS can accept HTTP
   requests. Its integration test bootstraps the real module graph and sends an
   HTTP request in memory; it does not depend on a running PostgreSQL instance.
-- **Local database runtime:** `compose.yaml` defines PostgreSQL only. It is not
-  connected to the API yet, and neither the API nor the web application is
-  containerized at this stage.
+- **Local database runtime:** `compose.yaml` defines PostgreSQL only. The API
+  reads its ignored root `.env.local` in local development and connects lazily
+  when a database-backed endpoint needs it; neither application is containerized
+  at this stage.
 - **Database schema and migrations:** Prisma owns the PostgreSQL datasource,
   generated client configuration, and SQL migration history. The current
   migrations model users, workspaces, explicit workspace memberships with roles,
@@ -107,7 +112,9 @@ contains no business logic, data fetching, or client-side state.
 - **Workspace access boundary:** Every future financial record will belong to a
   workspace. `WorkspaceMembership` is the backend authorization lookup between
   a user, a workspace, and its role; it uses database constraints and indexes,
-  not UI-only checks.
+  not UI-only checks. The protected workspace-creation service establishes the
+  first `OWNER` membership atomically with its workspace. It does not replace
+  the next task's membership and role guard for existing workspaces.
 - **Workspace-scoped repository boundary:** `WorkspaceScope` is required by
   tenant-owned repository and service methods. The first example,
   `CustomersRepository`, uses a composite workspace/customer key for exact
@@ -137,10 +144,11 @@ contains no business logic, data fetching, or client-side state.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop.
 
-There is no API feature layer, runtime database integration, authentication, or
-authorization yet. The local PostgreSQL startup and data-retention procedure is
-documented in [local-database.md](./local-database.md). Database readiness will
-be added to the health contract only once API database access exists.
+The API now has authentication and a minimal workspace feature layer, but no
+membership/role guard for accessing an existing workspace and no financial CRUD
+workflow. The local PostgreSQL startup and data-retention procedure is documented
+in [local-database.md](./local-database.md). Database readiness remains separate
+from the liveness health contract.
 The pure invoice calculation module is covered by focused unit tests; the UI
 must not pretend that persistence or complete financial workflows already exist.
 

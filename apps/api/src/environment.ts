@@ -9,10 +9,7 @@ import { config } from "dotenv";
  */
 if (process.env.NODE_ENV?.trim().toLowerCase() !== "production") {
   config({
-    path: [
-      resolve(process.cwd(), ".env.local"),
-      resolve(process.cwd(), "../../.env.local"),
-    ],
+    path: [resolve(process.cwd(), ".env.local"), resolve(process.cwd(), "../../.env.local")],
     quiet: true,
   });
 }

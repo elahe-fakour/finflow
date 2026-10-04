@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { configureApp, configureNotFoundHandler } from "../src/app.config.js";
 import { AppModule } from "../src/app.module.js";
 import { AuthService } from "../src/auth/auth.service.js";
+import { WorkspacesService } from "../src/workspaces/workspaces.service.js";
 
 describe("Authentication HTTP endpoints", () => {
   let app: INestApplication;
@@ -14,6 +15,9 @@ describe("Authentication HTTP endpoints", () => {
     logout: vi.fn(),
     register: vi.fn(),
   };
+  const workspacesService = {
+    createForOwner: vi.fn(),
+  };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -21,6 +25,8 @@ describe("Authentication HTTP endpoints", () => {
     })
       .overrideProvider(AuthService)
       .useValue(authService)
+      .overrideProvider(WorkspacesService)
+      .useValue(workspacesService)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -103,6 +109,21 @@ describe("Authentication HTTP endpoints", () => {
       message: "Unauthorized",
     });
     expect(authService.getCurrentUser).toHaveBeenCalledTimes(callsBeforeRequest);
+  });
+
+  it("requires a valid session before workspace creation reaches its controller", async () => {
+    const callsBeforeRequest = workspacesService.createForOwner.mock.calls.length;
+
+    const response = await request(app.getHttpServer())
+      .post("/api/v1/workspaces")
+      .send({ name: "Acme Studio" })
+      .expect(401);
+
+    expect(response.body).toMatchObject({
+      code: "UNAUTHENTICATED",
+      message: "Unauthorized",
+    });
+    expect(workspacesService.createForOwner).toHaveBeenCalledTimes(callsBeforeRequest);
   });
 
   it("clears the cookie after logout", async () => {

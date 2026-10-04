@@ -3,7 +3,7 @@
 ## Status and Source of Truth
 
 This document describes the PostgreSQL persistence contract through Phase 7,
-Milestone 7.1, Task 4. It is a guide for contributors and reviewers. The
+Milestone 7.2, Task 1. It is a guide for contributors and reviewers. The
 executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
@@ -14,8 +14,8 @@ executable source of truth is:
 The NestJS API has a lazily initialized Prisma service, a workspace-scoped
 customer repository pattern, authentication endpoints, and revocable session
 persistence. Private password hashes are stored separately from public user data.
-Workspace authorization, financial CRUD endpoints, and audit-event writing remain
-in their planned milestones.
+Workspace membership and role checks for existing records, financial CRUD
+endpoints, and audit-event writing remain in their planned milestones.
 
 ## Design Goals
 
@@ -62,6 +62,12 @@ will be designed explicitly in the reconciliation milestone.
 consistent authorization query shape: the future API will first verify the
 actor's `WorkspaceMembership`, then query or mutate only records for that same
 workspace.
+
+`POST /workspaces` creates the initial membership as part of the same
+serializable transaction as the workspace row. The nested write creates an
+`OWNER` membership for the authenticated user; if either write fails, neither is
+committed. This is the one creation flow that does not first require an existing
+membership, because it establishes one.
 
 PostgreSQL also protects important relationships with composite foreign keys:
 

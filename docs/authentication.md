@@ -2,10 +2,12 @@
 
 ## Scope and Status
 
-The authentication slice is implemented through Phase 7, Milestone 7.1, Task 4. The API persists password hashes, validates registration and login input,
-creates revocable database-backed sessions, and denies every endpoint unless it
-is explicitly public. The Next.js application provides protected routes and
-same-origin sign-in, registration, and sign-out UI.
+The authentication slice and the first workspace-onboarding API are implemented
+through Phase 7, Milestone 7.2, Task 1. The API persists password hashes,
+validates registration and login input, creates revocable database-backed
+sessions, and denies every endpoint unless it is explicitly public. The Next.js
+application provides protected routes and same-origin sign-in, registration, and
+sign-out UI.
 
 Current public endpoints:
 
@@ -132,13 +134,17 @@ Authorization answers: **may that user perform this action in this workspace?**
 The current `WorkspaceMembership` model remains the source for the second
 answer. A session must not embed an authorization decision that can become stale.
 Every workspace-owned endpoint will perform backend membership and role checks in
-Phase 7, Milestone 7.2.
+Phase 7, Milestone 7.2. The initial `POST /workspaces` endpoint is the exception
+to that shape: it requires authentication but creates the membership it needs in
+the same transaction as the new workspace. Its caller becomes `OWNER` by
+construction.
 
 ## Next Steps
 
 1. Add workspace membership and role guards in Milestone 7.2.
-2. Apply explicit CSRF protection to future unsafe financial workflows.
-3. Add browser integration tests once the full authenticated workspace flow has
+2. Add a browser-facing workspace onboarding flow through the same-origin BFF.
+3. Apply explicit CSRF protection to future unsafe financial workflows.
+4. Add browser integration tests once the full authenticated workspace flow has
    persisted data to exercise.
 
 ## References
