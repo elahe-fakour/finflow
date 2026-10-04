@@ -9,10 +9,11 @@ schema includes users and their private password credentials, workspaces,
 memberships and roles, workspace-scoped customers and vendors, and the invoice,
 line-item, payment, manual income/expense, banking, and reconciliation contracts.
 
-The first authentication endpoints are `POST /api/v1/auth/register` and
-`POST /api/v1/auth/login`. They hash or verify a password and return public user
-data only. They do not issue a session, cookie, JWT, or workspace authorization
-decision yet; that is a separate authentication task. A lazy Prisma service and
+The authentication endpoints are `POST /api/v1/auth/register`,
+`POST /api/v1/auth/login`, `GET /api/v1/auth/me`, and
+`POST /api/v1/auth/logout`. Login creates a database-backed opaque session and
+sets its secure `HttpOnly` cookie; the raw token is never returned in JSON.
+Workspace authorization is still a separate task. A lazy Prisma service and
 workspace-scoped customer repository are available as backend patterns.
 
 Invoice and payment amounts are stored as PostgreSQL `BIGINT` minor units; the

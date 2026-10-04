@@ -31,6 +31,7 @@ planned milestones.
 
 ```text
 User -- UserCredential
+User --< UserSession
 User --< WorkspaceMembership >-- Workspace
 Workspace --< Customer --< Invoice --< InvoiceLineItem
                          |
@@ -47,7 +48,7 @@ will be designed explicitly in the reconciliation milestone.
 
 | Area              | Models                                  | Purpose                                                                                                      |
 | ----------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Identity          | `User`, `UserCredential`                | Separates public identity data from the private password hash for local credentials.                         |
+| Identity          | `User`, `UserCredential`, `UserSession` | Separates public identity data, private password hashes, and revocable session verifiers.                    |
 | Workspace access  | `Workspace`, `WorkspaceMembership`      | Represents businesses and workspace-specific roles for users.                                                |
 | Contacts          | `Customer`, `Vendor`                    | Holds invoice customers and expense vendors.                                                                 |
 | Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment` | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.                |
@@ -75,6 +76,18 @@ PostgreSQL also protects important relationships with composite foreign keys:
 These constraints are defense in depth. They do not replace backend authorization:
 an authenticated user still must be a member with a sufficient role before an API
 operation is allowed.
+
+## Session Storage
+
+`user_sessions` is not workspace-owned data. It stores a SHA-256 verifier of a
+random browser token, never the raw token itself. Each row contains its user,
+creation time, absolute expiry, and last activity time; optional JSON metadata is
+reserved for a future devices/sessions page.
+
+The session-store implementation removes sessions past their absolute expiry when
+it creates a session. It uses a conditional `UPDATE` to move `last_active_at`
+forward and a single `DELETE` to revoke a session. Those query shapes preserve a
+logout that races with an older in-flight request.
 
 ## Money Storage Strategy
 

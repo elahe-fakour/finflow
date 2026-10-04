@@ -51,6 +51,20 @@ export class AuthRepository {
     });
   }
 
+  findPublicUserById(
+    userId: string,
+    database: AuthenticationQueryClient = this.prisma.database,
+  ): Promise<Pick<User, "id" | "email" | "displayName"> | null> {
+    return database.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+      },
+    });
+  }
+
   updatePasswordHash(
     userId: string,
     passwordHash: string,

@@ -7,7 +7,7 @@ accounting workflows with modern web engineering.
 > **Project status:** Phase 7 — Authentication & Authorization is in progress.
 > The repository contains a frontend workflow preview, a NestJS API, local
 > PostgreSQL Compose configuration, a tracked Prisma schema, and secure
-> registration/login credential verification. Browser sessions, workspace guards,
+> registration/login with database-backed browser sessions. Workspace guards,
 > persisted financial API workflows, and audit events are still planned work.
 
 ## Product Direction
@@ -77,9 +77,10 @@ npm run dev:api
 
 The API starts on port `3001`. Its liveness endpoint is available at
 `GET /api/v1/health` and responds with `{ "status": "ok" }`. The credential
-endpoints are `POST /api/v1/auth/register` and `POST /api/v1/auth/login`.
-They need a healthy local PostgreSQL service, and deliberately do not create a
-browser session yet.
+endpoints are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
+`GET /api/v1/auth/me`, and `POST /api/v1/auth/logout`. They need a healthy
+local PostgreSQL service. Login creates an opaque, `HttpOnly` browser cookie;
+workspace authorization is introduced separately.
 
 ### Run local PostgreSQL
 

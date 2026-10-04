@@ -8,6 +8,12 @@ import { HealthModule } from "./health/health.module.js";
   imports: [
     AuthenticationModule.forRoot({
       globalGuard: false,
+      session: {
+        absoluteTtl: "7d",
+        idleTtl: "1d",
+        touchInterval: "1m",
+        trustedOrigins: getTrustedWebOrigins(),
+      },
     }),
     HealthModule,
     CustomersModule,
@@ -15,3 +21,13 @@ import { HealthModule } from "./health/health.module.js";
   ],
 })
 export class AppModule {}
+
+function getTrustedWebOrigins(): string[] {
+  if (process.env.WEB_ORIGIN !== undefined) {
+    return [process.env.WEB_ORIGIN];
+  }
+
+  return process.env.NODE_ENV?.trim().toLowerCase() === "production"
+    ? []
+    : ["http://localhost:3000"];
+}

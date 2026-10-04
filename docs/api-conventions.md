@@ -91,16 +91,19 @@ unexpected server error messages or stack traces to clients.
 The first public authentication endpoints are intentionally limited to identity
 creation and credential verification:
 
-| Endpoint                     | Success | Purpose                                                                |
-| ---------------------------- | ------- | ---------------------------------------------------------------------- |
-| `POST /api/v1/auth/register` | `201`   | Creates a public user and private password credential in one DB write. |
-| `POST /api/v1/auth/login`    | `200`   | Verifies credentials and returns only public user data.                |
+| Endpoint                     | Success | Purpose                                                                            |
+| ---------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `POST /api/v1/auth/register` | `201`   | Creates a public user and private password credential in one DB write.             |
+| `POST /api/v1/auth/login`    | `200`   | Verifies credentials, sets an opaque session cookie, and returns public user data. |
+| `GET /api/v1/auth/me`        | `200`   | Resolves the current public user from a live session.                              |
+| `POST /api/v1/auth/logout`   | `204`   | Revokes the current session and sends a clearing cookie.                           |
 
 Both requests validate an email address and a 15–128 character password. Login
 uses `401 INVALID_CREDENTIALS` for both an unknown email and an incorrect
 password. Registration maps the database's unique-email constraint to
 `409 EMAIL_ALREADY_REGISTERED`.
 
-No endpoint emits a session, cookie, JWT, or workspace authorization decision in
-this task. Those contracts are introduced separately so they can be tested as a
-focused security change.
+The login cookie is opaque, `HttpOnly`, `Secure`, `SameSite=Lax`, and scoped to
+`Path=/`; its raw token is never included in JSON. `GET /auth/me` returns
+`401 UNAUTHENTICATED` if no live session exists. No endpoint returns a JWT or a
+workspace authorization decision in this task.

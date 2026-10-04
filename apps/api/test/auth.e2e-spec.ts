@@ -9,7 +9,9 @@ import { AuthService } from "../src/auth/auth.service.js";
 describe("Authentication HTTP endpoints", () => {
   let app: INestApplication;
   const authService = {
+    getCurrentUser: vi.fn(),
     login: vi.fn(),
+    logout: vi.fn(),
     register: vi.fn(),
   };
 
@@ -34,9 +36,12 @@ describe("Authentication HTTP endpoints", () => {
 
   it("normalizes an email before delegating a login to the service", async () => {
     authService.login.mockResolvedValue({
-      id: "6efc89d9-c720-45f6-82cd-ee29e80314b4",
-      email: "owner@acme.example",
-      displayName: "Acme Owner",
+      user: {
+        id: "6efc89d9-c720-45f6-82cd-ee29e80314b4",
+        email: "owner@acme.example",
+        displayName: "Acme Owner",
+      },
+      cookie: "__Host-sid=session-token; HttpOnly; Secure; SameSite=Lax",
     });
 
     const response = await request(app.getHttpServer())
@@ -52,10 +57,16 @@ describe("Authentication HTTP endpoints", () => {
       email: "owner@acme.example",
       displayName: "Acme Owner",
     });
-    expect(authService.login).toHaveBeenCalledWith({
-      email: "owner@acme.example",
-      password: "a secure passphrase",
-    });
+    expect(response.headers["set-cookie"]).toEqual(
+      expect.arrayContaining([expect.stringContaining("__Host-sid=session-token")]),
+    );
+    expect(authService.login).toHaveBeenCalledWith(
+      {
+        email: "owner@acme.example",
+        password: "a secure passphrase",
+      },
+      expect.objectContaining({ method: "POST" }),
+    );
   });
 
   it("rejects invalid login input before the service can access the database", async () => {
@@ -81,5 +92,41 @@ describe("Authentication HTTP endpoints", () => {
       ]),
     );
     expect(authService.login).toHaveBeenCalledTimes(callsBeforeRequest);
+  });
+
+  it("returns the current public user from the session context endpoint", async () => {
+    authService.getCurrentUser.mockResolvedValue({
+      id: "6efc89d9-c720-45f6-82cd-ee29e80314b4",
+      email: "owner@acme.example",
+      displayName: "Acme Owner",
+    });
+
+    const response = await request(app.getHttpServer())
+      .get("/api/v1/auth/me")
+      .set("Cookie", "__Host-sid=session-token")
+      .expect(200);
+
+    expect(response.body).toEqual({
+      id: "6efc89d9-c720-45f6-82cd-ee29e80314b4",
+      email: "owner@acme.example",
+      displayName: "Acme Owner",
+    });
+    expect(authService.getCurrentUser).toHaveBeenCalledWith(
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("clears the cookie after logout", async () => {
+    authService.logout.mockResolvedValue("__Host-sid=; Max-Age=0; HttpOnly; Secure; SameSite=Lax");
+
+    const response = await request(app.getHttpServer())
+      .post("/api/v1/auth/logout")
+      .set("Cookie", "__Host-sid=session-token")
+      .expect(204);
+
+    expect(response.headers["set-cookie"]).toEqual(
+      expect.arrayContaining([expect.stringContaining("Max-Age=0")]),
+    );
+    expect(authService.logout).toHaveBeenCalledWith(expect.objectContaining({ method: "POST" }));
   });
 });

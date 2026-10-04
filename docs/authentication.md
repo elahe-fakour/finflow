@@ -2,17 +2,19 @@
 
 ## Scope and Status
 
-The credential slice is implemented in Phase 7, Milestone 7.1, Task 2. The API
-now persists password hashes, validates registration and login input, and
-verifies credentials. It deliberately does **not** issue a browser session yet;
-cookie sessions, logout, and the authenticated-user context are Task 3.
+The credential and session slices are implemented through Phase 7, Milestone
+7.1, Task 3. The API persists password hashes, validates registration and login
+input, verifies credentials, and creates revocable database-backed sessions.
 
 Current public endpoints:
 
 - `POST /api/v1/auth/register` creates a user and its private credential record.
-- `POST /api/v1/auth/login` verifies a password and returns public user data.
+- `POST /api/v1/auth/login` verifies a password, sets the session cookie, and
+  returns public user data.
+- `GET /api/v1/auth/me` resolves the public user from a live session.
+- `POST /api/v1/auth/logout` revokes the current session and clears its cookie.
 
-Neither endpoint returns a password hash, session token, JWT, or authorization
+No endpoint returns a password hash, raw session token, JWT, or authorization
 decision. Login responds with the same `INVALID_CREDENTIALS` error for an
 unknown email address and an incorrect password.
 
@@ -39,22 +41,29 @@ the authenticated user for the requested workspace.
 
 ## Initial Session Contract
 
-| Concern            | Decision                                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------------------- |
-| Browser credential | Opaque session token in an HttpOnly cookie                                                              |
-| Session authority  | NestJS API using `@nestjs/authentication`                                                               |
-| Session storage    | PostgreSQL, shared by all API instances                                                                 |
-| Stored token value | SHA-256 verifier only; never the raw cookie token                                                       |
-| Token generation   | Cryptographically secure, random 256-bit token supplied by the NestJS module                            |
-| Production cookie  | `__Host-sid`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`                                            |
-| Expiry policy      | Absolute and idle expiry configured in the session store; exact durations are set during implementation |
-| Rotation           | At sign-in and after password, role, or other privilege changes                                         |
-| Logout             | Revoke the current stored session and clear the browser cookie                                          |
-| Logout everywhere  | Revoke all active sessions for the authenticated user                                                   |
+| Concern            | Decision                                                                                      |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| Browser credential | Opaque session token in an HttpOnly cookie                                                    |
+| Session authority  | NestJS API using `@nestjs/authentication`                                                     |
+| Session storage    | PostgreSQL, shared by all API instances                                                       |
+| Stored token value | SHA-256 verifier only; never the raw cookie token                                             |
+| Token generation   | Cryptographically secure, random 256-bit token supplied by the NestJS module                  |
+| Production cookie  | `__Host-sid`; `HttpOnly`, `Secure`, `SameSite=Lax`, `Path=/`                                  |
+| Expiry policy      | Seven-day absolute expiry and one-day idle expiry; activity is stored at most once per minute |
+| Rotation           | At sign-in and after password, role, or other privilege changes                               |
+| Logout             | Revoke the current stored session and clear the browser cookie                                |
+| Logout everywhere  | Revoke all active sessions for the authenticated user                                         |
 
 The raw token is not a user ID, workspace ID, role, or JWT. It is meaningless to
 the browser and is never returned in JSON, included in a URL, logged, or stored
 in local storage.
+
+The `user_sessions.id` value is the SHA-256 verifier of that raw token. A login
+deletes a prior valid session from the same browser before it saves the new one.
+Logout deletes the stored verifier before its cookie is cleared. A conditional
+database update advances `lastActiveAt` only when the session still exists and
+the supplied time is later, so a concurrent logout cannot be undone by a stale
+request.
 
 ## Password Contract
 
@@ -78,8 +87,12 @@ and tests.
 
 ## Browser and CSRF Contract
 
-The API and web application use separate local origins during development. When
-authentication is implemented, the API will:
+The API and web application use separate local origins during development. The
+session module now refuses a cross-origin login or logout unless its origin is
+listed in `WEB_ORIGIN` (default: `http://localhost:3000` outside production).
+
+Before the web application makes credentialed browser requests, the API must
+still:
 
 - enable credentialed CORS only for configured trusted web origins;
 - configure the same trusted origins for NestJS session handling and CSRF
@@ -102,11 +115,9 @@ Phase 7, Milestone 7.2.
 
 ## Planned Implementation Sequence
 
-1. Add the session persistence model and PostgreSQL session store.
-2. Implement session issuance, rotation, logout, and the current-user API
-   context.
-3. Add CORS, trusted-origin, CSRF, expiry, and authentication integration tests.
-4. Add workspace membership and role guards in Milestone 7.2.
+1. Add credentialed CORS, Nest CSRF protection, and browser integration tests.
+2. Add backend authentication guards and unauthenticated web UI states.
+3. Add workspace membership and role guards in Milestone 7.2.
 
 ## References
 

@@ -70,6 +70,7 @@ model User {
   updatedAt          DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
   memberships        WorkspaceMembership[]
   passwordCredential UserCredential?
+  sessions           UserSession[]
 
   @@map("users")
 }
@@ -83,6 +84,21 @@ model UserCredential {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_credentials")
+}
+
+model UserSession {
+  id           String   @id @db.Char(43)
+  userId       String   @map("user_id") @db.Uuid
+  createdAt    DateTime @map("created_at") @db.Timestamptz(3)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(3)
+  lastActiveAt DateTime @map("last_active_at") @db.Timestamptz(3)
+  metadata     Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt], map: "user_sessions_user_id_expires_at_idx")
+  @@index([expiresAt], map: "user_sessions_expires_at_idx")
+  @@map("user_sessions")
 }
 
 model Workspace {
