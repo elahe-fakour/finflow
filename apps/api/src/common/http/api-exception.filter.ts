@@ -46,12 +46,16 @@ export function createApiErrorResponse(
   return {
     statusCode,
     error: getString(exceptionResponse?.error) ?? fallbackMessage,
-    code: getString(exceptionResponse?.code) ?? `HTTP_${statusCode}`,
+    code: getString(exceptionResponse?.code) ?? getFallbackErrorCode(statusCode),
     message: getString(exceptionResponse?.message) ?? fallbackMessage,
     ...(details === undefined ? {} : { details }),
     path,
     timestamp: new Date().toISOString(),
   };
+}
+
+function getFallbackErrorCode(statusCode: number): string {
+  return statusCode === HttpStatus.UNAUTHORIZED ? "UNAUTHENTICATED" : `HTTP_${statusCode}`;
 }
 
 function getExceptionResponse(exception: unknown): ExceptionResponse | undefined {

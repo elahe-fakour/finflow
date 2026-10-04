@@ -3,7 +3,7 @@
 ## Status and Source of Truth
 
 This document describes the PostgreSQL persistence contract through Phase 7,
-Milestone 7.1, Task 2. It is a guide for contributors and reviewers. The
+Milestone 7.1, Task 4. It is a guide for contributors and reviewers. The
 executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
@@ -12,10 +12,10 @@ executable source of truth is:
   versioned PostgreSQL schema, including custom constraints and partial indexes.
 
 The NestJS API has a lazily initialized Prisma service, a workspace-scoped
-customer repository pattern, and registration/login endpoints. Private password
-hashes are stored separately from public user data. Session persistence,
-authorization, financial CRUD endpoints, and audit-event writing remain in their
-planned milestones.
+customer repository pattern, authentication endpoints, and revocable session
+persistence. Private password hashes are stored separately from public user data.
+Workspace authorization, financial CRUD endpoints, and audit-event writing remain
+in their planned milestones.
 
 ## Design Goals
 

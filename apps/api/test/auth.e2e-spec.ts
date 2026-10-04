@@ -94,26 +94,15 @@ describe("Authentication HTTP endpoints", () => {
     expect(authService.login).toHaveBeenCalledTimes(callsBeforeRequest);
   });
 
-  it("returns the current public user from the session context endpoint", async () => {
-    authService.getCurrentUser.mockResolvedValue({
-      id: "6efc89d9-c720-45f6-82cd-ee29e80314b4",
-      email: "owner@acme.example",
-      displayName: "Acme Owner",
-    });
+  it("requires a valid session before the current-user endpoint reaches its controller", async () => {
+    const callsBeforeRequest = authService.getCurrentUser.mock.calls.length;
+    const response = await request(app.getHttpServer()).get("/api/v1/auth/me").expect(401);
 
-    const response = await request(app.getHttpServer())
-      .get("/api/v1/auth/me")
-      .set("Cookie", "__Host-sid=session-token")
-      .expect(200);
-
-    expect(response.body).toEqual({
-      id: "6efc89d9-c720-45f6-82cd-ee29e80314b4",
-      email: "owner@acme.example",
-      displayName: "Acme Owner",
+    expect(response.body).toMatchObject({
+      code: "UNAUTHENTICATED",
+      message: "Unauthorized",
     });
-    expect(authService.getCurrentUser).toHaveBeenCalledWith(
-      expect.objectContaining({ method: "GET" }),
-    );
+    expect(authService.getCurrentUser).toHaveBeenCalledTimes(callsBeforeRequest);
   });
 
   it("clears the cookie after logout", async () => {

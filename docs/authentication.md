@@ -2,12 +2,14 @@
 
 ## Scope and Status
 
-The credential and session slices are implemented through Phase 7, Milestone
-7.1, Task 3. The API persists password hashes, validates registration and login
-input, verifies credentials, and creates revocable database-backed sessions.
+The authentication slice is implemented through Phase 7, Milestone 7.1, Task 4. The API persists password hashes, validates registration and login input,
+creates revocable database-backed sessions, and denies every endpoint unless it
+is explicitly public. The Next.js application provides protected routes and
+same-origin sign-in, registration, and sign-out UI.
 
 Current public endpoints:
 
+- `GET /api/v1/health` confirms that the API process can accept requests.
 - `POST /api/v1/auth/register` creates a user and its private credential record.
 - `POST /api/v1/auth/login` verifies a password, sets the session cookie, and
   returns public user data.
@@ -22,20 +24,21 @@ unknown email address and an incorrect password.
 
 ```text
 Browser
-  │  HttpOnly session cookie
+  │  HttpOnly session cookie; same-origin /api/auth/* requests
   ▼
-Next.js web application ── credentialed requests ──► NestJS API
-                                                      │
-                                                      ├─ authenticate session
-                                                      ├─ load user identity
-                                                      └─ later: verify workspace membership and role
-                                                               │
-                                                               ▼
-                                                         PostgreSQL
+Next.js web application ── server-to-server, session cookie only ──► NestJS API
+                                                                      │
+                                                                      ├─ authenticate session
+                                                                      ├─ load user identity
+                                                                      └─ later: verify workspace membership and role
+                                                                               │
+                                                                               ▼
+                                                                         PostgreSQL
 ```
 
-The NestJS API is the authentication authority. Next.js renders the experience
-and sends requests, but it does not decide whether a user may access financial
+The NestJS API is the authentication authority. Next.js renders the experience,
+relays a narrow set of authentication requests, and reads the current identity
+for route rendering, but it does not decide whether a user may access financial
 data. The API authenticates the session first; a later workspace guard authorizes
 the authenticated user for the requested workspace.
 
@@ -45,6 +48,7 @@ the authenticated user for the requested workspace.
 | ------------------ | --------------------------------------------------------------------------------------------- |
 | Browser credential | Opaque session token in an HttpOnly cookie                                                    |
 | Session authority  | NestJS API using `@nestjs/authentication`                                                     |
+| Browser transport  | Same-origin Next.js BFF routes that forward only the session cookie to the API                |
 | Session storage    | PostgreSQL, shared by all API instances                                                       |
 | Stored token value | SHA-256 verifier only; never the raw cookie token                                             |
 | Token generation   | Cryptographically secure, random 256-bit token supplied by the NestJS module                  |
@@ -85,22 +89,39 @@ Password reset, email verification, breached-password checking, MFA, and
 passkeys are deferred. They require separate threat modeling, delivery channels,
 and tests.
 
-## Browser and CSRF Contract
+## Route Protection and Browser Boundary
 
-The API and web application use separate local origins during development. The
-session module now refuses a cross-origin login or logout unless its origin is
-listed in `WEB_ORIGIN` (default: `http://localhost:3000` outside production).
+The NestJS `AuthenticationGuard` is global. `GET /auth/me` and every future API
+endpoint require a valid session by default. The only explicit public routes are
+the liveness endpoint, registration, login, and logout. Logout remains public
+only so a stale browser cookie can be cleared; its service still revokes a live
+session when one is present.
 
-Before the web application makes credentialed browser requests, the API must
-still:
+`src/proxy.ts` gives an unauthenticated browser an early redirect to `/login` if
+the session cookie is absent. The protected `(app)` layout performs the secure
+check: its Server Component forwards just `__Host-sid` to `GET /api/v1/auth/me`.
+A missing, expired, or revoked session redirects to a readable sign-in state.
+The proxy is an optimistic UX check, not an authorization boundary; sensitive
+data and mutations remain protected by the NestJS API.
 
-- enable credentialed CORS only for configured trusted web origins;
-- configure the same trusted origins for NestJS session handling and CSRF
-  protection;
-- enable NestJS CSRF protection for unsafe HTTP methods;
-- use HTTPS and secure cookies in production;
-- never use `SameSite=None` unless a later deployment topology requires it and
-  the cookie remains `Secure`.
+The browser does not call `localhost:3001` directly for the current MVP.
+`/api/auth/register`, `/api/auth/login`, and `/api/auth/logout` are Next.js Route
+Handlers on the browser's own origin. They forward the API's `Set-Cookie` header
+without exposing the raw token to browser JavaScript. Every unsafe BFF request
+requires an `Origin` header equal to the Next.js origin, which blocks basic
+cross-origin login and logout CSRF attempts. The BFF forwards only the session
+cookie, never unrelated browser cookies.
+
+`API_BASE_URL` is server-only configuration for the Next.js-to-NestJS hop. It
+must never use a `NEXT_PUBLIC_` prefix. `WEB_ORIGIN` remains the trusted origin
+configuration for the NestJS session module and will be used if a future client
+needs direct browser-to-API access.
+
+Before adding financial browser mutations or a direct browser-to-API client, we
+must explicitly extend CSRF protections and, if direct requests are needed,
+enable credentialed CORS only for configured trusted origins. Production also
+requires HTTPS; `SameSite=None` is not permitted unless a later deployment
+topology requires it and the cookie remains `Secure`.
 
 ## Authorization Boundary
 
@@ -113,11 +134,12 @@ answer. A session must not embed an authorization decision that can become stale
 Every workspace-owned endpoint will perform backend membership and role checks in
 Phase 7, Milestone 7.2.
 
-## Planned Implementation Sequence
+## Next Steps
 
-1. Add credentialed CORS, Nest CSRF protection, and browser integration tests.
-2. Add backend authentication guards and unauthenticated web UI states.
-3. Add workspace membership and role guards in Milestone 7.2.
+1. Add workspace membership and role guards in Milestone 7.2.
+2. Apply explicit CSRF protection to future unsafe financial workflows.
+3. Add browser integration tests once the full authenticated workspace flow has
+   persisted data to exercise.
 
 ## References
 

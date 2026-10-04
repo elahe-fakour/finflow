@@ -7,8 +7,9 @@ accounting workflows with modern web engineering.
 > **Project status:** Phase 7 — Authentication & Authorization is in progress.
 > The repository contains a frontend workflow preview, a NestJS API, local
 > PostgreSQL Compose configuration, a tracked Prisma schema, and secure
-> registration/login with database-backed browser sessions. Workspace guards,
-> persisted financial API workflows, and audit events are still planned work.
+> registration/login with database-backed browser sessions and protected
+> application routes. Workspace guards, persisted financial API workflows, and
+> audit events are still planned work.
 
 ## Product Direction
 
@@ -82,6 +83,11 @@ endpoints are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
 local PostgreSQL service. Login creates an opaque, `HttpOnly` browser cookie;
 workspace authorization is introduced separately.
 
+The browser-facing sign-in, account creation, and sign-out routes are served by
+the Next.js application. They relay only the session cookie to the API through a
+same-origin BFF boundary. `API_BASE_URL` in `.env.local` defaults to
+`http://localhost:3001`; do not expose it through a `NEXT_PUBLIC_` variable.
+
 ### Run local PostgreSQL
 
 PostgreSQL is the only service currently managed by Docker. Follow the
@@ -146,7 +152,8 @@ plan.md        # Product roadmap, architecture direction, and delivery plan
 - Future monetary values will use integer minor units rather than JavaScript
   floating-point numbers.
 - Business and financial rules will live outside React UI components.
-- Authorization will be enforced by the backend when authentication is introduced.
+- Authentication is enforced by the backend; workspace authorization follows in
+  the next milestone.
 - Secrets and real financial data must never be committed. Use `.env.local` for
   local values and `.env.example` only for safe placeholders.
 

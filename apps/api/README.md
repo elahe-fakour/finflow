@@ -13,8 +13,10 @@ The authentication endpoints are `POST /api/v1/auth/register`,
 `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, and
 `POST /api/v1/auth/logout`. Login creates a database-backed opaque session and
 sets its secure `HttpOnly` cookie; the raw token is never returned in JSON.
-Workspace authorization is still a separate task. A lazy Prisma service and
-workspace-scoped customer repository are available as backend patterns.
+The global authentication guard protects every endpoint except health,
+registration, login, and logout. Workspace authorization is still a separate
+task. A lazy Prisma service and workspace-scoped customer repository are
+available as backend patterns.
 
 Invoice and payment amounts are stored as PostgreSQL `BIGINT` minor units; the
 generated Prisma Client exposes them as TypeScript `bigint`. Line-item quantities

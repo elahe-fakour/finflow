@@ -1,13 +1,15 @@
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
 import { MobileNavigation } from "@/components/layout/mobile-navigation";
+import type { AuthenticatedUser } from "@/lib/auth/auth-types";
 import type { ReactNode } from "react";
 
 type AppShellProps = {
   children: ReactNode;
+  user: AuthenticatedUser;
 };
 
-function AppShell({ children }: AppShellProps) {
+function AppShell({ children, user }: AppShellProps) {
   return (
     <div className="min-h-svh bg-background">
       <a
@@ -19,7 +21,7 @@ function AppShell({ children }: AppShellProps) {
       <div className="flex min-h-svh">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <AppTopbar />
+          <AppTopbar user={user} />
           <main className="flex-1 pb-24 lg:pb-0" id="main-content" tabIndex={-1}>
             <div className="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
               {children}

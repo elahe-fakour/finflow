@@ -1,3 +1,4 @@
+import "./environment.js";
 import { AuthenticationModule } from "@nestjs/authentication";
 import { Module } from "@nestjs/common";
 import { AuthModule } from "./auth/auth.module.js";
@@ -7,7 +8,7 @@ import { HealthModule } from "./health/health.module.js";
 @Module({
   imports: [
     AuthenticationModule.forRoot({
-      globalGuard: false,
+      globalGuard: true,
       session: {
         absoluteTtl: "7d",
         idleTtl: "1d",

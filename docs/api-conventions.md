@@ -2,10 +2,9 @@
 
 ## Status
 
-This document defines the HTTP boundary applied by the NestJS API before
-feature endpoints are added. It is intentionally small: it establishes a stable
-request and error contract without introducing authentication, database access,
-or financial business logic.
+This document defines the HTTP boundary applied by the NestJS API. It is
+intentionally small: it establishes a stable request and error contract before
+financial feature endpoints are added.
 
 ## Versioning
 
@@ -84,12 +83,14 @@ Every HTTP error uses the following JSON shape:
 
 `details` is present only when there are safe, structured details to return,
 such as validation failures. The global exception filter does not expose
-unexpected server error messages or stack traces to clients.
+unexpected server error messages or stack traces to clients. A guard-generated
+HTTP `401` without a more specific code is normalized to `UNAUTHENTICATED`.
 
 ## Authentication Endpoints
 
-The first public authentication endpoints are intentionally limited to identity
-creation and credential verification:
+Authentication is default-deny: all API endpoints require a live session unless
+they explicitly use `@Public()`. The initial public routes are intentionally
+limited to liveness and the authentication lifecycle:
 
 | Endpoint                     | Success | Purpose                                                                            |
 | ---------------------------- | ------- | ---------------------------------------------------------------------------------- |
@@ -97,6 +98,10 @@ creation and credential verification:
 | `POST /api/v1/auth/login`    | `200`   | Verifies credentials, sets an opaque session cookie, and returns public user data. |
 | `GET /api/v1/auth/me`        | `200`   | Resolves the current public user from a live session.                              |
 | `POST /api/v1/auth/logout`   | `204`   | Revokes the current session and sends a clearing cookie.                           |
+
+`GET /api/v1/health` is also public so deployment health checks do not require a
+user session. Logout is public only to clear expired browser cookies; it revokes
+a live session when supplied.
 
 Both requests validate an email address and a 15–128 character password. Login
 uses `401 INVALID_CREDENTIALS` for both an unknown email and an incorrect

@@ -35,6 +35,7 @@ export class AuthController {
 
   @Post("logout")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Public()
   async logout(
     @Req() request: HttpRequest,
     @Res({ passthrough: true }) response: CookieResponse,

@@ -35,8 +35,11 @@ The planned cookie policy is:
 - no cookie `Domain` attribute, so the `__Host-` prefix remains valid;
 - a development-only localhost configuration that preserves secure production
   defaults;
-- explicit trusted origins and credentialed CORS for the separate web and API
-  origins.
+- a same-origin Next.js BFF boundary for browser authentication requests; it
+  forwards the session cookie to the API without exposing the token to browser
+  JavaScript;
+- explicit trusted origins and credentialed CORS if a future client needs direct
+  browser-to-API access.
 
 The NestJS authentication module's built-in `PasswordHasher` will hash passwords
 with Node's memory-hard `scrypt` implementation. Passwords are never stored,
@@ -58,9 +61,11 @@ scope for the first authentication slice.
 - A Prisma migration will add private credential data and a session store. The
   existing `User` model stays the public identity record; password hashes must
   not leave the authentication repository.
-- Nest's authentication and CSRF protections will run before workspace
-  authorization guards. The Next.js application will use `credentials: "include"`
-  for API requests after CORS and trusted origins are configured.
+- Nest's authentication protections run before workspace authorization guards.
+  The Next.js application relays login, registration, and logout through
+  same-origin Route Handlers, which reject cross-origin writes and forward only
+  the session cookie. Future financial writes need explicit CSRF protection at
+  that browser boundary.
 - The session store makes individual logout, logout everywhere, expiry, and
   revocation possible without a JWT deny-list.
 - The NestJS module's database store contract must be implemented with atomic

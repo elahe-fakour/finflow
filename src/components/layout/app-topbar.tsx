@@ -1,6 +1,15 @@
+import { LogoutButton } from "@/components/auth/logout-button";
+import type { AuthenticatedUser } from "@/lib/auth/auth-types";
 import { Bell, Building2, ChevronDown, Search } from "lucide-react";
 
-function AppTopbar() {
+type AppTopbarProps = {
+  user: AuthenticatedUser;
+};
+
+function AppTopbar({ user }: AppTopbarProps) {
+  const accountLabel = user.displayName ?? user.email;
+  const accountInitial = accountLabel.charAt(0).toUpperCase();
+
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b border-border bg-surface/95 backdrop-blur">
       <div className="flex w-full items-center gap-3 px-4 sm:px-6">
@@ -32,15 +41,11 @@ function AppTopbar() {
 
         <div className="flex h-9 items-center gap-2 rounded-control border border-border px-2 text-sm text-foreground">
           <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-            U
+            {accountInitial}
           </span>
-          <span className="hidden font-medium lg:inline">Account</span>
-          <ChevronDown
-            aria-hidden="true"
-            className="hidden size-4 text-muted-foreground lg:block"
-          />
-          <span className="sr-only">Profile menu will be available in a future milestone</span>
+          <span className="hidden max-w-32 truncate font-medium lg:inline">{accountLabel}</span>
         </div>
+        <LogoutButton />
       </div>
     </header>
   );
