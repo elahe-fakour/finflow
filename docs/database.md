@@ -2,19 +2,20 @@
 
 ## Status and Source of Truth
 
-This document describes the PostgreSQL persistence contract that exists at the
-current Phase 6, Milestone 6.3 stage. It is a guide for contributors and
-reviewers. The executable source of truth is:
+This document describes the PostgreSQL persistence contract through Phase 7,
+Milestone 7.1, Task 2. It is a guide for contributors and reviewers. The
+executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
   models, relations, and indexes.
 - [`apps/api/prisma/migrations/`](../apps/api/prisma/migrations/) for the
   versioned PostgreSQL schema, including custom constraints and partial indexes.
 
-The NestJS API has a lazily initialized Prisma service and a workspace-scoped
-customer repository pattern, but no database-backed HTTP endpoint yet.
-Authentication, authorization, financial CRUD endpoints, and audit-event writing
-are intentionally deferred to their planned milestones.
+The NestJS API has a lazily initialized Prisma service, a workspace-scoped
+customer repository pattern, and registration/login endpoints. Private password
+hashes are stored separately from public user data. Session persistence,
+authorization, financial CRUD endpoints, and audit-event writing remain in their
+planned milestones.
 
 ## Design Goals
 
@@ -29,6 +30,7 @@ are intentionally deferred to their planned milestones.
 ## Relationship Map
 
 ```text
+User -- UserCredential
 User --< WorkspaceMembership >-- Workspace
 Workspace --< Customer --< Invoice --< InvoiceLineItem
                          |
@@ -43,14 +45,15 @@ will be designed explicitly in the reconciliation milestone.
 
 ## Model Map
 
-| Area              | Models                                     | Purpose                                                                                                      |
-| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Workspace access  | `User`, `Workspace`, `WorkspaceMembership` | Represents users, businesses, and workspace-specific roles.                                                  |
-| Contacts          | `Customer`, `Vendor`                       | Holds invoice customers and expense vendors.                                                                 |
-| Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment`    | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.                |
-| Manual operations | `IncomeExpenseEntry`                       | Stores a positive manual income or expense amount, date, description, currency, and optional expense vendor. |
-| Banking           | `BankAccount`, `BankTransaction`           | Stores financial accounts, opening balances, and signed transaction facts.                                   |
-| Reconciliation    | `Reconciliation`                           | Records suggested or manual matches between bank transactions and payments, including reversal history.      |
+| Area              | Models                                  | Purpose                                                                                                      |
+| ----------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Identity          | `User`, `UserCredential`                | Separates public identity data from the private password hash for local credentials.                         |
+| Workspace access  | `Workspace`, `WorkspaceMembership`      | Represents businesses and workspace-specific roles for users.                                                |
+| Contacts          | `Customer`, `Vendor`                    | Holds invoice customers and expense vendors.                                                                 |
+| Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment` | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.                |
+| Manual operations | `IncomeExpenseEntry`                    | Stores a positive manual income or expense amount, date, description, currency, and optional expense vendor. |
+| Banking           | `BankAccount`, `BankTransaction`        | Stores financial accounts, opening balances, and signed transaction facts.                                   |
+| Reconciliation    | `Reconciliation`                        | Records suggested or manual matches between bank transactions and payments, including reversal history.      |
 
 ## Workspace Isolation
 

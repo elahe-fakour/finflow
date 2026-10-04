@@ -21,6 +21,7 @@
     "check": "npm run prisma:validate && npm run prisma:generate && npm run lint && npm run typecheck && npm run typecheck:test && npm run test && npm run build"
   },
   "dependencies": {
+    "@nestjs/authentication": "^0.0.1",
     "@nestjs/common": "^12.1.0",
     "@nestjs/core": "^12.1.0",
     "@nestjs/platform-express": "^12.1.0",

@@ -63,14 +63,26 @@ enum ReconciliationMatchType {
 }
 
 model User {
-  id          String                @id @default(uuid()) @db.Uuid
-  email       String                @unique(map: "users_email_key") @db.VarChar(320)
-  displayName String?               @map("display_name") @db.VarChar(120)
-  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
-  memberships WorkspaceMembership[]
+  id                 String                @id @default(uuid()) @db.Uuid
+  email              String                @unique(map: "users_email_key") @db.VarChar(320)
+  displayName        String?               @map("display_name") @db.VarChar(120)
+  createdAt          DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships        WorkspaceMembership[]
+  passwordCredential UserCredential?
 
   @@map("users")
+}
+
+model UserCredential {
+  userId       String   @id @map("user_id") @db.Uuid
+  passwordHash String   @map("password_hash") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_credentials")
 }
 
 model Workspace {

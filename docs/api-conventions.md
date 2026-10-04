@@ -85,3 +85,22 @@ Every HTTP error uses the following JSON shape:
 `details` is present only when there are safe, structured details to return,
 such as validation failures. The global exception filter does not expose
 unexpected server error messages or stack traces to clients.
+
+## Authentication Endpoints
+
+The first public authentication endpoints are intentionally limited to identity
+creation and credential verification:
+
+| Endpoint                     | Success | Purpose                                                                |
+| ---------------------------- | ------- | ---------------------------------------------------------------------- |
+| `POST /api/v1/auth/register` | `201`   | Creates a public user and private password credential in one DB write. |
+| `POST /api/v1/auth/login`    | `200`   | Verifies credentials and returns only public user data.                |
+
+Both requests validate an email address and a 15–128 character password. Login
+uses `401 INVALID_CREDENTIALS` for both an unknown email and an incorrect
+password. Registration maps the database's unique-email constraint to
+`409 EMAIL_ALREADY_REGISTERED`.
+
+No endpoint emits a session, cookie, JWT, or workspace authorization decision in
+this task. Those contracts are introduced separately so they can be tested as a
+focused security change.

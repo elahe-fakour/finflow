@@ -2,9 +2,19 @@
 
 ## Scope and Status
 
-This is the approved design for the first authentication slice. It documents the
-contract before code and database changes are introduced. The implementation
-starts in Phase 7, Milestone 7.1, Task 2.
+The credential slice is implemented in Phase 7, Milestone 7.1, Task 2. The API
+now persists password hashes, validates registration and login input, and
+verifies credentials. It deliberately does **not** issue a browser session yet;
+cookie sessions, logout, and the authenticated-user context are Task 3.
+
+Current public endpoints:
+
+- `POST /api/v1/auth/register` creates a user and its private credential record.
+- `POST /api/v1/auth/login` verifies a password and returns public user data.
+
+Neither endpoint returns a password hash, session token, JWT, or authorization
+decision. Login responds with the same `INVALID_CREDENTIALS` error for an
+unknown email address and an incorrect password.
 
 ## Boundary
 
@@ -58,6 +68,10 @@ in local storage.
 - Rehash a password after successful sign-in when configured hashing costs
   increase.
 
+Email addresses are trimmed and stored lowercase before the unique database
+constraint is checked. Password whitespace is preserved: a passphrase is not
+trimmed or silently modified by FinFlow.
+
 Password reset, email verification, breached-password checking, MFA, and
 passkeys are deferred. They require separate threat modeling, delivery channels,
 and tests.
@@ -88,14 +102,11 @@ Phase 7, Milestone 7.2.
 
 ## Planned Implementation Sequence
 
-1. Add credential and session persistence through a reviewed Prisma migration.
-2. Install and configure `@nestjs/authentication` with a PostgreSQL store.
-3. Implement registration and sign-in DTOs, hashing, and generic failure
-   handling.
-4. Implement session issuance, rotation, logout, and the current-user API
+1. Add the session persistence model and PostgreSQL session store.
+2. Implement session issuance, rotation, logout, and the current-user API
    context.
-5. Add CORS, trusted-origin, CSRF, expiry, and authentication integration tests.
-6. Add workspace membership and role guards in Milestone 7.2.
+3. Add CORS, trusted-origin, CSRF, expiry, and authentication integration tests.
+4. Add workspace membership and role guards in Milestone 7.2.
 
 ## References
 

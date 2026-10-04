@@ -3,15 +3,17 @@
 The NestJS API is the future authoritative backend for FinFlow. It starts on
 port `3001`, separately from the Next.js web application on port `3000`.
 
-At this milestone the API bootstraps its Nest module graph, owns the Prisma
-schema and migration configuration, and provides a liveness endpoint at
-`GET /api/v1/health`. The schema includes users, workspaces, memberships, and workspace
-roles, workspace-scoped customers and vendors, and the invoice, line-item, and
-payment persistence contract. It also models manual income/expense entries, bank
-accounts, bank transactions, and reconciliation records. Authentication and
-financial feature endpoints are introduced in their planned follow-up tasks. A
-lazy Prisma service and workspace-scoped customer repository are available as
-backend patterns, but no HTTP endpoint calls them yet.
+The API bootstraps its Nest module graph, owns the Prisma schema and migration
+configuration, and provides a liveness endpoint at `GET /api/v1/health`. The
+schema includes users and their private password credentials, workspaces,
+memberships and roles, workspace-scoped customers and vendors, and the invoice,
+line-item, payment, manual income/expense, banking, and reconciliation contracts.
+
+The first authentication endpoints are `POST /api/v1/auth/register` and
+`POST /api/v1/auth/login`. They hash or verify a password and return public user
+data only. They do not issue a session, cookie, JWT, or workspace authorization
+decision yet; that is a separate authentication task. A lazy Prisma service and
+workspace-scoped customer repository are available as backend patterns.
 
 Invoice and payment amounts are stored as PostgreSQL `BIGINT` minor units; the
 generated Prisma Client exposes them as TypeScript `bigint`. Line-item quantities
