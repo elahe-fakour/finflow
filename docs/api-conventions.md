@@ -48,8 +48,27 @@ client-supplied body field.
 `GET /api/v1/workspaces/:workspaceId` is the first route using this contract.
 An absent membership returns `404 WORKSPACE_NOT_FOUND`, rather than a revealing
 `403`, so a user cannot use the API to discover another business's workspace
-identifier. Role-based permissions are intentionally deferred to the next task;
-at this stage any workspace member may pass this membership guard.
+identifier.
+
+Every workspace-scoped route also declares a business permission with
+`@RequireWorkspacePermission(...)`. `WorkspacePermissionGuard` runs after the
+membership guard and maps the current membership role to the required
+permission. It denies missing permission metadata by default. A member who
+knows a workspace but lacks the required role receives
+`403 WORKSPACE_PERMISSION_DENIED`.
+
+| Permission                          | Owner | Admin | Accountant | Member |
+| ----------------------------------- | ----- | ----- | ---------- | ------ |
+| View workspace data                 | Yes   | Yes   | Yes        | Yes    |
+| Manage workspace settings           | Yes   | Yes   | No         | No     |
+| Manage financial data               | Yes   | Yes   | Yes        | No     |
+| Manage members                      | Yes   | Yes   | No         | No     |
+| Manage ownership / critical control | Yes   | No    | No         | No     |
+
+The first privileged route is `PATCH /api/v1/workspaces/:workspaceId`; it
+renames a workspace and requires `MANAGE_SETTINGS`. Future routes must not
+compare role names inside their controllers; they must declare the business
+permission they require instead.
 
 ## Transactional Financial Workflows
 

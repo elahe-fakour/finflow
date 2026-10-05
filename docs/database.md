@@ -14,8 +14,9 @@ executable source of truth is:
 The NestJS API has a lazily initialized Prisma service, a workspace-scoped
 customer repository pattern, authentication endpoints, and revocable session
 persistence. Private password hashes are stored separately from public user data.
-Workspace membership and role checks for existing records, financial CRUD
-endpoints, and audit-event writing remain in their planned milestones.
+Workspace membership and role checks are enforced for the initial workspace
+routes. Financial CRUD endpoints and audit-event writing remain in their planned
+milestones.
 
 ## Design Goals
 
@@ -69,10 +70,12 @@ serializable transaction as the workspace row. The nested write creates an
 committed. This is the one creation flow that does not first require an existing
 membership, because it establishes one.
 
-Membership validation and record selection are separate defense-in-depth layers:
+Membership validation, role permission, and record selection are separate
+defense-in-depth layers:
 the guard decides whether a user may enter a workspace, while every repository
 still receives `WorkspaceScope` and includes its `workspaceId` in database
-queries. Role permissions are a further, separate layer.
+queries. `WorkspacePermissionGuard` then maps the current membership role to the
+business permission required by the route.
 
 PostgreSQL also protects important relationships with composite foreign keys:
 

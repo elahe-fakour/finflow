@@ -99,4 +99,25 @@ export class WorkspacesRepository {
       },
     });
   }
+
+  rename(
+    scope: WorkspaceScope,
+    name: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<WorkspaceSummary> {
+    return database.workspace.update({
+      where: {
+        id: scope.workspaceId,
+      },
+      data: {
+        name,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        createdAt: true,
+      },
+    });
+  }
 }

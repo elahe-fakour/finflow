@@ -88,4 +88,30 @@ describe("WorkspacesRepository", () => {
       },
     });
   });
+
+  it("renames a workspace using the authorized scope", async () => {
+    const update = vi.fn().mockResolvedValue({});
+    const repository = new WorkspacesRepository({
+      database: {
+        workspace: { update },
+      },
+    } as unknown as PrismaService);
+
+    await repository.rename({ workspaceId: "workspace-a" }, "Renamed Studio");
+
+    expect(update).toHaveBeenCalledWith({
+      where: {
+        id: "workspace-a",
+      },
+      data: {
+        name: "Renamed Studio",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        createdAt: true,
+      },
+    });
+  });
 });

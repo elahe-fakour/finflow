@@ -116,8 +116,10 @@ contains no business logic, data fetching, or client-side state.
   first `OWNER` membership atomically with its workspace. It does not replace
   membership verification for existing workspaces. `WorkspaceMembershipGuard`
   now verifies the current user against that composite membership key and
-  attaches an authorized scope before a controller invokes a service. The next
-  task adds role-specific permissions.
+  attaches an authorized scope before a controller invokes a service.
+  `WorkspacePermissionGuard` then evaluates an explicit business permission
+  against the current role; its central matrix is documented in
+  [ADR 0005](./adr/0005-adopt-workspace-role-permissions.md).
 - **Workspace-scoped repository boundary:** `WorkspaceScope` is required by
   tenant-owned repository and service methods. The first example,
   `CustomersRepository`, uses a composite workspace/customer key for exact

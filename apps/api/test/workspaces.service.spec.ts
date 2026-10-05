@@ -100,4 +100,30 @@ describe("WorkspacesService", () => {
       role: WorkspaceRole.ACCOUNTANT,
     });
   });
+
+  it("returns the current role with a renamed workspace", async () => {
+    const rename = vi.fn().mockResolvedValue({
+      id: createdWorkspace.id,
+      name: "Renamed Studio",
+      slug: createdWorkspace.slug,
+      createdAt: createdWorkspace.createdAt,
+    });
+    const service = new WorkspacesService(
+      {} as PrismaService,
+      { rename } as unknown as WorkspacesRepository,
+    );
+    const access = {
+      workspaceId: createdWorkspace.id,
+      role: WorkspaceRole.ADMIN,
+    };
+
+    await expect(service.renameForManager(access, { name: "Renamed Studio" })).resolves.toEqual({
+      id: createdWorkspace.id,
+      name: "Renamed Studio",
+      slug: createdWorkspace.slug,
+      createdAt: createdWorkspace.createdAt,
+      role: WorkspaceRole.ADMIN,
+    });
+    expect(rename).toHaveBeenCalledWith(access, "Renamed Studio");
+  });
 });

@@ -18,9 +18,10 @@ registration, login, and logout. Workspace authorization is still a separate
 task. `POST /api/v1/workspaces` requires a live session and creates a workspace
 plus an `OWNER` membership atomically. Membership checks for existing
 workspace-owned data use `WorkspaceMembershipGuard`, which supplies an
-authorized workspace scope after checking the composite membership key. Role-
-specific permissions are still a separate task. A lazy Prisma service and
-workspace-scoped customer repository are available as backend patterns.
+authorized workspace scope after checking the composite membership key.
+`WorkspacePermissionGuard` then enforces a route's named business permission
+against the current membership role. A lazy Prisma service and workspace-scoped
+customer repository are available as backend patterns.
 
 Invoice and payment amounts are stored as PostgreSQL `BIGINT` minor units; the
 generated Prisma Client exposes them as TypeScript `bigint`. Line-item quantities

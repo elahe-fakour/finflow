@@ -4,6 +4,7 @@ import { Prisma, WorkspaceRole } from "../generated/prisma/client.js";
 import { PrismaService } from "../database/prisma.service.js";
 import type { AuthenticatedUser } from "../auth/auth.service.js";
 import type { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
+import type { RenameWorkspaceDto } from "./dto/rename-workspace.dto.js";
 import type { WorkspaceAccess } from "./workspace-access.js";
 import { WorkspacesRepository } from "./workspaces.repository.js";
 
@@ -97,6 +98,29 @@ export class WorkspacesService {
       role: access.role,
     };
   }
+
+  async renameForManager(
+    access: WorkspaceAccess,
+    input: RenameWorkspaceDto,
+  ): Promise<AccessibleWorkspace> {
+    try {
+      const workspace = await this.workspacesRepository.rename(access, input.name);
+
+      return {
+        ...workspace,
+        role: access.role,
+      };
+    } catch (error) {
+      if (isWorkspaceMissing(error)) {
+        throw new NotFoundException({
+          code: "WORKSPACE_NOT_FOUND",
+          message: "Workspace not found.",
+        });
+      }
+
+      throw error;
+    }
+  }
 }
 
 function createWorkspaceSlug(name: string): string {
@@ -114,4 +138,8 @@ function createWorkspaceSlug(name: string): string {
 
 function isUniqueSlugViolation(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+function isWorkspaceMissing(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025";
 }

@@ -32,7 +32,7 @@ Next.js web application ── server-to-server, session cookie only ──► N
                                                                       │
                                                                       ├─ authenticate session
                                                                       ├─ load user identity
-                                                                      └─ later: verify workspace membership and role
+                                                                      └─ verify workspace membership and role permission
                                                                                │
                                                                                ▼
                                                                          PostgreSQL
@@ -141,13 +141,14 @@ endpoint is the exception to that shape: it requires authentication but creates
 the membership it needs in the same transaction as the new workspace. Its caller
 becomes `OWNER` by construction.
 
-Membership is authorization to enter a workspace, not yet permission to perform
-every action in it. The following task applies the `OWNER`, `ADMIN`,
-`ACCOUNTANT`, and `MEMBER` role rules to individual operations.
+Membership is authorization to enter a workspace, while a separate permission
+guard authorizes the action within it. The `OWNER`, `ADMIN`, `ACCOUNTANT`, and
+`MEMBER` matrix is enforced in the API from the current PostgreSQL membership
+row, not from session contents. See [ADR 0005](./adr/0005-adopt-workspace-role-permissions.md).
 
 ## Next Steps
 
-1. Add workspace role permissions in Milestone 7.2.
+1. Add authorization tests proving cross-workspace isolation in Milestone 7.2.
 2. Add a browser-facing workspace onboarding flow through the same-origin BFF.
 3. Apply explicit CSRF protection to future unsafe financial workflows.
 4. Add browser integration tests once the full authenticated workspace flow has

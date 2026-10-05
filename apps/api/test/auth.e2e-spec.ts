@@ -18,6 +18,7 @@ describe("Authentication HTTP endpoints", () => {
   const workspacesService = {
     createForOwner: vi.fn(),
     getForMember: vi.fn(),
+    renameForManager: vi.fn(),
   };
 
   beforeAll(async () => {
@@ -139,6 +140,21 @@ describe("Authentication HTTP endpoints", () => {
       message: "Unauthorized",
     });
     expect(workspacesService.getForMember).toHaveBeenCalledTimes(callsBeforeRequest);
+  });
+
+  it("requires a valid session before workspace settings changes reach its controller", async () => {
+    const callsBeforeRequest = workspacesService.renameForManager.mock.calls.length;
+
+    const response = await request(app.getHttpServer())
+      .patch("/api/v1/workspaces/6efc89d9-c720-45f6-82cd-ee29e80314b5")
+      .send({ name: "Renamed Studio" })
+      .expect(401);
+
+    expect(response.body).toMatchObject({
+      code: "UNAUTHENTICATED",
+      message: "Unauthorized",
+    });
+    expect(workspacesService.renameForManager).toHaveBeenCalledTimes(callsBeforeRequest);
   });
 
   it("clears the cookie after logout", async () => {
