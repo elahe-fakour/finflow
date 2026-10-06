@@ -2,8 +2,8 @@
 
 ## Status and Source of Truth
 
-This document describes the PostgreSQL persistence contract through Phase 7,
-Milestone 7.2, Task 1. It is a guide for contributors and reviewers. The
+This document describes the PostgreSQL persistence contract through Phase 8,
+Milestone 8.1, Task 1. It is a guide for contributors and reviewers. The
 executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
@@ -37,7 +37,7 @@ User --< WorkspaceMembership >-- Workspace
 Workspace --< Customer --< Invoice --< InvoiceLineItem
                          |
                          +--< Payment --< Reconciliation >-- BankTransaction
-Workspace --< Vendor --< IncomeExpenseEntry
+Workspace --< IncomeExpenseCategory --< IncomeExpenseEntry >-- Vendor
 Workspace --< BankAccount --< BankTransaction
 ```
 
@@ -47,15 +47,15 @@ will be designed explicitly in the reconciliation milestone.
 
 ## Model Map
 
-| Area              | Models                                  | Purpose                                                                                                      |
-| ----------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Identity          | `User`, `UserCredential`, `UserSession` | Separates public identity data, private password hashes, and revocable session verifiers.                    |
-| Workspace access  | `Workspace`, `WorkspaceMembership`      | Represents businesses and workspace-specific roles for users.                                                |
-| Contacts          | `Customer`, `Vendor`                    | Holds invoice customers and expense vendors.                                                                 |
-| Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment` | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.                |
-| Manual operations | `IncomeExpenseEntry`                    | Stores a positive manual income or expense amount, date, description, currency, and optional expense vendor. |
-| Banking           | `BankAccount`, `BankTransaction`        | Stores financial accounts, opening balances, and signed transaction facts.                                   |
-| Reconciliation    | `Reconciliation`                        | Records suggested or manual matches between bank transactions and payments, including reversal history.      |
+| Area              | Models                                        | Purpose                                                                                                 |
+| ----------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Identity          | `User`, `UserCredential`, `UserSession`       | Separates public identity data, private password hashes, and revocable session verifiers.               |
+| Workspace access  | `Workspace`, `WorkspaceMembership`            | Represents businesses and workspace-specific roles for users.                                           |
+| Contacts          | `Customer`, `Vendor`                          | Holds invoice customers and expense vendors.                                                            |
+| Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment`       | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.           |
+| Manual operations | `IncomeExpenseCategory`, `IncomeExpenseEntry` | Stores workspace-specific income/expense categories and positive manual income or expense facts.        |
+| Banking           | `BankAccount`, `BankTransaction`              | Stores financial accounts, opening balances, and signed transaction facts.                              |
+| Reconciliation    | `Reconciliation`                              | Records suggested or manual matches between bank transactions and payments, including reversal history. |
 
 ## Workspace Isolation
 
@@ -84,6 +84,7 @@ PostgreSQL also protects important relationships with composite foreign keys:
 | `Invoice` → `Customer`                             | An invoice cannot reference a customer in a different workspace.    |
 | `Payment` → `Invoice`                              | A payment cannot reference an invoice in a different workspace.     |
 | `IncomeExpenseEntry` → `Vendor`                    | An expense cannot reference a vendor in a different workspace.      |
+| `IncomeExpenseEntry` → `IncomeExpenseCategory`     | An entry cannot reference a category in a different workspace.      |
 | `BankTransaction` → `BankAccount`                  | A transaction cannot reference an account in a different workspace. |
 | `Reconciliation` → `BankTransaction` and `Payment` | A reconciliation cannot join facts from different workspaces.       |
 
@@ -158,18 +159,19 @@ invoice's workflow status inside one database transaction.
 Prisma describes the models, but selected PostgreSQL rules are added in migration
 SQL because they cannot be fully represented in the Prisma schema.
 
-| Area                  | Database rule                                                                                                                                                                    |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Identity and tenancy  | UUID primary keys, workspace-scoped unique names/numbers, and composite foreign keys protect record ownership.                                                                   |
-| Currency              | Persisted currency values must be three uppercase letters.                                                                                                                       |
-| Invoice               | Number is non-blank; due date is not before issue date; totals are non-negative; discount does not exceed subtotal; total equals subtotal minus discount plus tax.               |
-| Invoice line          | Position and quantity are positive; price and totals are non-negative; discount fields have one valid shape; line total equals subtotal minus discount plus tax.                 |
-| Payment               | Amount is strictly positive.                                                                                                                                                     |
-| Income/expense        | Amount is strictly positive; description is non-blank; a vendor may be attached only to an `EXPENSE` entry.                                                                      |
-| Bank account          | Name is non-blank; a stored account suffix is exactly four digits; full account numbers are not stored.                                                                          |
-| Bank transaction      | Amount is never zero; description and non-null external IDs are non-blank; a non-null external ID is unique within its bank account.                                             |
-| Reconciliation        | Suggested matches require a `0`–`10,000` confidence value; manual matches have no synthetic confidence; a confirmed record has no reversal timestamp; a reversed record has one. |
-| Active reconciliation | Partial unique indexes allow only one `CONFIRMED` reconciliation per bank transaction and per payment, while preserving prior `REVERSED` records.                                |
+| Area                    | Database rule                                                                                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity and tenancy    | UUID primary keys, workspace-scoped unique names/numbers, and composite foreign keys protect record ownership.                                                                   |
+| Currency                | Persisted currency values must be three uppercase letters.                                                                                                                       |
+| Invoice                 | Number is non-blank; due date is not before issue date; totals are non-negative; discount does not exceed subtotal; total equals subtotal minus discount plus tax.               |
+| Invoice line            | Position and quantity are positive; price and totals are non-negative; discount fields have one valid shape; line total equals subtotal minus discount plus tax.                 |
+| Payment                 | Amount is strictly positive.                                                                                                                                                     |
+| Income/expense category | Name is non-blank and unique within a workspace and category type.                                                                                                               |
+| Income/expense          | Amount is strictly positive; description is non-blank; a vendor may be attached only to an `EXPENSE` entry; a selected category belongs to the same workspace.                   |
+| Bank account            | Name is non-blank; a stored account suffix is exactly four digits; full account numbers are not stored.                                                                          |
+| Bank transaction        | Amount is never zero; description and non-null external IDs are non-blank; a non-null external ID is unique within its bank account.                                             |
+| Reconciliation          | Suggested matches require a `0`–`10,000` confidence value; manual matches have no synthetic confidence; a confirmed record has no reversal timestamp; a reversed record has one. |
+| Active reconciliation   | Partial unique indexes allow only one `CONFIRMED` reconciliation per bank transaction and per payment, while preserving prior `REVERSED` records.                                |
 
 ## Rules Deferred to the Service Layer
 
@@ -178,6 +180,9 @@ The future NestJS service layer must enforce the following inside transactions
 where multiple records change:
 
 - Verify authentication and workspace role before every read or mutation.
+- Verify that an income or expense entry uses a category with the same
+  `IncomeExpenseType`; a foreign key can enforce shared workspace ownership but
+  cannot compare the type values stored in two different rows.
 - Validate allowed invoice status transitions and prevent payment overpayment.
 - Confirm that a reconciled bank transaction is eligible, represents an incoming
   amount, and matches the intended payment amount and currency.
@@ -224,7 +229,7 @@ financial schema because it bypasses reviewable migration history.
 
 ## Deliberately Not Modeled Yet
 
-- Workspace-scoped categories and category CRUD (Phase 8)
+- Category CRUD and category-type validation for income/expense writes (Phase 8)
 - Attachment/file storage for receipts or income/expense evidence
 - CSV import source metadata beyond `BankTransaction.externalId`
 - Exchange rates and multi-currency conversion

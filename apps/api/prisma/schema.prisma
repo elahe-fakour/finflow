@@ -102,22 +102,40 @@ model UserSession {
 }
 
 model Workspace {
-  id                   String                @id @default(uuid()) @db.Uuid
-  name                 String                @db.VarChar(120)
-  slug                 String                @unique(map: "workspaces_slug_key") @db.VarChar(100)
-  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
-  bankAccounts         BankAccount[]
-  bankTransactions     BankTransaction[]
-  customers            Customer[]
-  incomeExpenseEntries IncomeExpenseEntry[]
-  invoices             Invoice[]
-  memberships          WorkspaceMembership[]
-  payments             Payment[]
-  reconciliations      Reconciliation[]
-  vendors              Vendor[]
+  id                      String                  @id @default(uuid()) @db.Uuid
+  name                    String                  @db.VarChar(120)
+  slug                    String                  @unique(map: "workspaces_slug_key") @db.VarChar(100)
+  createdAt               DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+  bankAccounts            BankAccount[]
+  bankTransactions        BankTransaction[]
+  customers               Customer[]
+  incomeExpenseCategories IncomeExpenseCategory[]
+  incomeExpenseEntries    IncomeExpenseEntry[]
+  invoices                Invoice[]
+  memberships             WorkspaceMembership[]
+  payments                Payment[]
+  reconciliations         Reconciliation[]
+  vendors                 Vendor[]
 
   @@map("workspaces")
+}
+
+model IncomeExpenseCategory {
+  id          String            @id @default(uuid()) @db.Uuid
+  workspaceId String            @map("workspace_id") @db.Uuid
+  type        IncomeExpenseType @map("category_type")
+  name        String            @db.VarChar(120)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  entries   IncomeExpenseEntry[]
+  workspace Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, id], map: "income_expense_categories_workspace_id_id_key")
+  @@unique([workspaceId, type, name], map: "income_expense_categories_workspace_id_type_name_key")
+  @@index([workspaceId, type, name], map: "income_expense_categories_workspace_id_type_name_idx")
+  @@map("income_expense_categories")
 }
 
 model WorkspaceMembership {
@@ -249,6 +267,7 @@ model Payment {
 model IncomeExpenseEntry {
   id               String            @id @default(uuid()) @db.Uuid
   workspaceId      String            @map("workspace_id") @db.Uuid
+  categoryId       String?           @map("category_id") @db.Uuid
   vendorId         String?           @map("vendor_id") @db.Uuid
   type             IncomeExpenseType @map("entry_type")
   amountMinorUnits BigInt            @map("amount_minor_units") @db.BigInt
@@ -259,9 +278,11 @@ model IncomeExpenseEntry {
   createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  vendor    Vendor?   @relation(fields: [workspaceId, vendorId], references: [workspaceId, id], onDelete: Restrict)
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  category  IncomeExpenseCategory? @relation(fields: [workspaceId, categoryId], references: [workspaceId, id], onDelete: Restrict)
+  vendor    Vendor?                @relation(fields: [workspaceId, vendorId], references: [workspaceId, id], onDelete: Restrict)
+  workspace Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
+  @@index([workspaceId, categoryId], map: "income_expense_entries_workspace_id_category_id_idx")
   @@index([workspaceId, occurredOn], map: "income_expense_entries_workspace_id_occurred_on_idx")
   @@index([workspaceId, type, occurredOn], map: "income_expense_entries_workspace_id_type_occurred_on_idx")
   @@index([workspaceId, vendorId], map: "income_expense_entries_workspace_id_vendor_id_idx")

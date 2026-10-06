@@ -106,8 +106,8 @@ contains no business logic, data fetching, or client-side state.
   generated client configuration, and SQL migration history. The current
   migrations model users, workspaces, explicit workspace memberships with roles,
   workspace-scoped contacts, invoices, invoice line items, payments,
-  income/expense entries, bank accounts, bank transactions, and reconciliation
-  records. The current model map and persistence invariants are documented in
+  income/expense categories and entries, bank accounts, bank transactions, and
+  reconciliation records. The current model map and persistence invariants are documented in
   [database.md](./database.md).
 - **Workspace access boundary:** Every future financial record will belong to a
   workspace. `WorkspaceMembership` is the backend authorization lookup between
