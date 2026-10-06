@@ -147,7 +147,11 @@ contains no business logic, data fetching, or client-side state.
   unique indexes allow only one confirmed reconciliation per transaction or
   payment while retaining reversed history.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
-  and production builds provide the initial feedback loop.
+  and production builds provide the initial feedback loop. The workspace
+  isolation test composes the real membership and permission guards with two
+  distinct users and workspaces, and proves a cross-workspace request cannot
+  invoke a service method. A dedicated API integration-test database strategy
+  remains planned for Phase 13.
 
 The API now has authentication and a minimal workspace feature layer, but no
 membership/role guard for accessing an existing workspace and no financial CRUD

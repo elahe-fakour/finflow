@@ -148,10 +148,9 @@ row, not from session contents. See [ADR 0005](./adr/0005-adopt-workspace-role-p
 
 ## Next Steps
 
-1. Add authorization tests proving cross-workspace isolation in Milestone 7.2.
-2. Add a browser-facing workspace onboarding flow through the same-origin BFF.
-3. Apply explicit CSRF protection to future unsafe financial workflows.
-4. Add browser integration tests once the full authenticated workspace flow has
+1. Add a browser-facing workspace onboarding flow through the same-origin BFF.
+2. Apply explicit CSRF protection to future unsafe financial workflows.
+3. Add browser integration tests once the full authenticated workspace flow has
    persisted data to exercise.
 
 ## References

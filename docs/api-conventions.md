@@ -154,5 +154,5 @@ identifier. The unique database constraint remains the final concurrency check;
 the service retries the extremely unlikely generated-slug collision.
 
 This endpoint establishes ownership. Existing workspace access is verified by
-`WorkspaceMembershipGuard`; role-based permission checks are the next task in
-this milestone.
+`WorkspaceMembershipGuard` and the route's declared permission is enforced by
+`WorkspacePermissionGuard`.
