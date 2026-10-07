@@ -3,7 +3,7 @@
 ## Status and Source of Truth
 
 This document describes the PostgreSQL persistence contract through Phase 8,
-Milestone 8.1, Task 1. It is a guide for contributors and reviewers. The
+Milestone 8.1, Task 3. It is a guide for contributors and reviewers. The
 executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
@@ -12,11 +12,11 @@ executable source of truth is:
   versioned PostgreSQL schema, including custom constraints and partial indexes.
 
 The NestJS API has a lazily initialized Prisma service, a workspace-scoped
-customer repository pattern, authentication endpoints, and revocable session
-persistence. Private password hashes are stored separately from public user data.
-Workspace membership and role checks are enforced for the initial workspace
-routes. Financial CRUD endpoints and audit-event writing remain in their planned
-milestones.
+customer repository pattern, authentication endpoints, revocable session
+persistence, and manual income/expense entry endpoints. Private password hashes
+are stored separately from public user data. Workspace membership and role checks
+are enforced for workspace-scoped routes. Audit-event writing remains in its
+planned milestone.
 
 ## Design Goals
 
@@ -85,6 +85,7 @@ PostgreSQL also protects important relationships with composite foreign keys:
 | `Payment` → `Invoice`                              | A payment cannot reference an invoice in a different workspace.     |
 | `IncomeExpenseEntry` → `Vendor`                    | An expense cannot reference a vendor in a different workspace.      |
 | `IncomeExpenseEntry` → `IncomeExpenseCategory`     | An entry cannot reference a category in a different workspace.      |
+| `IncomeExpenseEntry` exact lookup                  | A repository can select one entry with its `(workspaceId, id)` key. |
 | `BankTransaction` → `BankAccount`                  | A transaction cannot reference an account in a different workspace. |
 | `Reconciliation` → `BankTransaction` and `Payment` | A reconciliation cannot join facts from different workspaces.       |
 
@@ -180,9 +181,6 @@ The future NestJS service layer must enforce the following inside transactions
 where multiple records change:
 
 - Verify authentication and workspace role before every read or mutation.
-- Verify that an income or expense entry uses a category with the same
-  `IncomeExpenseType`; a foreign key can enforce shared workspace ownership but
-  cannot compare the type values stored in two different rows.
 - Validate allowed invoice status transitions and prevent payment overpayment.
 - Confirm that a reconciled bank transaction is eligible, represents an incoming
   amount, and matches the intended payment amount and currency.
@@ -229,12 +227,12 @@ financial schema because it bypasses reviewable migration history.
 
 ## Deliberately Not Modeled Yet
 
-- Category CRUD and category-type validation for income/expense writes (Phase 8)
+- Audited void/reversal workflow for income and expense entries
 - Attachment/file storage for receipts or income/expense evidence
 - CSV import source metadata beyond `BankTransaction.externalId`
 - Exchange rates and multi-currency conversion
 - A general ledger or tax-jurisdiction engine
-- API authorization, audit events, and reconciliation scoring behavior
+- Audit-event writing and reconciliation scoring behavior
 
 These omissions are intentional. Each becomes a separate task when its business
 rules and operational requirements are clear.

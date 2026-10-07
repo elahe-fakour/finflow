@@ -192,15 +192,15 @@ preserving a clear path to a production-oriented separation of concerns.
 
 ## Financial Design Principles
 
-When financial features are introduced:
+For financial features:
 
-- Monetary values will use integer minor units and an ISO currency code, not
+- Monetary values use integer minor units and an ISO currency code, not
   JavaScript floating-point arithmetic.
 - Money representation and arithmetic invariants are documented in
   [fintech-concepts.md](./fintech-concepts.md).
-- Financial business rules will live outside React components.
-- Multi-record financial changes will use database transactions.
-- Workspace access control will be enforced by the backend, not only hidden in the
+- Financial business rules live outside React components.
+- Multi-record financial changes use database transactions.
+- Workspace access control is enforced by the backend, not only hidden in the
   UI.
 - Important financial operations will create audit events.
 

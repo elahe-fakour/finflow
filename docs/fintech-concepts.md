@@ -171,8 +171,9 @@ status rule and is discarded on refresh; it is not a financial record.
 
 PostgreSQL now persists minor-unit amounts as `BIGINT` values with a currency code
 beside each independent monetary fact. Prisma returns those values to the API as
-TypeScript `bigint`; future JSON responses must serialize them deliberately.
-The API will validate the same domain invariants. Any workflow that records a
+TypeScript `bigint`; the income/expense API accepts and returns minor units as
+integer strings, converting with `BigInt` only inside the server. The API rejects
+decimal, zero, negative, and out-of-range values. Any workflow that records a
 payment and changes an invoice balance will run in a database transaction and
 create an audit event. See [database.md](./database.md) for the persistence model
 and database-enforced rules.

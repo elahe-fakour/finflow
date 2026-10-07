@@ -3,7 +3,7 @@
 ## Status
 
 This document defines the HTTP boundary applied by the NestJS API. It is
-intentionally small: it establishes a stable request and error contract before
+intentionally small: it establishes a stable request and error contract as
 financial feature endpoints are added.
 
 ## Versioning
@@ -174,3 +174,28 @@ maps a duplicate `(workspaceId, type, name)` to `409 CATEGORY_NAME_ALREADY_EXIST
 Deleting a category referenced by an income or expense entry returns
 `409 CATEGORY_IN_USE`; it does not silently delete or recategorize financial
 history.
+
+## Income and Expense Entry Endpoints
+
+Manual income and expense entries are also scoped below their workspace:
+
+| Endpoint                                                                | Permission              | Purpose                                                                                      |
+| ----------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| `GET /api/v1/workspaces/:workspaceId/income-expense-entries`            | `VIEW`                  | Lists entries with bounded pagination and optional date, type, vendor, and category filters. |
+| `POST /api/v1/workspaces/:workspaceId/income-expense-entries`           | `MANAGE_FINANCIAL_DATA` | Records one manual income or expense entry.                                                  |
+| `GET /api/v1/workspaces/:workspaceId/income-expense-entries/:entryId`   | `VIEW`                  | Reads one entry in the current workspace.                                                    |
+| `PATCH /api/v1/workspaces/:workspaceId/income-expense-entries/:entryId` | `MANAGE_FINANCIAL_DATA` | Updates a manual entry after revalidating its relationships.                                 |
+
+`amountMinorUnits` is a positive integer **string** in requests and responses.
+The service converts it to PostgreSQL `BIGINT` with `BigInt`; JSON never carries
+financial amounts as JavaScript floating-point values. FinFlow currently accepts
+only `USD`.
+
+`categoryId` is required when an entry is created. The category must be in the
+same workspace and have the same `INCOME` or `EXPENSE` type as the entry. A
+`vendorId`, when present, must be in the same workspace and is valid only for an
+expense. Dates use the calendar-only `YYYY-MM-DD` format.
+
+The list defaults to `page=1` and `pageSize=25`; `pageSize` is capped at `100`.
+Financial entries intentionally have no hard-delete endpoint. A future audited
+void/reversal workflow will preserve the original fact and its traceability.

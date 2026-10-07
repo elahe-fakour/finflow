@@ -282,6 +282,7 @@ model IncomeExpenseEntry {
   vendor    Vendor?                @relation(fields: [workspaceId, vendorId], references: [workspaceId, id], onDelete: Restrict)
   workspace Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
+  @@unique([workspaceId, id], map: "income_expense_entries_workspace_id_id_key")
   @@index([workspaceId, categoryId], map: "income_expense_entries_workspace_id_category_id_idx")
   @@index([workspaceId, occurredOn], map: "income_expense_entries_workspace_id_occurred_on_idx")
   @@index([workspaceId, type, occurredOn], map: "income_expense_entries_workspace_id_type_occurred_on_idx")
