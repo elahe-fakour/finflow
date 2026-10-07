@@ -15,5 +15,6 @@ import { WorkspacesService } from "./workspaces.service.js";
     WorkspaceMembershipGuard,
     WorkspacePermissionGuard,
   ],
+  exports: [WorkspacesRepository, WorkspaceMembershipGuard, WorkspacePermissionGuard],
 })
 export class WorkspacesModule {}

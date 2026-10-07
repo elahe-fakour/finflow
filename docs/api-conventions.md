@@ -156,3 +156,21 @@ the service retries the extremely unlikely generated-slug collision.
 This endpoint establishes ownership. Existing workspace access is verified by
 `WorkspaceMembershipGuard` and the route's declared permission is enforced by
 `WorkspacePermissionGuard`.
+
+## Income and Expense Category Endpoints
+
+Income and expense categories are scoped below their workspace:
+
+| Endpoint                                                                       | Permission              | Purpose                                                        |
+| ------------------------------------------------------------------------------ | ----------------------- | -------------------------------------------------------------- |
+| `GET /api/v1/workspaces/:workspaceId/income-expense-categories`                | `VIEW`                  | Lists a workspace's categories; `type` may filter the results. |
+| `POST /api/v1/workspaces/:workspaceId/income-expense-categories`               | `MANAGE_FINANCIAL_DATA` | Creates an `INCOME` or `EXPENSE` category.                     |
+| `GET /api/v1/workspaces/:workspaceId/income-expense-categories/:categoryId`    | `VIEW`                  | Reads one category in the current workspace.                   |
+| `PATCH /api/v1/workspaces/:workspaceId/income-expense-categories/:categoryId`  | `MANAGE_FINANCIAL_DATA` | Renames a category; its type is immutable.                     |
+| `DELETE /api/v1/workspaces/:workspaceId/income-expense-categories/:categoryId` | `MANAGE_FINANCIAL_DATA` | Deletes an unused category.                                    |
+
+The API trims category names, rejects blank names and unsupported types, and
+maps a duplicate `(workspaceId, type, name)` to `409 CATEGORY_NAME_ALREADY_EXISTS`.
+Deleting a category referenced by an income or expense entry returns
+`409 CATEGORY_IN_USE`; it does not silently delete or recategorize financial
+history.
