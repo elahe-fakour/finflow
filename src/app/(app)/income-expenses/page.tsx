@@ -5,6 +5,8 @@ import { getIncomeExpenseCategories } from "@/lib/income-expenses/income-expense
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
 import { FolderPlus } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Income & Expenses",
@@ -19,6 +21,11 @@ export default async function IncomeExpensesPage() {
       <section aria-labelledby="income-expenses-title">
         <PageHeader workspaceName={null} />
         <EmptyState
+          action={
+            <Button asChild>
+              <Link href="/onboarding">Create workspace</Link>
+            </Button>
+          }
           className="mt-8"
           description="A workspace is required before financial categories can be managed."
           icon={FolderPlus}
