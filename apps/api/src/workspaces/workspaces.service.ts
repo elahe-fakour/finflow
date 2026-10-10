@@ -99,6 +99,10 @@ export class WorkspacesService {
     };
   }
 
+  listForUser(user: AuthenticatedUser): Promise<AccessibleWorkspace[]> {
+    return this.workspacesRepository.listForUser(user.id);
+  }
+
   async renameForManager(
     access: WorkspaceAccess,
     input: RenameWorkspaceDto,

@@ -32,6 +32,10 @@ export type WorkspaceSummary = {
   createdAt: Date;
 };
 
+export type WorkspaceMembershipSummary = WorkspaceSummary & {
+  role: WorkspaceRole;
+};
+
 @Injectable()
 export class WorkspacesRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -81,6 +85,33 @@ export class WorkspacesRepository {
         role: true,
       },
     });
+  }
+
+  async listForUser(
+    userId: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<WorkspaceMembershipSummary[]> {
+    const memberships = await database.workspaceMembership.findMany({
+      where: { userId },
+      select: {
+        role: true,
+        workspace: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: {
+        workspace: {
+          name: "asc",
+        },
+      },
+    });
+
+    return memberships.map(({ role, workspace }) => ({ ...workspace, role }));
   }
 
   findById(

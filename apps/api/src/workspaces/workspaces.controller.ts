@@ -26,6 +26,11 @@ export class WorkspacesController {
     return this.workspacesService.createForOwner(owner, input);
   }
 
+  @Get()
+  list(@CurrentUser() user: AuthenticatedUser): Promise<AccessibleWorkspace[]> {
+    return this.workspacesService.listForUser(user);
+  }
+
   @Get(":workspaceId")
   @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
   @RequireWorkspacePermission(WorkspacePermission.VIEW)

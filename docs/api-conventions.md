@@ -157,6 +157,11 @@ This endpoint establishes ownership. Existing workspace access is verified by
 `WorkspaceMembershipGuard` and the route's declared permission is enforced by
 `WorkspacePermissionGuard`.
 
+`GET /api/v1/workspaces` returns only the workspaces where the authenticated
+user has a membership, ordered by workspace name. It includes the member's role
+for each workspace, so the web application can select an active workspace
+without treating a client-provided ID as authorization.
+
 ## Income and Expense Category Endpoints
 
 Income and expense categories are scoped below their workspace:
