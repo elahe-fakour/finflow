@@ -6,6 +6,7 @@ import { CustomersModule } from "./customers/customers.module.js";
 import { HealthModule } from "./health/health.module.js";
 import { IncomeExpenseCategoriesModule } from "./income-expense-categories/income-expense-categories.module.js";
 import { IncomeExpenseEntriesModule } from "./income-expense-entries/income-expense-entries.module.js";
+import { VendorsModule } from "./vendors/vendors.module.js";
 import { WorkspacesModule } from "./workspaces/workspaces.module.js";
 
 @Module({
@@ -25,6 +26,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
     WorkspacesModule,
     IncomeExpenseCategoriesModule,
     IncomeExpenseEntriesModule,
+    VendorsModule,
   ],
 })
 export class AppModule {}

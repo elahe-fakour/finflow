@@ -180,6 +180,16 @@ Deleting a category referenced by an income or expense entry returns
 `409 CATEGORY_IN_USE`; it does not silently delete or recategorize financial
 history.
 
+## Vendor Options for Expense Entries
+
+| Endpoint                                      | Permission | Purpose                                                              |
+| --------------------------------------------- | ---------- | -------------------------------------------------------------------- |
+| `GET /api/v1/workspaces/:workspaceId/vendors` | `VIEW`     | Lists the current workspace's vendor IDs and names, ordered by name. |
+
+This intentionally small read endpoint supplies the optional vendor selector
+when recording an expense. It returns only vendors from the authorized
+workspace; it does not introduce vendor creation or editing workflows.
+
 ## Income and Expense Entry Endpoints
 
 Manual income and expense entries are also scoped below their workspace:

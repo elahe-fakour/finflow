@@ -1,4 +1,5 @@
 import { CategoryManagement } from "@/components/income-expenses/category-management";
+import { ExpenseEntryForm } from "@/components/income-expenses/expense-entry-form";
 import { IncomeEntryForm } from "@/components/income-expenses/income-entry-form";
 import { IncomeExpenseEntryList } from "@/components/income-expenses/income-expense-entry-list";
 import { ErrorState } from "@/components/ui/error-state";
@@ -6,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import {
   getIncomeExpenseCategories,
   getIncomeExpenseEntries,
+  getVendorOptions,
 } from "@/lib/income-expenses/income-expense-categories";
 import {
   createEntryListPath,
@@ -51,9 +53,10 @@ export default async function IncomeExpensesPage({ searchParams }: IncomeExpense
     );
   }
 
-  const [categories, entries] = await Promise.all([
+  const [categories, entries, vendors] = await Promise.all([
     getIncomeExpenseCategories(workspace.id),
     getIncomeExpenseEntries(workspace.id, filters),
+    getVendorOptions(workspace.id),
   ]);
 
   if (categories === null) {
@@ -109,6 +112,20 @@ export default async function IncomeExpensesPage({ searchParams }: IncomeExpense
           key={categories.map((category) => category.id).join("-")}
           workspaceId={workspace.id}
         />
+      </div>
+      <div className="mt-10">
+        {vendors === null ? (
+          <ErrorState description="We couldn't load vendor options for this workspace. Please try again shortly." />
+        ) : (
+          <ExpenseEntryForm
+            canManage={workspace.role !== "MEMBER"}
+            categories={categories}
+            initialOccurredOn={new Date().toISOString().slice(0, 10)}
+            key={`${categories.map((category) => category.id).join("-")}-${vendors.map((vendor) => vendor.id).join("-")}`}
+            vendors={vendors}
+            workspaceId={workspace.id}
+          />
+        )}
       </div>
       <div className="mt-10">
         <IncomeExpenseEntryList categories={categories} entries={entries} filters={filters} />

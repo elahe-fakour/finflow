@@ -41,6 +41,11 @@ type PaginatedIncomeExpenseEntries = {
   totalPages: number;
 };
 
+type VendorOption = {
+  id: string;
+  name: string;
+};
+
 async function getIncomeExpenseCategories(
   workspaceId: string,
 ): Promise<IncomeExpenseCategory[] | null> {
@@ -121,10 +126,36 @@ async function getIncomeExpenseEntries(
   }
 }
 
-export { getIncomeExpenseCategories, getIncomeExpenseEntries };
+async function getVendorOptions(workspaceId: string): Promise<VendorOption[] | null> {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(sessionCookieName);
+  const headers = new Headers();
+
+  if (sessionCookie !== undefined) {
+    headers.set("Cookie", `${sessionCookieName}=${sessionCookie.value}`);
+  }
+
+  try {
+    const response = await fetch(
+      getApiUrl(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/vendors`),
+      { cache: "no-store", headers },
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as VendorOption[];
+  } catch {
+    return null;
+  }
+}
+
+export { getIncomeExpenseCategories, getIncomeExpenseEntries, getVendorOptions };
 export type {
   IncomeExpenseCategory,
   IncomeExpenseCategoryType,
   IncomeExpenseEntry,
   PaginatedIncomeExpenseEntries,
+  VendorOption,
 };
