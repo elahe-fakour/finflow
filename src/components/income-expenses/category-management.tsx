@@ -8,6 +8,7 @@ import type {
   IncomeExpenseCategoryType,
 } from "@/lib/income-expenses/income-expense-categories";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 type CategoryManagementProps = {
@@ -34,6 +35,7 @@ function CategoryManagement({
   const [editingName, setEditingName] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const incomeCategories = categories.filter((category) => category.type === "INCOME");
   const expenseCategories = categories.filter((category) => category.type === "EXPENSE");
@@ -63,6 +65,7 @@ function CategoryManagement({
       );
       setDraftNames((currentNames) => ({ ...currentNames, [type]: "" }));
       setFeedback(`${category.name} was added.`);
+      router.refresh();
     });
   }
 
@@ -96,6 +99,7 @@ function CategoryManagement({
       setEditingCategoryId(null);
       setEditingName("");
       setFeedback(`${updatedCategory.name} was updated.`);
+      router.refresh();
     });
   }
 
@@ -119,6 +123,7 @@ function CategoryManagement({
         currentCategories.filter((currentCategory) => currentCategory.id !== category.id),
       );
       setFeedback(`${category.name} was deleted.`);
+      router.refresh();
     });
   }
 

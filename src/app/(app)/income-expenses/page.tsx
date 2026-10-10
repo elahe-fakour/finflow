@@ -1,4 +1,5 @@
 import { CategoryManagement } from "@/components/income-expenses/category-management";
+import { IncomeEntryForm } from "@/components/income-expenses/income-entry-form";
 import { IncomeExpenseEntryList } from "@/components/income-expenses/income-expense-entry-list";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -97,6 +98,15 @@ export default async function IncomeExpensesPage({ searchParams }: IncomeExpense
         <CategoryManagement
           canManage={workspace.role !== "MEMBER"}
           initialCategories={categories}
+          workspaceId={workspace.id}
+        />
+      </div>
+      <div className="mt-10">
+        <IncomeEntryForm
+          canManage={workspace.role !== "MEMBER"}
+          categories={categories}
+          initialOccurredOn={new Date().toISOString().slice(0, 10)}
+          key={categories.map((category) => category.id).join("-")}
           workspaceId={workspace.id}
         />
       </div>
