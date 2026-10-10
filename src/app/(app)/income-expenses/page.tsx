@@ -1,11 +1,21 @@
 import { CategoryManagement } from "@/components/income-expenses/category-management";
+import { IncomeExpenseEntryList } from "@/components/income-expenses/income-expense-entry-list";
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getIncomeExpenseCategories } from "@/lib/income-expenses/income-expense-categories";
+import {
+  getIncomeExpenseCategories,
+  getIncomeExpenseEntries,
+} from "@/lib/income-expenses/income-expense-categories";
+import {
+  createEntryListPath,
+  parseEntryListFilters,
+  type EntryListSearchParams,
+} from "@/lib/income-expenses/entry-list-filters";
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
 import { FolderPlus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -13,8 +23,13 @@ export const metadata: Metadata = {
   description: "Manage income and expense categories in FinFlow.",
 };
 
-export default async function IncomeExpensesPage() {
+type IncomeExpensesPageProps = {
+  searchParams: Promise<EntryListSearchParams>;
+};
+
+export default async function IncomeExpensesPage({ searchParams }: IncomeExpensesPageProps) {
   const workspace = await getActiveWorkspace();
+  const filters = parseEntryListFilters(await searchParams);
 
   if (workspace === null) {
     return (
@@ -35,7 +50,10 @@ export default async function IncomeExpensesPage() {
     );
   }
 
-  const categories = await getIncomeExpenseCategories(workspace.id);
+  const [categories, entries] = await Promise.all([
+    getIncomeExpenseCategories(workspace.id),
+    getIncomeExpenseEntries(workspace.id, filters),
+  ]);
 
   if (categories === null) {
     return (
@@ -49,6 +67,29 @@ export default async function IncomeExpensesPage() {
     );
   }
 
+  if (entries === null) {
+    return (
+      <section aria-labelledby="income-expenses-title">
+        <PageHeader workspaceName={workspace.name} />
+        <div className="mt-8">
+          <CategoryManagement
+            canManage={workspace.role !== "MEMBER"}
+            initialCategories={categories}
+            workspaceId={workspace.id}
+          />
+        </div>
+        <ErrorState
+          className="mt-10"
+          description="We couldn't load income and expense activity for this workspace. Please try again shortly."
+        />
+      </section>
+    );
+  }
+
+  if (entries.totalPages > 0 && filters.page > entries.totalPages) {
+    redirect(createEntryListPath(filters, entries.totalPages));
+  }
+
   return (
     <section aria-labelledby="income-expenses-title">
       <PageHeader workspaceName={workspace.name} />
@@ -58,6 +99,9 @@ export default async function IncomeExpensesPage() {
           initialCategories={categories}
           workspaceId={workspace.id}
         />
+      </div>
+      <div className="mt-10">
+        <IncomeExpenseEntryList categories={categories} entries={entries} filters={filters} />
       </div>
     </section>
   );
