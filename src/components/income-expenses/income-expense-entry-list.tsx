@@ -1,27 +1,47 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IncomeExpenseEntryEditForm } from "@/components/income-expenses/income-expense-entry-edit-form";
 import type {
   IncomeExpenseCategory,
   IncomeExpenseEntry,
   PaginatedIncomeExpenseEntries,
+  VendorOption,
 } from "@/lib/income-expenses/income-expense-categories";
 import {
   createEntryListPath,
   type EntryListFilters,
 } from "@/lib/income-expenses/entry-list-filters";
 import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
-import { ArrowLeft, ArrowRight, FileSearch } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileSearch, Pencil } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type IncomeExpenseEntryListProps = {
+  canManage: boolean;
   categories: IncomeExpenseCategory[];
   entries: PaginatedIncomeExpenseEntries;
   filters: EntryListFilters;
+  vendors: VendorOption[];
+  workspaceId: string;
 };
 
-function IncomeExpenseEntryList({ categories, entries, filters }: IncomeExpenseEntryListProps) {
+function IncomeExpenseEntryList({
+  canManage,
+  categories,
+  entries,
+  filters,
+  vendors,
+  workspaceId,
+}: IncomeExpenseEntryListProps) {
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const router = useRouter();
+  const editingEntry = entries.data.find((entry) => entry.id === editingEntryId) ?? null;
+
   return (
     <section aria-labelledby="entries-title" className="space-y-4">
       <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -47,8 +67,20 @@ function IncomeExpenseEntryList({ categories, entries, filters }: IncomeExpenseE
           title="No matching entries"
         />
       ) : (
-        <EntryTable entries={entries.data} />
+        <EntryTable canManage={canManage} entries={entries.data} onEdit={setEditingEntryId} />
       )}
+
+      {editingEntry ? (
+        <IncomeExpenseEntryEditForm
+          categories={categories}
+          entry={editingEntry}
+          key={editingEntry.id}
+          onCancel={() => setEditingEntryId(null)}
+          onSaved={() => router.refresh()}
+          vendors={vendors}
+          workspaceId={workspaceId}
+        />
+      ) : null}
 
       <Pagination entries={entries} filters={filters} />
     </section>
@@ -148,7 +180,15 @@ function FilterField({
   );
 }
 
-function EntryTable({ entries }: { entries: IncomeExpenseEntry[] }) {
+function EntryTable({
+  canManage,
+  entries,
+  onEdit,
+}: {
+  canManage: boolean;
+  entries: IncomeExpenseEntry[];
+  onEdit: (entryId: string) => void;
+}) {
   return (
     <div className="overflow-x-auto rounded-card border border-border bg-card">
       <table className="w-full min-w-[46rem] text-left text-sm">
@@ -169,6 +209,11 @@ function EntryTable({ entries }: { entries: IncomeExpenseEntry[] }) {
             <th className="px-4 py-3 text-right font-medium" scope="col">
               Amount
             </th>
+            {canManage ? (
+              <th className="px-4 py-3 text-right font-medium" scope="col">
+                Actions
+              </th>
+            ) : null}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -202,6 +247,20 @@ function EntryTable({ entries }: { entries: IncomeExpenseEntry[] }) {
                   {formatUsdMinorUnits(entry.amountMinorUnits)}
                 </span>
               </td>
+              {canManage ? (
+                <td className="px-4 py-3 text-right">
+                  <Button
+                    aria-label={`Edit ${entry.description}`}
+                    onClick={() => onEdit(entry.id)}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    <Pencil aria-hidden="true" />
+                    Edit
+                  </Button>
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>

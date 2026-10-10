@@ -214,3 +214,8 @@ expense. Dates use the calendar-only `YYYY-MM-DD` format.
 The list defaults to `page=1` and `pageSize=25`; `pageSize` is capped at `100`.
 Financial entries intentionally have no hard-delete endpoint. A future audited
 void/reversal workflow will preserve the original fact and its traceability.
+
+The web application currently exposes an edit flow for permitted workspace
+members. It uses `PATCH` and repeats the same category, vendor, currency, date,
+and money validation as creation. It does not expose a delete control because a
+financial correction must remain traceable.

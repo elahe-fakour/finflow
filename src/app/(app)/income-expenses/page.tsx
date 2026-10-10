@@ -128,7 +128,14 @@ export default async function IncomeExpensesPage({ searchParams }: IncomeExpense
         )}
       </div>
       <div className="mt-10">
-        <IncomeExpenseEntryList categories={categories} entries={entries} filters={filters} />
+        <IncomeExpenseEntryList
+          canManage={workspace.role !== "MEMBER"}
+          categories={categories}
+          entries={entries}
+          filters={filters}
+          vendors={vendors ?? []}
+          workspaceId={workspace.id}
+        />
       </div>
     </section>
   );

@@ -308,7 +308,8 @@ validation, authorization, and error states.
 2. Connect income/expense list UI with filters and paging.
 3. Add create income flow.
 4. Add create expense flow with vendor selection.
-5. Add edit/delete flows with confirmation, error, and empty states.
+5. Add entry editing with confirmation, error, and empty states; defer deletion
+   to an audited void/reversal workflow.
 
 ### Phase 9 — Bank Accounts & Transactions
 
