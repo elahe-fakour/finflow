@@ -219,3 +219,24 @@ The web application currently exposes an edit flow for permitted workspace
 members. It uses `PATCH` and repeats the same category, vendor, currency, date,
 and money validation as creation. It does not expose a delete control because a
 financial correction must remain traceable.
+
+## Bank Account Endpoints
+
+Bank accounts are scoped below their workspace:
+
+| Endpoint                                                             | Permission              | Purpose                                                     |
+| -------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------- |
+| `GET /api/v1/workspaces/:workspaceId/bank-accounts`                  | `VIEW`                  | Lists accounts; `status` can filter `ACTIVE` or `ARCHIVED`. |
+| `POST /api/v1/workspaces/:workspaceId/bank-accounts`                 | `MANAGE_FINANCIAL_DATA` | Creates an active bank, cash, or payment processor account. |
+| `GET /api/v1/workspaces/:workspaceId/bank-accounts/:bankAccountId`   | `VIEW`                  | Reads one account in the current workspace.                 |
+| `PATCH /api/v1/workspaces/:workspaceId/bank-accounts/:bankAccountId` | `MANAGE_FINANCIAL_DATA` | Updates display details or archives/restores an account.    |
+
+The current MVP supports only `USD`. Monetary opening balances are signed
+integer **minor-unit strings** in requests and responses. A non-zero opening
+balance requires its calendar date, because a balance without an effective date
+is not meaningful financial information.
+
+An account's type, currency, opening balance, and opening-balance date are
+immutable after creation. `PATCH` may update the display name, institution,
+last four digits, or status. Accounts are archived with `status: ARCHIVED`;
+they are not hard-deleted because bank transactions will depend on them.
