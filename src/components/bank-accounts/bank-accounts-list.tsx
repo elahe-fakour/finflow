@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { BankAccount, BankAccountType } from "@/lib/bank-accounts/bank-accounts";
@@ -14,9 +15,11 @@ import {
 
 type BankAccountsListProps = {
   accounts: BankAccount[];
+  canManage: boolean;
+  onEdit: (account: BankAccount) => void;
 };
 
-function BankAccountsList({ accounts }: BankAccountsListProps) {
+function BankAccountsList({ accounts, canManage, onEdit }: BankAccountsListProps) {
   const activeAccounts = accounts.filter((account) => account.status === "ACTIVE");
   const archivedAccounts = accounts.length - activeAccounts.length;
   const totalActiveOpeningBalance = activeAccounts.reduce(
@@ -60,14 +63,27 @@ function BankAccountsList({ accounts }: BankAccountsListProps) {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {accounts.map((account) => (
-          <BankAccountCard account={account} key={account.id} />
+          <BankAccountCard
+            account={account}
+            canManage={canManage}
+            key={account.id}
+            onEdit={onEdit}
+          />
         ))}
       </div>
     </section>
   );
 }
 
-function BankAccountCard({ account }: { account: BankAccount }) {
+function BankAccountCard({
+  account,
+  canManage,
+  onEdit,
+}: {
+  account: BankAccount;
+  canManage: boolean;
+  onEdit: (account: BankAccount) => void;
+}) {
   const Icon = iconByAccountType[account.type];
   const isArchived = account.status === "ARCHIVED";
 
@@ -109,6 +125,16 @@ function BankAccountCard({ account }: { account: BankAccount }) {
           />
           <Detail label="Currency" value={account.currency} />
         </dl>
+        {canManage ? (
+          <Button
+            className="w-full"
+            onClick={() => onEdit(account)}
+            type="button"
+            variant="outline"
+          >
+            Edit account
+          </Button>
+        ) : null}
       </CardContent>
     </Card>
   );

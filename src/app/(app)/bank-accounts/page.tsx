@@ -1,4 +1,4 @@
-import { BankAccountsList } from "@/components/bank-accounts/bank-accounts-list";
+import { BankAccountsWorkspace } from "@/components/bank-accounts/bank-accounts-workspace";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -52,7 +52,11 @@ export default async function BankAccountsPage() {
   return (
     <section aria-labelledby="bank-accounts-title">
       <PageHeader workspaceName={workspace.name} />
-      <BankAccountsList accounts={accounts} />
+      <BankAccountsWorkspace
+        accounts={accounts}
+        canManage={workspace.role !== "MEMBER"}
+        workspaceId={workspace.id}
+      />
     </section>
   );
 }
