@@ -10,8 +10,13 @@ describe("formatUsdMinorUnits", () => {
     expect(formatUsdMinorUnits("9007199254740993")).toBe("$90,071,992,547,409.93");
   });
 
-  it("rejects non-positive and non-integer inputs", () => {
-    expect(() => formatUsdMinorUnits("0")).toThrow("positive integer string");
-    expect(() => formatUsdMinorUnits("12.50")).toThrow("positive integer string");
+  it("formats zero and negative values without a floating-point conversion", () => {
+    expect(formatUsdMinorUnits("0")).toBe("$0.00");
+    expect(formatUsdMinorUnits("-1250")).toBe("-$12.50");
+  });
+
+  it("rejects decimal and malformed integer inputs", () => {
+    expect(() => formatUsdMinorUnits("12.50")).toThrow("integer string");
+    expect(() => formatUsdMinorUnits("-0")).toThrow("integer string");
   });
 });
