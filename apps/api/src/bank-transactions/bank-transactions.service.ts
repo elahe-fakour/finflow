@@ -8,9 +8,11 @@ import { BankAccountStatus, Prisma, type BankTransaction } from "../generated/pr
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
 import {
   BankTransactionsRepository,
+  type BankTransactionRecord,
   type CreateBankTransactionInput,
 } from "./bank-transactions.repository.js";
 import type { CreateBankTransactionDto } from "./dto/create-bank-transaction.dto.js";
+import { type ListBankTransactionsDto } from "./dto/list-bank-transactions.dto.js";
 
 const MAX_POSTGRES_BIGINT = 9_223_372_036_854_775_807n;
 const IDEMPOTENCY_KEY_PATTERN =
@@ -29,6 +31,22 @@ export type BankTransactionResponse = {
 
 export type CreateBankTransactionResponse = BankTransactionResponse & {
   idempotencyReplayed: boolean;
+};
+
+export type PaginatedBankTransactions = {
+  data: BankTransactionListItem[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type BankTransactionListItem = BankTransactionResponse & {
+  bankAccount: {
+    currency: string;
+    id: string;
+    name: string;
+  };
 };
 
 @Injectable()
@@ -91,6 +109,29 @@ export class BankTransactionsService {
       return serializeIdempotentResult(concurrentTransaction, persistenceInput);
     }
   }
+
+  async list(
+    scope: WorkspaceScope,
+    input: ListBankTransactionsDto,
+  ): Promise<PaginatedBankTransactions> {
+    const dateRange = validateDateRange(input.from, input.to);
+    const result = await this.bankTransactionsRepository.list(scope, {
+      bankAccountId: input.bankAccountId,
+      direction: input.direction,
+      ...dateRange,
+      page: input.page,
+      pageSize: input.pageSize,
+      q: input.q,
+    });
+
+    return {
+      data: result.transactions.map(serializeBankTransactionListItem),
+      page: input.page,
+      pageSize: input.pageSize,
+      totalItems: result.totalItems,
+      totalPages: Math.ceil(result.totalItems / input.pageSize),
+    };
+  }
 }
 
 function toCreateInput(
@@ -132,6 +173,19 @@ function serializeBankTransaction(transaction: BankTransaction): BankTransaction
     reference: transaction.reference,
     createdAt: transaction.createdAt.toISOString(),
     updatedAt: transaction.updatedAt.toISOString(),
+  };
+}
+
+function serializeBankTransactionListItem(
+  transaction: BankTransactionRecord,
+): BankTransactionListItem {
+  return {
+    ...serializeBankTransaction(transaction),
+    bankAccount: {
+      id: transaction.bankAccount.id,
+      name: transaction.bankAccount.name,
+      currency: transaction.bankAccount.currency,
+    },
   };
 }
 
@@ -197,6 +251,23 @@ function parseCalendarDate(value: string): Date {
   }
 
   return date;
+}
+
+function validateDateRange(
+  from: string | undefined,
+  to: string | undefined,
+): { from?: Date; to?: Date } {
+  const parsedFrom = from === undefined ? undefined : parseCalendarDate(from);
+  const parsedTo = to === undefined ? undefined : parseCalendarDate(to);
+
+  if (parsedFrom !== undefined && parsedTo !== undefined && parsedFrom > parsedTo) {
+    throw new BadRequestException({
+      code: "INVALID_DATE_RANGE",
+      message: "from must be on or before to.",
+    });
+  }
+
+  return { from: parsedFrom, to: parsedTo };
 }
 
 function toCalendarDate(value: Date): string {

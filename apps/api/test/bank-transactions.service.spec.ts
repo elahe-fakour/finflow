@@ -101,6 +101,52 @@ describe("BankTransactionsService", () => {
       code: "IDEMPOTENCY_KEY_REQUIRED",
     });
   });
+
+  it("lists signed transactions with account display data and pagination", async () => {
+    const list = vi.fn().mockResolvedValue({
+      transactions: [createBankTransactionRecord()],
+      totalItems: 26,
+    });
+    const service = createService({ list });
+
+    await expect(
+      service.list(scope, {
+        direction: "OUTFLOW",
+        page: 2,
+        pageSize: 25,
+        q: "contractor",
+      }),
+    ).resolves.toMatchObject({
+      data: [
+        {
+          amountMinorUnits: "-125050",
+          bankAccount: { id: bankAccountId, name: "Operating account", currency: "USD" },
+        },
+      ],
+      page: 2,
+      totalItems: 26,
+      totalPages: 2,
+    });
+    expect(list).toHaveBeenCalledWith(
+      scope,
+      expect.objectContaining({ direction: "OUTFLOW", page: 2, pageSize: 25, q: "contractor" }),
+    );
+  });
+
+  it("rejects an inverted transaction date range before querying the database", async () => {
+    const list = vi.fn();
+    const service = createService({ list });
+
+    const error = await service
+      .list(scope, { from: "2026-10-11", page: 1, pageSize: 25, to: "2026-10-01" })
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(BadRequestException);
+    expect((error as BadRequestException).getResponse()).toMatchObject({
+      code: "INVALID_DATE_RANGE",
+    });
+    expect(list).not.toHaveBeenCalled();
+  });
 });
 
 function createService(repository: Record<string, ReturnType<typeof vi.fn>>) {
@@ -152,5 +198,16 @@ function createBankTransaction(): BankTransaction {
     reference: "ACH-4242",
     createdAt: now,
     updatedAt: now,
+  };
+}
+
+function createBankTransactionRecord() {
+  return {
+    ...createBankTransaction(),
+    bankAccount: {
+      currency: "USD",
+      id: bankAccountId,
+      name: "Operating account",
+    },
   };
 }

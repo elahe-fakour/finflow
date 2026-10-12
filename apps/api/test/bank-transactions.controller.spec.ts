@@ -5,14 +5,17 @@ import { WorkspacePermission } from "../src/workspaces/workspace-permissions.js"
 import { describe, expect, it } from "vitest";
 
 describe("BankTransactionsController", () => {
-  it("requires financial-data permission to create a transaction", () => {
+  it.each([
+    ["list", WorkspacePermission.VIEW],
+    ["create", WorkspacePermission.MANAGE_FINANCIAL_DATA],
+  ] as const)("requires %s authorization", (method, permission) => {
     const reflector = new Reflector();
 
     expect(
       reflector.getAllAndOverride(WORKSPACE_PERMISSION_KEY, [
-        BankTransactionsController.prototype.create,
+        BankTransactionsController.prototype[method],
         BankTransactionsController,
       ]),
-    ).toBe(WorkspacePermission.MANAGE_FINANCIAL_DATA);
+    ).toBe(permission);
   });
 });

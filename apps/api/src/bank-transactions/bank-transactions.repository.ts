@@ -1,7 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import type { BankAccount, BankTransaction, PrismaClient } from "../generated/prisma/client.js";
+import type {
+  BankAccount,
+  BankTransaction,
+  Prisma,
+  PrismaClient,
+} from "../generated/prisma/client.js";
 import { PrismaService } from "../database/prisma.service.js";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
+import type { BankTransactionDirection } from "./dto/list-bank-transactions.dto.js";
 
 type BankTransactionQueryClient = Pick<PrismaClient, "bankAccount" | "bankTransaction">;
 
@@ -14,6 +20,30 @@ export type CreateBankTransactionInput = {
   reference: string | null;
   transactionDate: Date;
 };
+
+export type BankTransactionListInput = {
+  bankAccountId?: string;
+  direction?: BankTransactionDirection;
+  from?: Date;
+  page: number;
+  pageSize: number;
+  q?: string;
+  to?: Date;
+};
+
+export type BankTransactionRecord = BankTransaction & {
+  bankAccount: Pick<BankAccount, "currency" | "id" | "name">;
+};
+
+const transactionRelations = {
+  bankAccount: {
+    select: {
+      currency: true,
+      id: true,
+      name: true,
+    },
+  },
+} as const;
 
 @Injectable()
 export class BankTransactionsRepository {
@@ -32,6 +62,26 @@ export class BankTransactionsRepository {
         },
       },
     });
+  }
+
+  async list(
+    scope: WorkspaceScope,
+    input: BankTransactionListInput,
+    database: BankTransactionQueryClient = this.prisma.database,
+  ): Promise<{ transactions: BankTransactionRecord[]; totalItems: number }> {
+    const where = createTransactionWhere(scope, input);
+    const [transactions, totalItems] = await Promise.all([
+      database.bankTransaction.findMany({
+        where,
+        include: transactionRelations,
+        orderBy: [{ transactionDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
+      }),
+      database.bankTransaction.count({ where }),
+    ]);
+
+    return { transactions, totalItems };
   }
 
   findByIdempotencyKey(
@@ -61,4 +111,35 @@ export class BankTransactionsRepository {
       },
     });
   }
+}
+
+function createTransactionWhere(
+  scope: WorkspaceScope,
+  input: BankTransactionListInput,
+): Prisma.BankTransactionWhereInput {
+  return {
+    workspaceId: scope.workspaceId,
+    ...(input.bankAccountId === undefined ? {} : { bankAccountId: input.bankAccountId }),
+    ...(input.direction === undefined
+      ? {}
+      : {
+          amountMinorUnits: input.direction === "INFLOW" ? { gt: 0n } : { lt: 0n },
+        }),
+    ...(input.from === undefined && input.to === undefined
+      ? {}
+      : {
+          transactionDate: {
+            ...(input.from === undefined ? {} : { gte: input.from }),
+            ...(input.to === undefined ? {} : { lte: input.to }),
+          },
+        }),
+    ...(input.q === undefined
+      ? {}
+      : {
+          OR: [
+            { description: { contains: input.q, mode: "insensitive" } },
+            { reference: { contains: input.q, mode: "insensitive" } },
+          ],
+        }),
+  };
 }

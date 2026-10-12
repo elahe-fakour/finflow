@@ -1,6 +1,7 @@
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { CreateBankTransactionDto } from "../src/bank-transactions/dto/create-bank-transaction.dto.js";
+import { ListBankTransactionsDto } from "../src/bank-transactions/dto/list-bank-transactions.dto.js";
 import { describe, expect, it } from "vitest";
 
 describe("bank transaction DTOs", () => {
@@ -31,5 +32,20 @@ describe("bank transaction DTOs", () => {
     expect(errors.map((error) => error.property)).toEqual(
       expect.arrayContaining(["amountMinorUnits", "transactionDate"]),
     );
+  });
+
+  it("parses valid list filters and pagination values", async () => {
+    const input = plainToInstance(ListBankTransactionsDto, {
+      bankAccountId: "6efc89d9-c720-45f6-82cd-ee29e80314b5",
+      direction: "OUTFLOW",
+      from: "2026-10-01",
+      page: "2",
+      pageSize: "50",
+      q: "  Stripe  ",
+      to: "2026-10-11",
+    });
+
+    await expect(validate(input)).resolves.toEqual([]);
+    expect(input).toMatchObject({ page: 2, pageSize: 50, q: "Stripe" });
   });
 });

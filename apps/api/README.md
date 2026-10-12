@@ -41,6 +41,10 @@ header containing a UUID. Retrying the same request returns the original
 transaction with `idempotencyReplayed: true`; reusing a key with different
 financial details is rejected.
 
+`GET /api/v1/workspaces/:workspaceId/bank-transactions` lists the workspace's
+bank activity with database-backed search, account, direction, date-range, and
+pagination filters. It requires the `VIEW` workspace permission.
+
 From the repository root:
 
 ```bash

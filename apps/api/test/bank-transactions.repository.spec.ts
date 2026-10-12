@@ -42,6 +42,47 @@ describe("BankTransactionsRepository", () => {
       data: { workspaceId: scope.workspaceId, ...input },
     });
   });
+
+  it("queries only the authorized workspace with search, direction, date, and account filters", async () => {
+    const count = vi.fn().mockResolvedValue(0);
+    const findMany = vi.fn().mockResolvedValue([]);
+    const repository = createRepository({}, { count, findMany });
+
+    await repository.list(scope, {
+      bankAccountId,
+      direction: "OUTFLOW",
+      from: new Date("2026-10-01T00:00:00.000Z"),
+      page: 2,
+      pageSize: 25,
+      q: "Stripe",
+      to: new Date("2026-10-11T00:00:00.000Z"),
+    });
+
+    const expectedWhere = {
+      workspaceId: scope.workspaceId,
+      bankAccountId,
+      amountMinorUnits: { lt: 0n },
+      transactionDate: {
+        gte: new Date("2026-10-01T00:00:00.000Z"),
+        lte: new Date("2026-10-11T00:00:00.000Z"),
+      },
+      OR: [
+        { description: { contains: "Stripe", mode: "insensitive" } },
+        { reference: { contains: "Stripe", mode: "insensitive" } },
+      ],
+    };
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      include: {
+        bankAccount: { select: { currency: true, id: true, name: true } },
+      },
+      orderBy: [{ transactionDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      skip: 25,
+      take: 25,
+    });
+    expect(count).toHaveBeenCalledWith({ where: expectedWhere });
+  });
 });
 
 function createRepository(
