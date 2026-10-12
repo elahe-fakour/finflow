@@ -15,9 +15,14 @@ async function forwardApiRequest(
 
   const headers = createSessionHeaders(request);
   const contentType = request.headers.get("Content-Type");
+  const idempotencyKey = request.headers.get("Idempotency-Key");
 
   if (contentType !== null) {
     headers.set("Content-Type", contentType);
+  }
+
+  if (idempotencyKey !== null) {
+    headers.set("Idempotency-Key", idempotencyKey);
   }
 
   const body = method === "DELETE" ? undefined : await request.text();

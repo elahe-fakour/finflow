@@ -1,4 +1,5 @@
 import { BankTransactionList } from "@/components/bank-transactions/bank-transaction-list";
+import { CreateBankTransactionForm } from "@/components/bank-transactions/create-bank-transaction-form";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -68,9 +69,27 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
     redirect(createBankTransactionListPath(filters, transactions.totalPages));
   }
 
+  const activeAccounts = accounts.filter((account) => account.status === "ACTIVE");
+
   return (
     <section aria-labelledby="transactions-title">
       <PageHeader workspaceName={workspace.name} />
+      <div className="mt-8">
+        {workspace.role === "MEMBER" ? null : activeAccounts.length === 0 ? (
+          <EmptyState
+            action={
+              <Button asChild>
+                <Link href="/bank-accounts">Add bank account</Link>
+              </Button>
+            }
+            description="Create an active bank account before recording manual transaction activity."
+            icon={FolderPlus}
+            title="No active bank accounts"
+          />
+        ) : (
+          <CreateBankTransactionForm accounts={activeAccounts} workspaceId={workspace.id} />
+        )}
+      </div>
       <BankTransactionList accounts={accounts} filters={filters} transactions={transactions} />
     </section>
   );

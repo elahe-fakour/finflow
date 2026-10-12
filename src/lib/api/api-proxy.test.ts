@@ -22,6 +22,7 @@ describe("API BFF writes", () => {
         headers: {
           "Content-Type": "application/json",
           Cookie: "__Host-sid=active-session; unrelated=value",
+          "Idempotency-Key": "e3268a34-1814-41d1-904f-2328b67d473a",
           Origin: "http://localhost:3000",
         },
         method: "POST",
@@ -40,6 +41,9 @@ describe("API BFF writes", () => {
       expect.any(Object),
     );
     expect(new Headers(requestOptions.headers).get("Cookie")).toBe("__Host-sid=active-session");
+    expect(new Headers(requestOptions.headers).get("Idempotency-Key")).toBe(
+      "e3268a34-1814-41d1-904f-2328b67d473a",
+    );
     expect(requestOptions.body).toBe(JSON.stringify({ name: "Consulting", type: "INCOME" }));
     expect(await response.json()).toEqual({ id: "category-1", name: "Consulting" });
   });
