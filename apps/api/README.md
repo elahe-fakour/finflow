@@ -34,6 +34,13 @@ money in and negative for money out. A bank-account balance will later be derive
 from its opening balance and transactions, rather than duplicated in a mutable
 `currentBalance` column.
 
+Manual bank transaction creation uses
+`POST /api/v1/workspaces/:workspaceId/bank-transactions`. It requires the
+`MANAGE_FINANCIAL_DATA` workspace permission and an `Idempotency-Key` request
+header containing a UUID. Retrying the same request returns the original
+transaction with `idempotencyReplayed: true`; reusing a key with different
+financial details is rejected.
+
 From the repository root:
 
 ```bash
