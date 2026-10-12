@@ -206,7 +206,12 @@ function TransactionTable({ transactions }: { transactions: BankTransaction[] })
                   {transaction.transactionDate}
                 </td>
                 <td className="max-w-80 px-4 py-3">
-                  <p className="truncate font-medium text-foreground">{transaction.description}</p>
+                  <Link
+                    className="truncate font-medium text-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    href={`/transactions/${transaction.id}`}
+                  >
+                    {transaction.description}
+                  </Link>
                   {transaction.reference ? (
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {transaction.reference}

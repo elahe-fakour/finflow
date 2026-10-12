@@ -13,6 +13,11 @@ type BankTransaction = {
     name: string;
   };
   bankAccountId: string;
+  category: {
+    id: string;
+    name: string;
+    type: "EXPENSE" | "INCOME";
+  } | null;
   createdAt: string;
   description: string;
   id: string;
@@ -83,5 +88,35 @@ async function getBankTransactions(
   }
 }
 
-export { getBankTransactions };
+async function getBankTransaction(
+  workspaceId: string,
+  transactionId: string,
+): Promise<BankTransaction | null> {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(sessionCookieName);
+  const headers = new Headers();
+
+  if (sessionCookie !== undefined) {
+    headers.set("Cookie", `${sessionCookieName}=${sessionCookie.value}`);
+  }
+
+  try {
+    const response = await fetch(
+      getApiUrl(
+        `/api/v1/workspaces/${encodeURIComponent(workspaceId)}/bank-transactions/${encodeURIComponent(transactionId)}`,
+      ),
+      { cache: "no-store", headers },
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as BankTransaction;
+  } catch {
+    return null;
+  }
+}
+
+export { getBankTransaction, getBankTransactions };
 export type { BankTransaction, PaginatedBankTransactions };

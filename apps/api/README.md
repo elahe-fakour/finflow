@@ -45,6 +45,14 @@ financial details is rejected.
 bank activity with database-backed search, account, direction, date-range, and
 pagination filters. It requires the `VIEW` workspace permission.
 
+`GET /api/v1/workspaces/:workspaceId/bank-transactions/:bankTransactionId`
+returns one transaction with its bank account and optional reporting category.
+`PATCH /api/v1/workspaces/:workspaceId/bank-transactions/:bankTransactionId/category`
+assigns or clears that category and requires `MANAGE_FINANCIAL_DATA`. The API
+only accepts an `INCOME` category for a positive transaction and an `EXPENSE`
+category for a negative transaction, preventing mismatched financial
+classification at the backend boundary.
+
 From the repository root:
 
 ```bash

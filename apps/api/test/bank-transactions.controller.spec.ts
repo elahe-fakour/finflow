@@ -7,6 +7,8 @@ import { describe, expect, it } from "vitest";
 describe("BankTransactionsController", () => {
   it.each([
     ["list", WorkspacePermission.VIEW],
+    ["getById", WorkspacePermission.VIEW],
+    ["assignCategory", WorkspacePermission.MANAGE_FINANCIAL_DATA],
     ["create", WorkspacePermission.MANAGE_FINANCIAL_DATA],
   ] as const)("requires %s authorization", (method, permission) => {
     const reflector = new Reflector();

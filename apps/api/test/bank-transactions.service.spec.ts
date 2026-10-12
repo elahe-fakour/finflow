@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException } from "@nestjs/common";
 import {
   BankAccountStatus,
   BankAccountType,
+  IncomeExpenseType,
   type BankAccount,
   type BankTransaction,
 } from "../src/generated/prisma/client.js";
@@ -147,6 +148,49 @@ describe("BankTransactionsService", () => {
     });
     expect(list).not.toHaveBeenCalled();
   });
+
+  it("assigns a matching expense category to an outflow", async () => {
+    const updateCategory = vi
+      .fn()
+      .mockResolvedValue(createBankTransactionRecord({ category: createCategory() }));
+    const service = createService({
+      findById: vi.fn().mockResolvedValue(createBankTransactionRecord()),
+      findCategory: vi.fn().mockResolvedValue(createCategory()),
+      updateCategory,
+    });
+
+    await expect(
+      service.assignCategory(scope, "6efc89d9-c720-45f6-82cd-ee29e80314b6", {
+        categoryId: "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+      }),
+    ).resolves.toMatchObject({ category: { name: "Contractors", type: "EXPENSE" } });
+    expect(updateCategory).toHaveBeenCalledWith(
+      scope,
+      "6efc89d9-c720-45f6-82cd-ee29e80314b6",
+      "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+    );
+  });
+
+  it("rejects an income category for an outflow before updating the transaction", async () => {
+    const updateCategory = vi.fn();
+    const service = createService({
+      findById: vi.fn().mockResolvedValue(createBankTransactionRecord()),
+      findCategory: vi.fn().mockResolvedValue(createCategory({ type: IncomeExpenseType.INCOME })),
+      updateCategory,
+    });
+
+    const error = await service
+      .assignCategory(scope, "6efc89d9-c720-45f6-82cd-ee29e80314b6", {
+        categoryId: "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+      })
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(BadRequestException);
+    expect((error as BadRequestException).getResponse()).toMatchObject({
+      code: "CATEGORY_TYPE_MISMATCH",
+    });
+    expect(updateCategory).not.toHaveBeenCalled();
+  });
 });
 
 function createService(repository: Record<string, ReturnType<typeof vi.fn>>) {
@@ -201,7 +245,9 @@ function createBankTransaction(): BankTransaction {
   };
 }
 
-function createBankTransactionRecord() {
+function createBankTransactionRecord(
+  overrides: { category?: ReturnType<typeof createCategory> | null } = {},
+) {
   return {
     ...createBankTransaction(),
     bankAccount: {
@@ -209,5 +255,18 @@ function createBankTransactionRecord() {
       id: bankAccountId,
       name: "Operating account",
     },
+    category: null,
+    ...overrides,
+  };
+}
+
+function createCategory(
+  overrides: Partial<{ id: string; name: string; type: IncomeExpenseType }> = {},
+) {
+  return {
+    id: "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+    name: "Contractors",
+    type: IncomeExpenseType.EXPENSE,
+    ...overrides,
   };
 }

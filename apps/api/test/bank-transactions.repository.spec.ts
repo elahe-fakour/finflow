@@ -76,6 +76,7 @@ describe("BankTransactionsRepository", () => {
       where: expectedWhere,
       include: {
         bankAccount: { select: { currency: true, id: true, name: true } },
+        category: { select: { id: true, name: true, type: true } },
       },
       orderBy: [{ transactionDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
       skip: 25,
@@ -83,16 +84,39 @@ describe("BankTransactionsRepository", () => {
     });
     expect(count).toHaveBeenCalledWith({ where: expectedWhere });
   });
+
+  it("loads and updates a transaction category only inside the authorized workspace", async () => {
+    const findUnique = vi.fn().mockResolvedValue(null);
+    const update = vi.fn().mockResolvedValue({});
+    const repository = createRepository({ findUnique }, { findUnique, update }, { findUnique });
+    const transactionId = "6efc89d9-c720-45f6-82cd-ee29e80314b8";
+    const categoryId = "6efc89d9-c720-45f6-82cd-ee29e80314b7";
+
+    await repository.findById(scope, transactionId);
+    await repository.findCategory(scope, categoryId);
+    await repository.updateCategory(scope, transactionId, categoryId);
+
+    expect(update).toHaveBeenCalledWith({
+      where: { workspaceId_id: { workspaceId: scope.workspaceId, id: transactionId } },
+      data: { categoryId },
+      include: {
+        bankAccount: { select: { currency: true, id: true, name: true } },
+        category: { select: { id: true, name: true, type: true } },
+      },
+    });
+  });
 });
 
 function createRepository(
   bankAccountDelegate: Record<string, ReturnType<typeof vi.fn>>,
   bankTransactionDelegate: Record<string, ReturnType<typeof vi.fn>>,
+  incomeExpenseCategoryDelegate: Record<string, ReturnType<typeof vi.fn>> = {},
 ) {
   return new BankTransactionsRepository({
     database: {
       bankAccount: bankAccountDelegate,
       bankTransaction: bankTransactionDelegate,
+      incomeExpenseCategory: incomeExpenseCategoryDelegate,
     },
   } as unknown as PrismaService);
 }

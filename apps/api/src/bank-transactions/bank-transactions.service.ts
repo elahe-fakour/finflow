@@ -4,7 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { BankAccountStatus, Prisma, type BankTransaction } from "../generated/prisma/client.js";
+import {
+  BankAccountStatus,
+  IncomeExpenseType,
+  Prisma,
+  type BankTransaction,
+} from "../generated/prisma/client.js";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
 import {
   BankTransactionsRepository,
@@ -13,6 +18,7 @@ import {
 } from "./bank-transactions.repository.js";
 import type { CreateBankTransactionDto } from "./dto/create-bank-transaction.dto.js";
 import { type ListBankTransactionsDto } from "./dto/list-bank-transactions.dto.js";
+import type { AssignBankTransactionCategoryDto } from "./dto/assign-bank-transaction-category.dto.js";
 
 const MAX_POSTGRES_BIGINT = 9_223_372_036_854_775_807n;
 const IDEMPOTENCY_KEY_PATTERN =
@@ -21,12 +27,19 @@ const IDEMPOTENCY_KEY_PATTERN =
 export type BankTransactionResponse = {
   amountMinorUnits: string;
   bankAccountId: string;
+  category: BankTransactionCategory | null;
   createdAt: string;
   description: string;
   id: string;
   reference: string | null;
   transactionDate: string;
   updatedAt: string;
+};
+
+export type BankTransactionCategory = {
+  id: string;
+  name: string;
+  type: IncomeExpenseType;
 };
 
 export type CreateBankTransactionResponse = BankTransactionResponse & {
@@ -132,6 +145,62 @@ export class BankTransactionsService {
       totalPages: Math.ceil(result.totalItems / input.pageSize),
     };
   }
+
+  async getById(scope: WorkspaceScope, transactionId: string): Promise<BankTransactionListItem> {
+    const transaction = await this.bankTransactionsRepository.findById(scope, transactionId);
+
+    if (transaction === null) {
+      throw bankTransactionNotFound();
+    }
+
+    return serializeBankTransactionListItem(transaction);
+  }
+
+  async assignCategory(
+    scope: WorkspaceScope,
+    transactionId: string,
+    input: AssignBankTransactionCategoryDto,
+  ): Promise<BankTransactionListItem> {
+    const transaction = await this.bankTransactionsRepository.findById(scope, transactionId);
+
+    if (transaction === null) {
+      throw bankTransactionNotFound();
+    }
+
+    if (input.categoryId === undefined) {
+      throw new BadRequestException({
+        code: "CATEGORY_ID_REQUIRED",
+        message: "categoryId must be a UUID or null.",
+      });
+    }
+
+    const categoryId = input.categoryId;
+
+    if (categoryId !== null) {
+      const category = await this.bankTransactionsRepository.findCategory(scope, categoryId);
+
+      if (category === null) {
+        throw new NotFoundException({
+          code: "INCOME_EXPENSE_CATEGORY_NOT_FOUND",
+          message: "The requested income or expense category was not found.",
+        });
+      }
+
+      const expectedType =
+        transaction.amountMinorUnits > 0n ? IncomeExpenseType.INCOME : IncomeExpenseType.EXPENSE;
+
+      if (category.type !== expectedType) {
+        throw new BadRequestException({
+          code: "CATEGORY_TYPE_MISMATCH",
+          message: `This ${expectedType.toLowerCase()} transaction requires an ${expectedType.toLowerCase()} category.`,
+        });
+      }
+    }
+
+    return serializeBankTransactionListItem(
+      await this.bankTransactionsRepository.updateCategory(scope, transactionId, categoryId),
+    );
+  }
 }
 
 function toCreateInput(
@@ -167,6 +236,7 @@ function serializeBankTransaction(transaction: BankTransaction): BankTransaction
   return {
     id: transaction.id,
     bankAccountId: transaction.bankAccountId,
+    category: null,
     amountMinorUnits: transaction.amountMinorUnits.toString(),
     transactionDate: toCalendarDate(transaction.transactionDate),
     description: transaction.description,
@@ -181,12 +251,27 @@ function serializeBankTransactionListItem(
 ): BankTransactionListItem {
   return {
     ...serializeBankTransaction(transaction),
+    category:
+      transaction.category === null
+        ? null
+        : {
+            id: transaction.category.id,
+            name: transaction.category.name,
+            type: transaction.category.type,
+          },
     bankAccount: {
       id: transaction.bankAccount.id,
       name: transaction.bankAccount.name,
       currency: transaction.bankAccount.currency,
     },
   };
+}
+
+function bankTransactionNotFound(): NotFoundException {
+  return new NotFoundException({
+    code: "BANK_TRANSACTION_NOT_FOUND",
+    message: "The requested bank transaction was not found.",
+  });
 }
 
 function matchesCreateInput(

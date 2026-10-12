@@ -1,6 +1,7 @@
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { CreateBankTransactionDto } from "../src/bank-transactions/dto/create-bank-transaction.dto.js";
+import { AssignBankTransactionCategoryDto } from "../src/bank-transactions/dto/assign-bank-transaction-category.dto.js";
 import { ListBankTransactionsDto } from "../src/bank-transactions/dto/list-bank-transactions.dto.js";
 import { describe, expect, it } from "vitest";
 
@@ -47,5 +48,15 @@ describe("bank transaction DTOs", () => {
 
     await expect(validate(input)).resolves.toEqual([]);
     expect(input).toMatchObject({ page: 2, pageSize: 50, q: "Stripe" });
+  });
+
+  it("accepts a category UUID or null when assigning a transaction category", async () => {
+    const category = plainToInstance(AssignBankTransactionCategoryDto, {
+      categoryId: "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+    });
+    const uncategorized = plainToInstance(AssignBankTransactionCategoryDto, { categoryId: null });
+
+    await expect(validate(category)).resolves.toEqual([]);
+    await expect(validate(uncategorized)).resolves.toEqual([]);
   });
 });

@@ -129,8 +129,9 @@ model IncomeExpenseCategory {
   createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  entries   IncomeExpenseEntry[]
-  workspace Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  bankTransactions BankTransaction[]
+  entries          IncomeExpenseEntry[]
+  workspace        Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
   @@unique([workspaceId, id], map: "income_expense_categories_workspace_id_id_key")
   @@unique([workspaceId, type, name], map: "income_expense_categories_workspace_id_type_name_key")
@@ -317,6 +318,7 @@ model BankTransaction {
   id               String   @id @default(uuid()) @db.Uuid
   workspaceId      String   @map("workspace_id") @db.Uuid
   bankAccountId    String   @map("bank_account_id") @db.Uuid
+  categoryId       String?  @map("category_id") @db.Uuid
   idempotencyKey   String?  @map("idempotency_key") @db.VarChar(255)
   externalId       String?  @map("external_id") @db.VarChar(255)
   amountMinorUnits BigInt   @map("amount_minor_units") @db.BigInt
@@ -326,13 +328,15 @@ model BankTransaction {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  bankAccount     BankAccount      @relation(fields: [workspaceId, bankAccountId], references: [workspaceId, id], onDelete: Restrict)
+  bankAccount     BankAccount             @relation(fields: [workspaceId, bankAccountId], references: [workspaceId, id], onDelete: Restrict)
+  category        IncomeExpenseCategory? @relation(fields: [workspaceId, categoryId], references: [workspaceId, id], onDelete: Restrict)
   reconciliations Reconciliation[]
-  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  workspace       Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
   @@unique([workspaceId, id], map: "bank_transactions_workspace_id_id_key")
   @@unique([workspaceId, idempotencyKey], map: "bank_transactions_workspace_id_idempotency_key_key")
   @@index([workspaceId, transactionDate], map: "bank_transactions_workspace_id_transaction_date_idx")
+  @@index([workspaceId, categoryId], map: "bank_transactions_workspace_id_category_id_idx")
   @@index([bankAccountId, transactionDate], map: "bank_transactions_bank_account_id_transaction_date_idx")
   @@map("bank_transactions")
 }
