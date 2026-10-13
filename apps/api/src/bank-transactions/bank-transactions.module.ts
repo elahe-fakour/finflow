@@ -9,5 +9,6 @@ import { BankTransactionsService } from "./bank-transactions.service.js";
   imports: [DatabaseModule, WorkspacesModule],
   controllers: [BankTransactionsController],
   providers: [BankTransactionsRepository, BankTransactionsService],
+  exports: [BankTransactionsRepository],
 })
 export class BankTransactionsModule {}

@@ -53,6 +53,11 @@ only accepts an `INCOME` category for a positive transaction and an `EXPENSE`
 category for a negative transaction, preventing mismatched financial
 classification at the backend boundary.
 
+`POST /api/v1/workspaces/:workspaceId/bank-transaction-imports/preview` accepts
+one CSV file and an active `bankAccountId`. It validates the supported CSV
+headers and rows, returns row-level errors and exact signed minor-unit strings,
+and does not create transactions. It requires `MANAGE_FINANCIAL_DATA`.
+
 From the repository root:
 
 ```bash

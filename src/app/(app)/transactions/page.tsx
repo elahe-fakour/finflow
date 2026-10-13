@@ -1,5 +1,6 @@
 import { BankTransactionList } from "@/components/bank-transactions/bank-transaction-list";
 import { CreateBankTransactionForm } from "@/components/bank-transactions/create-bank-transaction-form";
+import { CsvImportPreview } from "@/components/bank-transactions/csv-import-preview";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -87,7 +88,10 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
             title="No active bank accounts"
           />
         ) : (
-          <CreateBankTransactionForm accounts={activeAccounts} workspaceId={workspace.id} />
+          <div className="space-y-6">
+            <CreateBankTransactionForm accounts={activeAccounts} workspaceId={workspace.id} />
+            <CsvImportPreview accounts={activeAccounts} workspaceId={workspace.id} />
+          </div>
         )}
       </div>
       <BankTransactionList accounts={accounts} filters={filters} transactions={transactions} />

@@ -7,6 +7,7 @@ import { BankTransactionsModule } from "./bank-transactions/bank-transactions.mo
 import { CustomersModule } from "./customers/customers.module.js";
 import { HealthModule } from "./health/health.module.js";
 import { IncomeExpenseCategoriesModule } from "./income-expense-categories/income-expense-categories.module.js";
+import { BankTransactionImportsModule } from "./bank-transaction-imports/bank-transaction-imports.module.js";
 import { IncomeExpenseEntriesModule } from "./income-expense-entries/income-expense-entries.module.js";
 import { VendorsModule } from "./vendors/vendors.module.js";
 import { WorkspacesModule } from "./workspaces/workspaces.module.js";
@@ -29,6 +30,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
     BankAccountsModule,
     BankTransactionsModule,
     IncomeExpenseCategoriesModule,
+    BankTransactionImportsModule,
     IncomeExpenseEntriesModule,
     VendorsModule,
   ],
