@@ -55,8 +55,11 @@ classification at the backend boundary.
 
 `POST /api/v1/workspaces/:workspaceId/bank-transaction-imports/preview` accepts
 one CSV file and an active `bankAccountId`. It validates the supported CSV
-headers and rows, returns row-level errors and exact signed minor-unit strings,
-and does not create transactions. It requires `MANAGE_FINANCIAL_DATA`.
+headers and rows, returns a short-lived preview token and exact signed
+minor-unit strings, and does not create transactions. `POST
+/api/v1/workspaces/:workspaceId/bank-transaction-imports/confirm` accepts that
+token plus an `Idempotency-Key`, then creates one import batch and all previewed
+transactions atomically. Both routes require `MANAGE_FINANCIAL_DATA`.
 
 From the repository root:
 

@@ -71,6 +71,7 @@ model User {
   memberships        WorkspaceMembership[]
   passwordCredential UserCredential?
   sessions           UserSession[]
+  importedBankTransactionBatches BankTransactionImportBatch[]
 
   @@map("users")
 }
@@ -108,6 +109,7 @@ model Workspace {
   createdAt               DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt               DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
   bankAccounts            BankAccount[]
+  bankTransactionImportBatches BankTransactionImportBatch[]
   bankTransactions        BankTransaction[]
   customers               Customer[]
   incomeExpenseCategories IncomeExpenseCategory[]
@@ -306,6 +308,7 @@ model BankAccount {
   updatedAt                DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   transactions BankTransaction[]
+  importBatches BankTransactionImportBatch[]
   workspace    Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
   @@unique([workspaceId, id], map: "bank_accounts_workspace_id_id_key")
@@ -314,11 +317,35 @@ model BankAccount {
   @@map("bank_accounts")
 }
 
+model BankTransactionImportBatch {
+  id             String   @id @default(uuid()) @db.Uuid
+  workspaceId    String   @map("workspace_id") @db.Uuid
+  bankAccountId  String   @map("bank_account_id") @db.Uuid
+  importedByUserId String @map("imported_by_user_id") @db.Uuid
+  idempotencyKey String   @map("idempotency_key") @db.VarChar(255)
+  fileName       String   @map("file_name") @db.VarChar(255)
+  rowCount       Int      @map("row_count")
+  importedRowCount Int    @map("imported_row_count")
+  importedAt     DateTime @default(now()) @map("imported_at") @db.Timestamptz(3)
+
+  bankAccount BankAccount       @relation(fields: [workspaceId, bankAccountId], references: [workspaceId, id], onDelete: Restrict)
+  transactions BankTransaction[]
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  importedBy  User              @relation(fields: [importedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, id], map: "bank_transaction_import_batches_workspace_id_id_key")
+  @@unique([workspaceId, idempotencyKey], map: "bank_tx_import_batches_workspace_idempotency_key_key")
+  @@index([workspaceId, bankAccountId, importedAt], map: "bank_tx_import_batches_workspace_account_imported_at_idx")
+  @@map("bank_transaction_import_batches")
+}
+
 model BankTransaction {
   id               String   @id @default(uuid()) @db.Uuid
   workspaceId      String   @map("workspace_id") @db.Uuid
   bankAccountId    String   @map("bank_account_id") @db.Uuid
   categoryId       String?  @map("category_id") @db.Uuid
+  importBatchId    String?  @map("import_batch_id") @db.Uuid
+  importSourceFingerprint String? @map("import_source_fingerprint") @db.Char(64)
   idempotencyKey   String?  @map("idempotency_key") @db.VarChar(255)
   externalId       String?  @map("external_id") @db.VarChar(255)
   amountMinorUnits BigInt   @map("amount_minor_units") @db.BigInt
@@ -329,12 +356,14 @@ model BankTransaction {
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   bankAccount     BankAccount             @relation(fields: [workspaceId, bankAccountId], references: [workspaceId, id], onDelete: Restrict)
+  importBatch     BankTransactionImportBatch? @relation(fields: [workspaceId, importBatchId], references: [workspaceId, id], onDelete: Restrict)
   category        IncomeExpenseCategory? @relation(fields: [workspaceId, categoryId], references: [workspaceId, id], onDelete: Restrict)
   reconciliations Reconciliation[]
   workspace       Workspace               @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
   @@unique([workspaceId, id], map: "bank_transactions_workspace_id_id_key")
   @@unique([workspaceId, idempotencyKey], map: "bank_transactions_workspace_id_idempotency_key_key")
+  @@unique([workspaceId, bankAccountId, importSourceFingerprint], map: "bank_transactions_workspace_account_fingerprint_key")
   @@index([workspaceId, transactionDate], map: "bank_transactions_workspace_id_transaction_date_idx")
   @@index([workspaceId, categoryId], map: "bank_transactions_workspace_id_category_id_idx")
   @@index([bankAccountId, transactionDate], map: "bank_transactions_bank_account_id_transaction_date_idx")

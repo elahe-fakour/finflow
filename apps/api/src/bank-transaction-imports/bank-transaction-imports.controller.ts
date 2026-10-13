@@ -1,5 +1,15 @@
-import { Body, Controller, Post, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Headers,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { CurrentUser } from "@nestjs/authentication";
+import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { RequireWorkspacePermission } from "../workspaces/require-workspace-permission.decorator.js";
 import { CurrentWorkspace, type WorkspaceAccess } from "../workspaces/workspace-access.js";
 import { WorkspaceMembershipGuard } from "../workspaces/workspace-membership.guard.js";
@@ -10,6 +20,7 @@ import {
   type BankTransactionImportPreview,
 } from "./bank-transaction-imports.service.js";
 import { PreviewBankTransactionImportDto } from "./dto/preview-bank-transaction-import.dto.js";
+import { ConfirmBankTransactionImportDto } from "./dto/confirm-bank-transaction-import.dto.js";
 
 @Controller("workspaces/:workspaceId/bank-transaction-imports")
 @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
@@ -22,9 +33,21 @@ export class BankTransactionImportsController {
   preview(
     @CurrentWorkspace() access: WorkspaceAccess,
     @Body() input: PreviewBankTransactionImportDto,
+    @CurrentUser() user: AuthenticatedUser,
     @UploadedFile()
     file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
   ): Promise<BankTransactionImportPreview> {
-    return this.importsService.preview(access, input.bankAccountId, file);
+    return this.importsService.preview(access, user.id, input.bankAccountId, file);
+  }
+
+  @Post("confirm")
+  @RequireWorkspacePermission(WorkspacePermission.MANAGE_FINANCIAL_DATA)
+  confirm(
+    @CurrentWorkspace() access: WorkspaceAccess,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() input: ConfirmBankTransactionImportDto,
+    @Headers("idempotency-key") idempotencyKey: string | undefined,
+  ) {
+    return this.importsService.confirm(access, user.id, input.previewToken, idempotencyKey);
   }
 }

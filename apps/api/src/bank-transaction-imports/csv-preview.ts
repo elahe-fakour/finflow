@@ -4,9 +4,10 @@ export type CsvPreviewRow = {
   amountMinorUnits: string | null;
   description: string | null;
   errors: { code: string; message: string }[];
+  externalId: string | null;
   reference: string | null;
   rowNumber: number;
-  status: "ERROR" | "VALID";
+  status: "DUPLICATE" | "ERROR" | "VALID";
   transactionDate: string | null;
 };
 
@@ -41,7 +42,7 @@ export function createCsvPreview(content: string): CsvPreviewRow[] {
     const row = previewRow(record, index + 2, headerIndexes);
 
     if (row.errors.length === 0) {
-      const fingerprint = createFingerprint(row);
+      const fingerprint = createPreviewFingerprint(row);
 
       if (fingerprints.has(fingerprint)) {
         row.errors.push({
@@ -84,12 +85,20 @@ function previewRow(
     });
   }
 
-  optionalField(record, headerIndexes, "externalId", 255, "CSV_EXTERNAL_ID_TOO_LONG", errors);
+  const externalId = optionalField(
+    record,
+    headerIndexes,
+    "externalId",
+    255,
+    "CSV_EXTERNAL_ID_TOO_LONG",
+    errors,
+  );
 
   return {
     amountMinorUnits,
     description: description === "" ? null : description,
     errors,
+    externalId,
     reference,
     rowNumber,
     transactionDate,
@@ -162,12 +171,31 @@ function parseAmount(value: string, errors: CsvPreviewRow["errors"]): string | n
   return `${sign === "-" ? "-" : ""}${amount}`;
 }
 
-function createFingerprint(row: Omit<CsvPreviewRow, "status">): string {
+function createPreviewFingerprint(row: Omit<CsvPreviewRow, "status">): string {
+  if (row.externalId !== null) {
+    return createHash("sha256").update(`externalId\u0000${row.externalId}`).digest("hex");
+  }
+
   return createHash("sha256")
     .update(
       `${row.transactionDate}\u0000${row.amountMinorUnits}\u0000${row.description}\u0000${row.reference ?? ""}`,
     )
     .digest("hex");
+}
+
+export function createImportSourceFingerprint(
+  bankAccountId: string,
+  row: Pick<
+    CsvPreviewRow,
+    "amountMinorUnits" | "description" | "externalId" | "reference" | "transactionDate"
+  >,
+): string {
+  const source =
+    row.externalId === null
+      ? `${bankAccountId}\u0000${row.transactionDate}\u0000${row.amountMinorUnits}\u0000${row.description}\u0000${row.reference ?? ""}`
+      : `${bankAccountId}\u0000externalId\u0000${row.externalId}`;
+
+  return createHash("sha256").update(source).digest("hex");
 }
 
 function parseCsv(content: string): string[][] {
