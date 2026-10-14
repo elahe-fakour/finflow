@@ -116,6 +116,98 @@ Eligible bank transaction
   suggestion. `confidenceBasisPoints` must be `null`; a fabricated score would
   misrepresent the evidence.
 
+## Deterministic Candidate Scoring
+
+Candidate scoring is an explainable ranking aid, not an authorization decision
+and not an automatic reconciliation rule. The service first applies the
+financial eligibility rules. It then scores only invoices that are in the same
+workspace and currency, are `SENT` or `OVERDUE`, have a positive outstanding
+balance, and have an outstanding amount exactly equal to the positive bank
+transaction amount.
+
+An invoice that fails an eligibility rule is not given a low score; it is not a
+candidate at all. This avoids implying that a cross-currency, paid, cancelled,
+or overpaid invoice might be safe to confirm.
+
+### Scoring Inputs
+
+The initial scorer uses only fields already held by FinFlow. It does not call an
+external service or infer facts from an opaque model.
+
+| Evidence                 | Source fields                                                         | Maximum basis points | Deterministic rule                                                                                                 |
+| ------------------------ | --------------------------------------------------------------------- | -------------------: | ------------------------------------------------------------------------------------------------------------------ |
+| Exact outstanding amount | Bank transaction amount; invoice derived outstanding amount           |                6,000 | Exact equality of signed integer minor units after eligibility has established an incoming transaction.            |
+| Invoice-number evidence  | Bank transaction `reference` and `description`; invoice number        |                2,500 | The normalized full invoice number appears as a whole token in either source field. It is awarded once, not twice. |
+| Customer-name evidence   | Bank transaction `reference` and `description`; invoice customer name |                  800 | The normalized full customer name appears as a whole phrase in either source field. It is awarded once.            |
+| Date proximity           | Bank transaction date; invoice due date                               |                  700 | `700` points for 0–3 calendar days apart, `300` for 4–7 days, `100` for 8–14 days, otherwise `0`.                  |
+
+The maximum is exactly `10,000` basis points. Confidence is an integer; it is
+never represented as a floating-point percentage. For example, `9,600` is shown
+to a user as 96%.
+
+For the FinFlow example, a `$1,250.00` incoming transaction dated September 10
+with reference `INV-2026-0182` and customer text `Acme Ltd.` can score:
+
+```text
+exact amount                 6,000
+invoice number in reference  2,500
+customer name                  800
+due date seven days away       300
+                             ------
+total                         9,600 (96%)
+```
+
+### Normalization and Matching Rules
+
+Text normalization must be shared by every scorer and test. The MVP applies, in
+this order:
+
+1. Unicode NFKC normalization.
+2. Trim leading and trailing whitespace.
+3. Locale-independent uppercase conversion.
+4. Replace every non-letter and non-number character with one space.
+5. Collapse consecutive whitespace to one space.
+
+The invoice-number and customer-name checks use token or phrase boundaries after
+that normalization. They do not use substring matching: `INV 18` must not match
+`INV 180`, and `ACME` must not match `ACMEGA`.
+
+Date proximity compares calendar dates only. It does not derive a timestamp,
+apply a time zone, or inspect the time of day. The score uses the absolute
+difference between the bank transaction date and invoice due date, so a payment
+slightly before or after its due date is treated consistently.
+
+### Candidate Output, Thresholds, and Ordering
+
+The pure scoring module will return a score plus individual evidence items so a
+future UI can say _why_ a candidate was suggested. Each item contains a stable
+code, its awarded basis points, and a user-facing explanation; it must not
+include hidden weights or raw sensitive bank data beyond the fields already
+visible to the authorized user.
+
+|        Score | Classification    | Product behavior                                                                                                   |
+| -----------: | ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 9,000–10,000 | High confidence   | Display as a prominent suggestion with evidence.                                                                   |
+|  7,500–8,999 | Medium confidence | Display as a suggestion; explicit user review remains required.                                                    |
+|  6,500–7,499 | Low confidence    | Display after higher-confidence suggestions with a clear caution.                                                  |
+|      0–6,499 | Not suggested     | Do not show as a candidate. The user may still choose an eligible invoice through the later manual-match workflow. |
+
+Candidates sort by descending confidence, then ascending invoice due date, then
+ascending invoice number, and finally ascending invoice ID. This tie-breaking
+order is part of the contract: equivalent inputs produce equivalent output order.
+
+### Inputs Intentionally Excluded
+
+- Fuzzy text similarity, embeddings, LLM output, or probabilistic models.
+- Bank transaction `externalId`, which identifies a source row but does not
+  prove which invoice it settles.
+- Category, vendor, or manually entered notes.
+- Historical payment behavior, customer payment habits, or cash-flow forecasts.
+- Any score for an ineligible invoice.
+
+These may become separately designed enhancements, but they must not silently
+change the MVP's deterministic score or its explanation contract.
+
 ## Confirmation Contract
 
 The confirmation action in Milestone 10.2 must run in one serializable database
