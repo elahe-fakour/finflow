@@ -46,6 +46,17 @@ export type ConfirmBankTransactionImportResponse = {
   importedRowCount: number;
 };
 
+export type BankTransactionImportHistoryItem = {
+  bankAccount: {
+    id: string;
+    name: string;
+  };
+  fileName: string;
+  id: string;
+  importedAt: string;
+  importedRowCount: number;
+};
+
 @Injectable()
 export class BankTransactionImportsService {
   private readonly previews = new Map<string, StoredPreview>();
@@ -227,6 +238,27 @@ export class BankTransactionImportsService {
       }
       throw error;
     }
+  }
+
+  async listHistory(scope: WorkspaceScope): Promise<BankTransactionImportHistoryItem[]> {
+    const batches = await this.prisma.database.bankTransactionImportBatch.findMany({
+      where: { workspaceId: scope.workspaceId },
+      include: {
+        bankAccount: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { importedAt: "desc" },
+      take: 5,
+    });
+
+    return batches.map((batch) => ({
+      bankAccount: batch.bankAccount,
+      fileName: batch.fileName,
+      id: batch.id,
+      importedAt: batch.importedAt.toISOString(),
+      importedRowCount: batch.importedRowCount,
+    }));
   }
 
   private requirePreview(scope: WorkspaceScope, userId: string, token: string): StoredPreview {

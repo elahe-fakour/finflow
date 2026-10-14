@@ -61,6 +61,10 @@ minor-unit strings, and does not create transactions. `POST
 token plus an `Idempotency-Key`, then creates one import batch and all previewed
 transactions atomically. Both routes require `MANAGE_FINANCIAL_DATA`.
 
+`GET /api/v1/workspaces/:workspaceId/bank-transaction-imports` returns the five
+most recent import-batch metadata records for the workspace. It requires the
+`VIEW` workspace permission and never returns the original CSV file.
+
 From the repository root:
 
 ```bash

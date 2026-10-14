@@ -57,14 +57,46 @@ describe("BankTransactionImportsService", () => {
       ]),
     });
   });
+
+  it("returns the most recent import-batch metadata for the current workspace", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      {
+        bankAccount: { id: bankAccountId, name: "Operating account" },
+        fileName: "october-statement.csv",
+        id: "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+        importedAt: new Date("2026-10-13T12:00:00.000Z"),
+        importedRowCount: 2,
+      },
+    ]);
+    const service = createService({ findMany });
+
+    await expect(service.listHistory(scope)).resolves.toEqual([
+      {
+        bankAccount: { id: bankAccountId, name: "Operating account" },
+        fileName: "october-statement.csv",
+        id: "6efc89d9-c720-45f6-82cd-ee29e80314b7",
+        importedAt: "2026-10-13T12:00:00.000Z",
+        importedRowCount: 2,
+      },
+    ]);
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { importedAt: "desc" },
+        take: 5,
+        where: { workspaceId: scope.workspaceId },
+      }),
+    );
+  });
 });
 
 function createService({
   create = vi.fn(),
   createMany = vi.fn(),
+  findMany = vi.fn().mockResolvedValue([]),
 }: {
   create?: ReturnType<typeof vi.fn>;
   createMany?: ReturnType<typeof vi.fn>;
+  findMany?: ReturnType<typeof vi.fn>;
 }): BankTransactionImportsService {
   const transaction = {
     bankTransactionImportBatch: { create },
@@ -73,7 +105,7 @@ function createService({
   const prisma = {
     database: {
       bankTransaction: { findMany: vi.fn().mockResolvedValue([]) },
-      bankTransactionImportBatch: { findUnique: vi.fn().mockResolvedValue(null) },
+      bankTransactionImportBatch: { findMany, findUnique: vi.fn().mockResolvedValue(null) },
     },
     withTransaction: vi.fn((work) => work(transaction)),
   } as unknown as PrismaService;

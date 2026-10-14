@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   Post,
   UploadedFile,
@@ -26,6 +27,12 @@ import { ConfirmBankTransactionImportDto } from "./dto/confirm-bank-transaction-
 @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
 export class BankTransactionImportsController {
   constructor(private readonly importsService: BankTransactionImportsService) {}
+
+  @Get()
+  @RequireWorkspacePermission(WorkspacePermission.VIEW)
+  listHistory(@CurrentWorkspace() access: WorkspaceAccess) {
+    return this.importsService.listHistory(access);
+  }
 
   @Post("preview")
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_FINANCIAL_DATA)

@@ -34,6 +34,17 @@ type PaginatedBankTransactions = {
   totalPages: number;
 };
 
+type BankTransactionImportHistoryItem = {
+  bankAccount: {
+    id: string;
+    name: string;
+  };
+  fileName: string;
+  id: string;
+  importedAt: string;
+  importedRowCount: number;
+};
+
 async function getBankTransactions(
   workspaceId: string,
   filters: BankTransactionListFilters,
@@ -118,5 +129,29 @@ async function getBankTransaction(
   }
 }
 
-export { getBankTransaction, getBankTransactions };
-export type { BankTransaction, PaginatedBankTransactions };
+async function getBankTransactionImportHistory(
+  workspaceId: string,
+): Promise<BankTransactionImportHistoryItem[] | null> {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(sessionCookieName);
+  const headers = new Headers();
+
+  if (sessionCookie !== undefined) {
+    headers.set("Cookie", `${sessionCookieName}=${sessionCookie.value}`);
+  }
+
+  try {
+    const response = await fetch(
+      getApiUrl(`/api/v1/workspaces/${encodeURIComponent(workspaceId)}/bank-transaction-imports`),
+      { cache: "no-store", headers },
+    );
+
+    if (!response.ok) return null;
+    return (await response.json()) as BankTransactionImportHistoryItem[];
+  } catch {
+    return null;
+  }
+}
+
+export { getBankTransaction, getBankTransactionImportHistory, getBankTransactions };
+export type { BankTransaction, BankTransactionImportHistoryItem, PaginatedBankTransactions };

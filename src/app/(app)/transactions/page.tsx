@@ -1,11 +1,15 @@
 import { BankTransactionList } from "@/components/bank-transactions/bank-transaction-list";
+import { BankTransactionImportHistory } from "@/components/bank-transactions/bank-transaction-import-history";
 import { CreateBankTransactionForm } from "@/components/bank-transactions/create-bank-transaction-form";
 import { CsvImportPreview } from "@/components/bank-transactions/csv-import-preview";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { getBankAccounts } from "@/lib/bank-accounts/bank-accounts";
-import { getBankTransactions } from "@/lib/bank-transactions/bank-transactions";
+import {
+  getBankTransactionImportHistory,
+  getBankTransactions,
+} from "@/lib/bank-transactions/bank-transactions";
 import {
   createBankTransactionListPath,
   parseBankTransactionListFilters,
@@ -49,12 +53,13 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
     );
   }
 
-  const [accounts, transactions] = await Promise.all([
+  const [accounts, imports, transactions] = await Promise.all([
     getBankAccounts(workspace.id),
+    getBankTransactionImportHistory(workspace.id),
     getBankTransactions(workspace.id, filters),
   ]);
 
-  if (accounts === null || transactions === null) {
+  if (accounts === null || imports === null || transactions === null) {
     return (
       <section aria-labelledby="transactions-title">
         <PageHeader workspaceName={workspace.name} />
@@ -93,6 +98,9 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
             <CsvImportPreview accounts={activeAccounts} workspaceId={workspace.id} />
           </div>
         )}
+      </div>
+      <div className="mt-6">
+        <BankTransactionImportHistory imports={imports} />
       </div>
       <BankTransactionList accounts={accounts} filters={filters} transactions={transactions} />
     </section>
