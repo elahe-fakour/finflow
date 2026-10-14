@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("authentication BFF routes", () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 
@@ -66,6 +67,20 @@ describe("authentication BFF routes", () => {
     expect(new Headers(requestOptions.headers).get("Cookie")).toBe("__Host-sid=active-session");
     expect(response.status).toBe(204);
     expect(response.headers.getSetCookie()).toEqual(["__Host-sid=; Max-Age=0; Path=/"]);
+  });
+
+  it("allows the explicitly configured local development origin", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const request = new NextRequest("http://localhost:3000/api/auth/logout", {
+      headers: { Origin: "http://10.170.169.8:3000" },
+      method: "POST",
+    });
+
+    await forwardLogoutRequest(request);
+
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it("rejects an authentication write from another origin before it reaches the API", async () => {

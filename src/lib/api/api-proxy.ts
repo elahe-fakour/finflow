@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getApiUrl } from "@/lib/auth/api-url";
 import { sessionCookieName } from "@/lib/auth/session-cookie";
+import { isTrustedWriteOrigin } from "@/lib/security/same-origin";
 
 type ApiRequestMethod = "DELETE" | "PATCH" | "POST";
 
@@ -9,7 +10,7 @@ async function forwardApiRequest(
   path: string,
   method: ApiRequestMethod,
 ): Promise<Response> {
-  if (!isSameOriginWrite(request)) {
+  if (!isTrustedWriteOrigin(request)) {
     return forbiddenCrossOriginResponse();
   }
 
@@ -52,10 +53,6 @@ async function forwardApiRequest(
       { status: 503 },
     );
   }
-}
-
-function isSameOriginWrite(request: NextRequest): boolean {
-  return request.headers.get("Origin") === request.nextUrl.origin;
 }
 
 function forbiddenCrossOriginResponse(): Response {

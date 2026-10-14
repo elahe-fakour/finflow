@@ -1,9 +1,10 @@
 import type { NextRequest } from "next/server";
 import { getApiUrl } from "./api-url";
 import { sessionCookieName } from "./session-cookie";
+import { isTrustedWriteOrigin } from "@/lib/security/same-origin";
 
 async function forwardAuthJsonRequest(request: NextRequest, path: string): Promise<Response> {
-  if (!isSameOriginWrite(request)) {
+  if (!isTrustedWriteOrigin(request)) {
     return forbiddenCrossOriginResponse();
   }
 
@@ -22,7 +23,7 @@ async function forwardAuthJsonRequest(request: NextRequest, path: string): Promi
 }
 
 async function forwardLogoutRequest(request: NextRequest): Promise<Response> {
-  if (!isSameOriginWrite(request)) {
+  if (!isTrustedWriteOrigin(request)) {
     return forbiddenCrossOriginResponse();
   }
 
@@ -33,10 +34,6 @@ async function forwardLogoutRequest(request: NextRequest): Promise<Response> {
       method: "POST",
     }),
   );
-}
-
-function isSameOriginWrite(request: NextRequest): boolean {
-  return request.headers.get("Origin") === request.nextUrl.origin;
 }
 
 function forbiddenCrossOriginResponse(): Response {
