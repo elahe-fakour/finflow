@@ -145,7 +145,10 @@ contains no business logic, data fetching, or client-side state.
   balance is derived from its opening balance and transactions. Composite foreign
   keys isolate transactions, payments, and reconciliations by workspace; partial
   unique indexes allow only one confirmed reconciliation per transaction or
-  payment while retaining reversed history.
+  payment while retaining reversed history. The reconciliation invariants,
+  state transitions, and reversal contract are defined in
+  [reconciliation-design.md](./reconciliation-design.md) before scoring and
+  workflow code is introduced.
 - **Quality checks:** Prettier, ESLint/Oxlint, TypeScript, Vitest unit tests,
   and production builds provide the initial feedback loop. The workspace
   isolation test composes the real membership and permission guards with two
