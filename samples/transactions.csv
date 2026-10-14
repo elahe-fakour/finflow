@@ -1,0 +1,3 @@
+transactionDate,description,amount,reference,externalId
+2026-10-14,Contractor payment,-1250.00,ACH-4242,payment-001
+2026-10-15,Client payment,2500.00,INV-2026-001,payment-002
