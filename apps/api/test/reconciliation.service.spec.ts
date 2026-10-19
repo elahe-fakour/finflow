@@ -18,7 +18,7 @@ const invoice = {
   invoiceNumber: "INV-2026-0182",
   status: "SENT" as const,
   currency: "USD",
-  dueDate: new Date("2026-09-10T00:00:00.000Z"),
+  dueDate: new Date("2026-09-17T00:00:00.000Z"),
   totalMinorUnits: 125_000n,
   customer: { name: "Acme Ltd." },
   payments: [],
@@ -51,12 +51,27 @@ describe("reconciliation service", () => {
     expect(repository.listInvoiceCandidates).toHaveBeenCalledWith(scope, "USD");
   });
 
+  it("passes the current workspace into candidate scoring", async () => {
+    const repository = {
+      findTransaction: vi.fn().mockResolvedValue(transaction),
+      listInvoiceCandidates: vi.fn().mockResolvedValue([invoice]),
+    };
+    const service = new ReconciliationService(repository);
+
+    await expect(service.listSuggestions(scope, transaction.id)).resolves.toMatchObject({
+      suggestions: [expect.objectContaining({ invoiceId: invoice.id })],
+    });
+
+    const response = await service.listSuggestions(scope, transaction.id);
+    expect(response.suggestions[0]?.scoreBasisPoints).toBe(9_600);
+  });
+
   it("subtracts existing payments before scoring outstanding amount", async () => {
     const repository = {
       findTransaction: vi.fn().mockResolvedValue(transaction),
-      listInvoiceCandidates: vi.fn().mockResolvedValue([
-        { ...invoice, payments: [{ amountMinorUnits: 25_000n }] },
-      ]),
+      listInvoiceCandidates: vi
+        .fn()
+        .mockResolvedValue([{ ...invoice, payments: [{ amountMinorUnits: 25_000n }] }]),
     };
     const service = new ReconciliationService(repository);
 

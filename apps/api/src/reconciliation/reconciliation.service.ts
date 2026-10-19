@@ -50,14 +50,17 @@ export class ReconciliationService {
 
     return {
       bankTransaction: serializeTransaction(transaction),
-      suggestions: rankInvoiceCandidates(toCandidateTransaction(transaction),
-        invoices.map(toCandidateInvoice)),
+      suggestions: rankInvoiceCandidates(
+        toCandidateTransaction(transaction, scope.workspaceId),
+        invoices.map((invoice) => toCandidateInvoice(invoice, scope.workspaceId)),
+      ),
     };
   }
 }
 
 function toCandidateTransaction(
   transaction: ReconciliationTransactionRecord,
+  workspaceId: string,
 ): CandidateTransaction {
   return {
     amountMinorUnits: transaction.amountMinorUnits,
@@ -66,11 +69,14 @@ function toCandidateTransaction(
     hasActiveReconciliation: transaction.reconciliations.length > 0,
     reference: transaction.reference,
     transactionDate: toCalendarDate(transaction.transactionDate),
-    workspaceId: "",
+    workspaceId,
   };
 }
 
-function toCandidateInvoice(record: ReconciliationInvoiceRecord): CandidateInvoice {
+function toCandidateInvoice(
+  record: ReconciliationInvoiceRecord,
+  workspaceId: string,
+): CandidateInvoice {
   const paidMinorUnits = record.payments.reduce(
     (total, payment) => total + payment.amountMinorUnits,
     0n,
@@ -84,7 +90,7 @@ function toCandidateInvoice(record: ReconciliationInvoiceRecord): CandidateInvoi
     invoiceNumber: record.invoiceNumber,
     outstandingMinorUnits: record.totalMinorUnits - paidMinorUnits,
     status: record.status,
-    workspaceId: "",
+    workspaceId,
   };
 }
 

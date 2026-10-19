@@ -9,7 +9,9 @@ import {
   type ReconciliationSuggestionsResponse,
 } from "./reconciliation.service.js";
 
-@Controller("workspaces/:workspaceId/bank-transactions/:bankTransactionId/reconciliation-suggestions")
+@Controller(
+  "workspaces/:workspaceId/bank-transactions/:bankTransactionId/reconciliation-suggestions",
+)
 @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
 export class ReconciliationController {
   constructor(private readonly reconciliationService: ReconciliationService) {}
