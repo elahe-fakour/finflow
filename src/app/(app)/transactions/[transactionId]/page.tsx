@@ -1,4 +1,5 @@
 import { TransactionCategoryAssignment } from "@/components/bank-transactions/transaction-category-assignment";
+import { ReconciliationSuggestions } from "@/components/reconciliation/reconciliation-suggestions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { getBankTransaction } from "@/lib/bank-transactions/bank-transactions";
 import { getIncomeExpenseCategories } from "@/lib/income-expenses/income-expense-categories";
 import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
+import { getReconciliationSuggestions } from "@/lib/reconciliation/reconciliation";
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
 import { ArrowDownLeft, ArrowUpRight, FolderPlus } from "lucide-react";
 import type { Metadata } from "next";
@@ -43,22 +45,23 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
     );
   }
 
-  const [transaction, categories] = await Promise.all([
+  const [transaction, categories, reconciliationSuggestions] = await Promise.all([
     getBankTransaction(workspace.id, transactionId),
     getIncomeExpenseCategories(workspace.id),
+    getReconciliationSuggestions(workspace.id, transactionId),
   ]);
 
   if (transaction === null) {
     notFound();
   }
 
-  if (categories === null) {
+  if (categories === null || reconciliationSuggestions === null) {
     return (
       <section aria-labelledby="transaction-title">
         <PageHeader description={transaction.description} />
         <ErrorState
           className="mt-8"
-          description="We couldn't load categories for this workspace. Please try again shortly."
+          description="We couldn't load transaction categories or reconciliation suggestions. Please try again shortly."
         />
       </section>
     );
@@ -133,6 +136,7 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
             />
           </CardContent>
         </Card>
+        <ReconciliationSuggestions suggestions={reconciliationSuggestions.suggestions} />
       </div>
     </section>
   );
