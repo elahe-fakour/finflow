@@ -1,5 +1,7 @@
 import { NotFoundException } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
+import type { PrismaService } from "../src/database/prisma.service.js";
+import { ReconciliationRepository } from "../src/reconciliation/reconciliation.repository.js";
 import { ReconciliationService } from "../src/reconciliation/reconciliation.service.js";
 
 const scope = { workspaceId: "workspace-1" };
@@ -25,12 +27,71 @@ const invoice = {
 };
 
 describe("reconciliation service", () => {
+  it("confirms an eligible suggestion atomically", async () => {
+    const reconciliation = {
+      bankTransactionId: transaction.id,
+      id: "reconciliation-1",
+      paymentId: "payment-1",
+      status: "CONFIRMED",
+    };
+    const database = {
+      $transaction: vi.fn(async (work: (client: unknown) => unknown) => work(database)),
+      reconciliation: {
+        create: vi.fn().mockResolvedValue(reconciliation),
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
+      bankTransaction: {
+        findUnique: vi.fn().mockResolvedValue({
+          amountMinorUnits: transaction.amountMinorUnits,
+          bankAccount: transaction.bankAccount,
+          reconciliations: [],
+          reference: transaction.reference,
+          transactionDate: transaction.transactionDate,
+        }),
+      },
+      invoice: {
+        findUnique: vi.fn().mockResolvedValue({
+          currency: invoice.currency,
+          dueDate: invoice.dueDate,
+          payments: [],
+          status: invoice.status,
+          totalMinorUnits: invoice.totalMinorUnits,
+        }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      payment: { create: vi.fn().mockResolvedValue({ id: "payment-1" }) },
+    };
+    const service = new ReconciliationService(
+      {
+        findTransaction: vi.fn(),
+        listInvoiceCandidates: vi.fn(),
+      } as unknown as ReconciliationRepository,
+      { database } as unknown as PrismaService,
+    );
+
+    await expect(
+      service.confirm(
+        scope,
+        transaction.id,
+        { confidenceBasisPoints: 9_600, invoiceId: invoice.id },
+        "11111111-1111-4111-8111-111111111111",
+      ),
+    ).resolves.toMatchObject({ idempotencyReplayed: false, id: reconciliation.id });
+
+    expect(database.payment.create).toHaveBeenCalledOnce();
+    expect(database.invoice.update).toHaveBeenCalledOnce();
+    expect(database.reconciliation.create).toHaveBeenCalledOnce();
+  });
+
   it("returns ranked, explainable suggestions without writing", async () => {
     const repository = {
       findTransaction: vi.fn().mockResolvedValue(transaction),
       listInvoiceCandidates: vi.fn().mockResolvedValue([invoice]),
     };
-    const service = new ReconciliationService(repository);
+    const service = new ReconciliationService(
+      repository as unknown as ReconciliationRepository,
+      {} as PrismaService,
+    );
 
     await expect(service.listSuggestions(scope, transaction.id)).resolves.toMatchObject({
       bankTransaction: {
@@ -56,7 +117,10 @@ describe("reconciliation service", () => {
       findTransaction: vi.fn().mockResolvedValue(transaction),
       listInvoiceCandidates: vi.fn().mockResolvedValue([invoice]),
     };
-    const service = new ReconciliationService(repository);
+    const service = new ReconciliationService(
+      repository as unknown as ReconciliationRepository,
+      {} as PrismaService,
+    );
 
     await expect(service.listSuggestions(scope, transaction.id)).resolves.toMatchObject({
       suggestions: [expect.objectContaining({ invoiceId: invoice.id })],
@@ -73,7 +137,10 @@ describe("reconciliation service", () => {
         .fn()
         .mockResolvedValue([{ ...invoice, payments: [{ amountMinorUnits: 25_000n }] }]),
     };
-    const service = new ReconciliationService(repository);
+    const service = new ReconciliationService(
+      repository as unknown as ReconciliationRepository,
+      {} as PrismaService,
+    );
 
     await expect(service.listSuggestions(scope, transaction.id)).resolves.toMatchObject({
       suggestions: [],
@@ -85,7 +152,10 @@ describe("reconciliation service", () => {
       findTransaction: vi.fn().mockResolvedValue(null),
       listInvoiceCandidates: vi.fn(),
     };
-    const service = new ReconciliationService(repository);
+    const service = new ReconciliationService(
+      repository as unknown as ReconciliationRepository,
+      {} as PrismaService,
+    );
 
     await expect(service.listSuggestions(scope, "missing")).rejects.toBeInstanceOf(
       NotFoundException,

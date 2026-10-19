@@ -1,4 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../database/prisma.service.js";
+import {
+  InvoiceStatus,
+  PaymentMethod,
+  ReconciliationMatchType,
+  ReconciliationStatus,
+} from "../generated/prisma/client.js";
+import { runFinancialTransaction } from "../database/financial-transaction.js";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
 import {
   rankInvoiceCandidates,
@@ -11,6 +19,7 @@ import {
   type ReconciliationInvoiceRecord,
   type ReconciliationTransactionRecord,
 } from "./reconciliation.repository.js";
+import type { ConfirmReconciliationDto } from "./dto/confirm-reconciliation.dto.js";
 
 export type ReconciliationSuggestionsResponse = {
   bankTransaction: {
@@ -25,7 +34,101 @@ export type ReconciliationSuggestionsResponse = {
 
 @Injectable()
 export class ReconciliationService {
-  constructor(private readonly reconciliationRepository: ReconciliationRepository) {}
+  constructor(
+    private readonly reconciliationRepository: ReconciliationRepository,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  async confirm(
+    scope: WorkspaceScope,
+    bankTransactionId: string,
+    input: ConfirmReconciliationDto,
+    idempotencyKey: string,
+  ) {
+    return runFinancialTransaction(this.prisma.database, async (database) => {
+      const existing = await database.reconciliation.findUnique({
+        where: {
+          workspaceId_idempotencyKey: { workspaceId: scope.workspaceId, idempotencyKey },
+        },
+        select: { bankTransactionId: true, id: true, paymentId: true, status: true },
+      });
+
+      if (existing !== null) {
+        return { idempotencyReplayed: true, ...existing };
+      }
+
+      const transaction = await database.bankTransaction.findUnique({
+        where: { workspaceId_id: { workspaceId: scope.workspaceId, id: bankTransactionId } },
+        select: {
+          amountMinorUnits: true,
+          bankAccount: { select: { currency: true } },
+          reconciliations: {
+            where: { status: ReconciliationStatus.CONFIRMED },
+            select: { id: true },
+          },
+          reference: true,
+          transactionDate: true,
+        },
+      });
+      const invoice = await database.invoice.findUnique({
+        where: { workspaceId_id: { workspaceId: scope.workspaceId, id: input.invoiceId } },
+        select: {
+          currency: true,
+          dueDate: true,
+          payments: { select: { amountMinorUnits: true } },
+          status: true,
+          totalMinorUnits: true,
+        },
+      });
+
+      if (transaction === null || invoice === null) throw reconciliationNotFound();
+      if (transaction.amountMinorUnits <= 0n) throw ineligibleReconciliation();
+      if (transaction.reconciliations.length > 0) throw alreadyReconciled();
+      if (invoice.currency !== transaction.bankAccount.currency) throw ineligibleReconciliation();
+      if (invoice.status !== InvoiceStatus.SENT && invoice.status !== InvoiceStatus.OVERDUE) {
+        throw ineligibleReconciliation();
+      }
+
+      const paid = invoice.payments.reduce(
+        (total, payment) => total + payment.amountMinorUnits,
+        0n,
+      );
+      const outstanding = invoice.totalMinorUnits - paid;
+      if (outstanding !== transaction.amountMinorUnits || outstanding <= 0n) {
+        throw ineligibleReconciliation();
+      }
+
+      const payment = await database.payment.create({
+        data: {
+          workspaceId: scope.workspaceId,
+          invoiceId: input.invoiceId,
+          amountMinorUnits: transaction.amountMinorUnits,
+          receivedAt: transaction.transactionDate,
+          method: PaymentMethod.BANK_TRANSFER,
+          reference: transaction.reference,
+        },
+        select: { id: true },
+      });
+      await database.invoice.update({
+        where: { workspaceId_id: { workspaceId: scope.workspaceId, id: input.invoiceId } },
+        data: { status: InvoiceStatus.PAID },
+      });
+      const reconciliation = await database.reconciliation.create({
+        data: {
+          workspaceId: scope.workspaceId,
+          bankTransactionId,
+          paymentId: payment.id,
+          status: ReconciliationStatus.CONFIRMED,
+          matchType: ReconciliationMatchType.SUGGESTED,
+          confidenceBasisPoints: input.confidenceBasisPoints,
+          idempotencyKey,
+        },
+        select: { bankTransactionId: true, id: true, paymentId: true, status: true },
+      });
+
+      return { idempotencyReplayed: false, ...reconciliation };
+    });
+  }
 
   async listSuggestions(
     scope: WorkspaceScope,
@@ -56,6 +159,27 @@ export class ReconciliationService {
       ),
     };
   }
+}
+
+function reconciliationNotFound(): NotFoundException {
+  return new NotFoundException({
+    code: "RECONCILIATION_RESOURCE_NOT_FOUND",
+    message: "The transaction or invoice was not found.",
+  });
+}
+
+function ineligibleReconciliation(): ConflictException {
+  return new ConflictException({
+    code: "RECONCILIATION_NOT_ELIGIBLE",
+    message: "The transaction and invoice no longer satisfy reconciliation rules.",
+  });
+}
+
+function alreadyReconciled(): ConflictException {
+  return new ConflictException({
+    code: "TRANSACTION_ALREADY_RECONCILED",
+    message: "The bank transaction already has an active reconciliation.",
+  });
 }
 
 function toCandidateTransaction(

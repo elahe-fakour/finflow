@@ -1,9 +1,23 @@
-import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { RequireWorkspacePermission } from "../workspaces/require-workspace-permission.decorator.js";
 import { CurrentWorkspace, type WorkspaceAccess } from "../workspaces/workspace-access.js";
 import { WorkspaceMembershipGuard } from "../workspaces/workspace-membership.guard.js";
 import { WorkspacePermissionGuard } from "../workspaces/workspace-permission.guard.js";
 import { WorkspacePermission } from "../workspaces/workspace-permissions.js";
+import { ConfirmReconciliationDto } from "./dto/confirm-reconciliation.dto.js";
+
+const idempotencyKeyPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 import {
   ReconciliationService,
   type ReconciliationSuggestionsResponse,
@@ -23,5 +37,28 @@ export class ReconciliationController {
     @Param("bankTransactionId", new ParseUUIDPipe()) bankTransactionId: string,
   ): Promise<ReconciliationSuggestionsResponse> {
     return this.reconciliationService.listSuggestions(access, bankTransactionId);
+  }
+
+  @Post("confirm")
+  @RequireWorkspacePermission(WorkspacePermission.MANAGE_FINANCIAL_DATA)
+  confirm(
+    @CurrentWorkspace() access: WorkspaceAccess,
+    @Param("bankTransactionId", new ParseUUIDPipe()) bankTransactionId: string,
+    @Body() input: ConfirmReconciliationDto,
+    @Headers("idempotency-key") idempotencyKey: string | undefined,
+  ) {
+    if (idempotencyKey === undefined || !idempotencyKeyPattern.test(idempotencyKey.trim())) {
+      throw new BadRequestException({
+        code: "INVALID_IDEMPOTENCY_KEY",
+        message: "The idempotency-key header must be a UUID.",
+      });
+    }
+
+    return this.reconciliationService.confirm(
+      access,
+      bankTransactionId,
+      input,
+      idempotencyKey.trim().toLowerCase(),
+    );
   }
 }
