@@ -378,6 +378,7 @@ model Reconciliation {
   status                ReconciliationStatus    @default(CONFIRMED)
   matchType             ReconciliationMatchType @map("match_type")
   confidenceBasisPoints Int?                    @map("confidence_basis_points")
+  idempotencyKey        String                  @map("idempotency_key") @db.VarChar(255)
   reconciledAt          DateTime                @default(now()) @map("reconciled_at") @db.Timestamptz(3)
   reversedAt            DateTime?               @map("reversed_at") @db.Timestamptz(3)
   note                  String?                 @db.Text
@@ -389,5 +390,6 @@ model Reconciliation {
   workspace       Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
 
   @@index([workspaceId, status, reconciledAt], map: "reconciliations_workspace_id_status_reconciled_at_idx")
+  @@unique([workspaceId, idempotencyKey], map: "reconciliations_workspace_idempotency_key_key")
   @@map("reconciliations")
 }
