@@ -9,6 +9,7 @@ import { HealthModule } from "./health/health.module.js";
 import { IncomeExpenseCategoriesModule } from "./income-expense-categories/income-expense-categories.module.js";
 import { BankTransactionImportsModule } from "./bank-transaction-imports/bank-transaction-imports.module.js";
 import { IncomeExpenseEntriesModule } from "./income-expense-entries/income-expense-entries.module.js";
+import { ReconciliationModule } from "./reconciliation/reconciliation.module.js";
 import { VendorsModule } from "./vendors/vendors.module.js";
 import { WorkspacesModule } from "./workspaces/workspaces.module.js";
 
@@ -33,6 +34,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
     BankTransactionImportsModule,
     IncomeExpenseEntriesModule,
     VendorsModule,
+    ReconciliationModule,
   ],
 })
 export class AppModule {}
