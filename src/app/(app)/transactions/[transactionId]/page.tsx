@@ -136,7 +136,11 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
             />
           </CardContent>
         </Card>
-        <ReconciliationSuggestions suggestions={reconciliationSuggestions.suggestions} />
+        <ReconciliationSuggestions
+          suggestions={reconciliationSuggestions.suggestions}
+          transactionId={transaction.id}
+          workspaceId={workspace.id}
+        />
       </div>
     </section>
   );

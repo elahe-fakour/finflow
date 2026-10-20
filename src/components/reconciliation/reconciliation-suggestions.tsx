@@ -1,13 +1,62 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ScoredInvoiceCandidate } from "@/lib/reconciliation/reconciliation";
-import { CircleCheck, Info } from "lucide-react";
+import { CheckCircle2, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type ReconciliationSuggestionsProps = {
+  transactionId: string;
+  workspaceId: string;
   suggestions: ScoredInvoiceCandidate[];
 };
 
-function ReconciliationSuggestions({ suggestions }: ReconciliationSuggestionsProps) {
+function ReconciliationSuggestions({
+  suggestions,
+  transactionId,
+  workspaceId,
+}: ReconciliationSuggestionsProps) {
+  const router = useRouter();
+  const [isConfirming, setIsConfirming] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+
+  async function confirmSuggestion(suggestion: ScoredInvoiceCandidate) {
+    setIsConfirming(suggestion.invoiceId);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/workspaces/${encodeURIComponent(workspaceId)}/bank-transactions/${encodeURIComponent(transactionId)}/reconciliation-suggestions/confirm`,
+        {
+          body: JSON.stringify({
+            confidenceBasisPoints: suggestion.scoreBasisPoints,
+            invoiceId: suggestion.invoiceId,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": crypto.randomUUID(),
+          },
+          method: "POST",
+        },
+      );
+
+      if (!response.ok) {
+        setMessage({ kind: "error", text: await getErrorMessage(response) });
+        return;
+      }
+
+      setMessage({ kind: "success", text: "Reconciliation confirmed successfully." });
+      router.refresh();
+    } catch {
+      setMessage({ kind: "error", text: "We couldn't confirm this match. Please try again." });
+    } finally {
+      setIsConfirming(null);
+    }
+  }
+
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
@@ -51,13 +100,51 @@ function ReconciliationSuggestions({ suggestions }: ReconciliationSuggestionsPro
                     </li>
                   ))}
                 </ul>
+                <Button
+                  className="mt-4"
+                  disabled={isConfirming !== null}
+                  onClick={() => confirmSuggestion(suggestion)}
+                  type="button"
+                >
+                  {isConfirming === suggestion.invoiceId ? "Confirming…" : "Confirm match"}
+                </Button>
               </article>
             ))}
           </div>
         )}
+        {message ? (
+          <p
+            aria-live="polite"
+            className={
+              message.kind === "success"
+                ? "mt-4 flex items-center gap-2 text-sm text-success"
+                : "mt-4 flex items-center gap-2 text-sm text-destructive"
+            }
+            role={message.kind === "error" ? "alert" : "status"}
+          >
+            {message.kind === "success" ? (
+              <CheckCircle2 aria-hidden="true" className="size-4" />
+            ) : (
+              <TriangleAlert aria-hidden="true" className="size-4" />
+            )}
+            {message.text}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
+}
+
+async function getErrorMessage(response: Response): Promise<string> {
+  const payload: unknown = await response.json().catch(() => null);
+
+  if (typeof payload === "object" && payload !== null && "message" in payload) {
+    const message = payload.message;
+
+    if (typeof message === "string") return message;
+  }
+
+  return "We couldn't confirm this match. Please try again.";
 }
 
 function formatConfidence(scoreBasisPoints: number): string {
