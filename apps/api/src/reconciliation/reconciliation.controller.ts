@@ -9,6 +9,8 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import { CurrentUser } from "@nestjs/authentication";
+import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { RequireWorkspacePermission } from "../workspaces/require-workspace-permission.decorator.js";
 import { CurrentWorkspace, type WorkspaceAccess } from "../workspaces/workspace-access.js";
 import { WorkspaceMembershipGuard } from "../workspaces/workspace-membership.guard.js";
@@ -43,6 +45,7 @@ export class ReconciliationController {
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_FINANCIAL_DATA)
   confirm(
     @CurrentWorkspace() access: WorkspaceAccess,
+    @CurrentUser() user: AuthenticatedUser,
     @Param("bankTransactionId", new ParseUUIDPipe()) bankTransactionId: string,
     @Body() input: ConfirmReconciliationDto,
     @Headers("idempotency-key") idempotencyKey: string | undefined,
@@ -56,6 +59,7 @@ export class ReconciliationController {
 
     return this.reconciliationService.confirm(
       access,
+      user.id,
       bankTransactionId,
       input,
       idempotencyKey.trim().toLowerCase(),

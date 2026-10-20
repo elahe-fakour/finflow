@@ -72,6 +72,7 @@ model User {
   passwordCredential UserCredential?
   sessions           UserSession[]
   importedBankTransactionBatches BankTransactionImportBatch[]
+  auditEvents                  AuditEvent[]
 
   @@map("users")
 }
@@ -119,6 +120,7 @@ model Workspace {
   payments                Payment[]
   reconciliations         Reconciliation[]
   vendors                 Vendor[]
+  auditEvents             AuditEvent[]
 
   @@map("workspaces")
 }
@@ -392,4 +394,22 @@ model Reconciliation {
   @@index([workspaceId, status, reconciledAt], map: "reconciliations_workspace_id_status_reconciled_at_idx")
   @@unique([workspaceId, idempotencyKey], map: "reconciliations_workspace_idempotency_key_key")
   @@map("reconciliations")
+}
+
+model AuditEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  actorUserId String   @map("actor_user_id") @db.Uuid
+  action      String   @db.VarChar(120)
+  entity      String   @db.VarChar(120)
+  entityId    String   @map("entity_id") @db.VarChar(120)
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor     User      @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@index([workspaceId, createdAt], map: "audit_events_workspace_id_created_at_idx")
+  @@index([workspaceId, entity, entityId], map: "audit_events_workspace_entity_idx")
+  @@map("audit_events")
 }

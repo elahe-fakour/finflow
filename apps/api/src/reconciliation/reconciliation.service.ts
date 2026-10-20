@@ -42,6 +42,7 @@ export class ReconciliationService {
 
   async confirm(
     scope: WorkspaceScope,
+    actorUserId: string,
     bankTransactionId: string,
     input: ConfirmReconciliationDto,
     idempotencyKey: string,
@@ -125,6 +126,22 @@ export class ReconciliationService {
           idempotencyKey,
         },
         select: { bankTransactionId: true, id: true, paymentId: true, status: true },
+      });
+
+      await database.auditEvent.create({
+        data: {
+          workspaceId: scope.workspaceId,
+          actorUserId,
+          action: "RECONCILIATION_CONFIRMED",
+          entity: "Reconciliation",
+          entityId: reconciliation.id,
+          metadata: {
+            bankTransactionId,
+            confidenceBasisPoints: input.confidenceBasisPoints,
+            invoiceId: input.invoiceId,
+            paymentId: payment.id,
+          },
+        },
       });
 
       return { idempotencyReplayed: false, ...reconciliation };

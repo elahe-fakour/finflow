@@ -40,6 +40,7 @@ describe("reconciliation service", () => {
         create: vi.fn().mockResolvedValue(reconciliation),
         findUnique: vi.fn().mockResolvedValue(null),
       },
+      auditEvent: { create: vi.fn().mockResolvedValue({}) },
       bankTransaction: {
         findUnique: vi.fn().mockResolvedValue({
           amountMinorUnits: transaction.amountMinorUnits,
@@ -72,6 +73,7 @@ describe("reconciliation service", () => {
     await expect(
       service.confirm(
         scope,
+        "user-1",
         transaction.id,
         { confidenceBasisPoints: 9_600, invoiceId: invoice.id },
         "11111111-1111-4111-8111-111111111111",
@@ -81,6 +83,7 @@ describe("reconciliation service", () => {
     expect(database.payment.create).toHaveBeenCalledOnce();
     expect(database.invoice.update).toHaveBeenCalledOnce();
     expect(database.reconciliation.create).toHaveBeenCalledOnce();
+    expect(database.auditEvent.create).toHaveBeenCalledOnce();
   });
 
   it("returns ranked, explainable suggestions without writing", async () => {
