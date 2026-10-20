@@ -23,6 +23,7 @@ type ReconciliationSuggestions = {
   bankTransaction: {
     amountMinorUnits: string;
     description: string;
+    hasActiveReconciliation: boolean;
     id: string;
     reference: string | null;
     transactionDate: string;

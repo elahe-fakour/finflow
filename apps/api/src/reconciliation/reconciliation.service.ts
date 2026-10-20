@@ -25,6 +25,7 @@ export type ReconciliationSuggestionsResponse = {
   bankTransaction: {
     amountMinorUnits: string;
     description: string;
+    hasActiveReconciliation: boolean;
     id: string;
     reference: string | null;
     transactionDate: string;
@@ -224,6 +225,7 @@ function serializeTransaction(
   return {
     amountMinorUnits: transaction.amountMinorUnits.toString(),
     description: transaction.description,
+    hasActiveReconciliation: transaction.reconciliations.length > 0,
     id: transaction.id,
     reference: transaction.reference,
     transactionDate: toCalendarDate(transaction.transactionDate),

@@ -9,12 +9,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type ReconciliationSuggestionsProps = {
+  hasActiveReconciliation: boolean;
   transactionId: string;
   workspaceId: string;
   suggestions: ScoredInvoiceCandidate[];
 };
 
 function ReconciliationSuggestions({
+  hasActiveReconciliation,
   suggestions,
   transactionId,
   workspaceId,
@@ -60,13 +62,22 @@ function ReconciliationSuggestions({
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
-        <CardTitle as="h2">Possible invoice matches</CardTitle>
+        <CardTitle as="h2">
+          {hasActiveReconciliation ? "Reconciliation confirmed" : "Possible invoice matches"}
+        </CardTitle>
         <CardDescription>
-          Review the evidence before any payment or reconciliation is created.
+          {hasActiveReconciliation
+            ? "This transaction already has an active reconciliation and cannot be matched again."
+            : "Review the evidence before any payment or reconciliation is created."}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {suggestions.length === 0 ? (
+        {hasActiveReconciliation ? (
+          <div className="flex items-start gap-3 rounded-lg border border-success/30 bg-success/5 p-4 text-sm text-success">
+            <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <p>Payment and invoice status have been updated for this bank transaction.</p>
+          </div>
+        ) : suggestions.length === 0 ? (
           <div className="flex items-start gap-3 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
             <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             <p>No invoice candidates met the minimum confidence threshold.</p>

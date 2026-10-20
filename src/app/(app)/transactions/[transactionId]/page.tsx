@@ -137,6 +137,9 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
           </CardContent>
         </Card>
         <ReconciliationSuggestions
+          hasActiveReconciliation={
+            reconciliationSuggestions.bankTransaction.hasActiveReconciliation
+          }
           suggestions={reconciliationSuggestions.suggestions}
           transactionId={transaction.id}
           workspaceId={workspace.id}
