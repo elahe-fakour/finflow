@@ -2,6 +2,7 @@ import "./environment.js";
 import { AuthenticationModule } from "@nestjs/authentication";
 import { Module } from "@nestjs/common";
 import { AuthModule } from "./auth/auth.module.js";
+import { AuditEventsModule } from "./audit-events/audit-events.module.js";
 import { BankAccountsModule } from "./bank-accounts/bank-accounts.module.js";
 import { BankTransactionsModule } from "./bank-transactions/bank-transactions.module.js";
 import { CustomersModule } from "./customers/customers.module.js";
@@ -27,6 +28,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
     HealthModule,
     CustomersModule,
     AuthModule,
+    AuditEventsModule,
     WorkspacesModule,
     BankAccountsModule,
     BankTransactionsModule,
