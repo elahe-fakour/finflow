@@ -6,6 +6,7 @@ export const WorkspacePermission = {
   MANAGE_FINANCIAL_DATA: "workspace:manage-financial-data",
   MANAGE_MEMBERS: "workspace:manage-members",
   MANAGE_OWNERSHIP: "workspace:manage-ownership",
+  VIEW_AUDIT_LOG: "workspace:view-audit-log",
 } as const;
 
 export type WorkspacePermission = (typeof WorkspacePermission)[keyof typeof WorkspacePermission];
@@ -20,7 +21,11 @@ const permissionsByRole: Readonly<Record<WorkspaceRole, readonly WorkspacePermis
     WorkspacePermission.MANAGE_FINANCIAL_DATA,
     WorkspacePermission.MANAGE_MEMBERS,
   ],
-  [WorkspaceRole.ACCOUNTANT]: [WorkspacePermission.VIEW, WorkspacePermission.MANAGE_FINANCIAL_DATA],
+  [WorkspaceRole.ACCOUNTANT]: [
+    WorkspacePermission.VIEW,
+    WorkspacePermission.VIEW_AUDIT_LOG,
+    WorkspacePermission.MANAGE_FINANCIAL_DATA,
+  ],
   [WorkspaceRole.MEMBER]: [WorkspacePermission.VIEW],
 };
 

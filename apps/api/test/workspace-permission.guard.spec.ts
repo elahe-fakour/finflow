@@ -14,6 +14,7 @@ describe("WorkspacePermissionGuard", () => {
     [WorkspaceRole.OWNER, WorkspacePermission.MANAGE_OWNERSHIP],
     [WorkspaceRole.ADMIN, WorkspacePermission.MANAGE_SETTINGS],
     [WorkspaceRole.ACCOUNTANT, WorkspacePermission.MANAGE_FINANCIAL_DATA],
+    [WorkspaceRole.ACCOUNTANT, WorkspacePermission.VIEW_AUDIT_LOG],
     [WorkspaceRole.MEMBER, WorkspacePermission.VIEW],
   ] as const)("allows %s to perform %s", (role, permission) => {
     const guard = createGuard(permission);

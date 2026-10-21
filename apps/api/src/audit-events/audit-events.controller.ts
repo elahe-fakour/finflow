@@ -13,7 +13,7 @@ export class AuditEventsController {
   constructor(private readonly auditEventsService: AuditEventsService) {}
 
   @Get()
-  @RequireWorkspacePermission(WorkspacePermission.VIEW)
+  @RequireWorkspacePermission(WorkspacePermission.VIEW_AUDIT_LOG)
   list(
     @CurrentWorkspace() access: WorkspaceAccess,
     @Query() input: ListAuditEventsDto,
