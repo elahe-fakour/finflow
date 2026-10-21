@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from "../auth/auth.service.js";
 import type { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
 import type { RenameWorkspaceDto } from "./dto/rename-workspace.dto.js";
 import type { WorkspaceAccess } from "./workspace-access.js";
-import { WorkspacesRepository } from "./workspaces.repository.js";
+import { WorkspacesRepository, type WorkspaceMember } from "./workspaces.repository.js";
 
 const MAX_SLUG_LENGTH = 100;
 const SLUG_SUFFIX_LENGTH = 12;
@@ -97,6 +97,10 @@ export class WorkspacesService {
       ...workspace,
       role: access.role,
     };
+  }
+
+  async listMembers(access: WorkspaceAccess): Promise<WorkspaceMember[]> {
+    return this.workspacesRepository.listMembers(access);
   }
 
   listForUser(user: AuthenticatedUser): Promise<AccessibleWorkspace[]> {

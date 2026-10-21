@@ -49,6 +49,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   return (
     <section aria-labelledby="settings-title" className="space-y-8">
       <PageHeader workspaceName={workspace.name} />
+      {workspace.role === "OWNER" || workspace.role === "ADMIN" ? (
+        <Button asChild variant="outline">
+          <Link href="/settings/members">Manage workspace members</Link>
+        </Button>
+      ) : null}
       <AuditEventFilters filters={filters} />
       {auditEvents === null ? (
         <ErrorState

@@ -38,6 +38,13 @@ export class WorkspacesController {
     return this.workspacesService.getForMember(access);
   }
 
+  @Get(":workspaceId/members")
+  @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
+  @RequireWorkspacePermission(WorkspacePermission.MANAGE_MEMBERS)
+  listMembers(@CurrentWorkspace() access: WorkspaceAccess) {
+    return this.workspacesService.listMembers(access);
+  }
+
   @Patch(":workspaceId")
   @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_SETTINGS)

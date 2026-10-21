@@ -25,6 +25,14 @@ export type WorkspaceMembershipAccess = {
   role: WorkspaceRole;
 };
 
+export type WorkspaceMember = {
+  createdAt: Date;
+  displayName: string | null;
+  email: string;
+  role: WorkspaceRole;
+  userId: string;
+};
+
 export type WorkspaceSummary = {
   id: string;
   name: string;
@@ -129,6 +137,29 @@ export class WorkspacesRepository {
         createdAt: true,
       },
     });
+  }
+
+  async listMembers(
+    scope: WorkspaceScope,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<WorkspaceMember[]> {
+    const memberships = await database.workspaceMembership.findMany({
+      where: { workspaceId: scope.workspaceId },
+      select: {
+        createdAt: true,
+        role: true,
+        user: { select: { id: true, displayName: true, email: true } },
+      },
+      orderBy: [{ role: "asc" }, { user: { email: "asc" } }],
+    });
+
+    return memberships.map(({ createdAt, role, user }) => ({
+      createdAt,
+      displayName: user.displayName,
+      email: user.email,
+      role,
+      userId: user.id,
+    }));
   }
 
   rename(
