@@ -3,7 +3,7 @@ import { WorkspaceRole, type PrismaClient } from "../generated/prisma/client.js"
 import { PrismaService } from "../database/prisma.service.js";
 import type { WorkspaceScope } from "./workspace-scope.js";
 
-type WorkspaceQueryClient = Pick<PrismaClient, "workspace" | "workspaceMembership">;
+type WorkspaceQueryClient = Pick<PrismaClient, "user" | "workspace" | "workspaceMembership">;
 
 export type WorkspaceWithOwnerMembership = {
   id: string;
@@ -31,6 +31,12 @@ export type WorkspaceMember = {
   email: string;
   role: WorkspaceRole;
   userId: string;
+};
+
+export type WorkspaceUser = {
+  displayName: string | null;
+  email: string;
+  id: string;
 };
 
 export type WorkspaceSummary = {
@@ -160,6 +166,32 @@ export class WorkspacesRepository {
       role,
       userId: user.id,
     }));
+  }
+
+  findUserByEmail(
+    email: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<WorkspaceUser | null> {
+    return database.user.findUnique({
+      where: { email },
+      select: { id: true, displayName: true, email: true },
+    });
+  }
+
+  createMembership(
+    workspaceId: string,
+    userId: string,
+    role: WorkspaceRole,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ) {
+    return database.workspaceMembership.create({
+      data: { workspaceId, userId, role },
+      select: {
+        createdAt: true,
+        role: true,
+        user: { select: { id: true, displayName: true, email: true } },
+      },
+    });
   }
 
   rename(

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { InviteMemberForm } from "@/components/workspaces/invite-member-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -46,7 +47,10 @@ export default async function WorkspaceMembersPage() {
           description="You may not have permission to view members, or the workspace service is unavailable."
         />
       ) : (
-        <MemberList members={members} />
+        <div className="space-y-4">
+          <InviteMemberForm workspaceId={workspace.id} />
+          <MemberList members={members} />
+        </div>
       )}
     </section>
   );

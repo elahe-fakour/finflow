@@ -2,6 +2,7 @@ import { CurrentUser } from "@nestjs/authentication";
 import { Body, Controller, Get, Patch, Post, UseGuards } from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
+import { InviteWorkspaceMemberDto } from "./dto/invite-workspace-member.dto.js";
 import { RenameWorkspaceDto } from "./dto/rename-workspace.dto.js";
 import { RequireWorkspacePermission } from "./require-workspace-permission.decorator.js";
 import { CurrentWorkspace, type WorkspaceAccess } from "./workspace-access.js";
@@ -43,6 +44,17 @@ export class WorkspacesController {
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_MEMBERS)
   listMembers(@CurrentWorkspace() access: WorkspaceAccess) {
     return this.workspacesService.listMembers(access);
+  }
+
+  @Post(":workspaceId/members")
+  @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
+  @RequireWorkspacePermission(WorkspacePermission.MANAGE_MEMBERS)
+  inviteMember(
+    @CurrentUser() actor: AuthenticatedUser,
+    @CurrentWorkspace() access: WorkspaceAccess,
+    @Body() input: InviteWorkspaceMemberDto,
+  ) {
+    return this.workspacesService.inviteMember(access, actor, input);
   }
 
   @Patch(":workspaceId")
