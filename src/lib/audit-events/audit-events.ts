@@ -22,10 +22,17 @@ type PaginatedAuditEvents = {
   totalPages: number;
 };
 
+type AuditEventFilters = {
+  action?: string;
+  actor?: string;
+  from?: string;
+  page: number;
+  to?: string;
+};
+
 async function getAuditEvents(
   workspaceId: string,
-  page = 1,
-  pageSize = 25,
+  filters: AuditEventFilters,
 ): Promise<PaginatedAuditEvents | null> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(sessionCookieName);
@@ -35,7 +42,12 @@ async function getAuditEvents(
     headers.set("Cookie", `${sessionCookieName}=${sessionCookie.value}`);
   }
 
-  const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  const query = new URLSearchParams({ page: String(filters.page), pageSize: "25" });
+
+  for (const key of ["action", "actor", "from", "to"] as const) {
+    const value = filters[key];
+    if (value !== undefined && value !== "") query.set(key, value);
+  }
 
   try {
     const response = await fetch(
@@ -56,4 +68,4 @@ async function getAuditEvents(
 }
 
 export { getAuditEvents };
-export type { AuditEvent, PaginatedAuditEvents };
+export type { AuditEvent, AuditEventFilters, PaginatedAuditEvents };

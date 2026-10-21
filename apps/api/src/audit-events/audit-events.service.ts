@@ -26,7 +26,7 @@ export class AuditEventsService {
   constructor(private readonly repository: AuditEventsRepository) {}
 
   async list(scope: WorkspaceScope, input: ListAuditEventsDto): Promise<PaginatedAuditEvents> {
-    const result = await this.repository.list(scope, input.page, input.pageSize);
+    const result = await this.repository.list(scope, input);
 
     return {
       data: result.events.map((event) => ({

@@ -31,6 +31,9 @@ describe("audit events service", () => {
       totalPages: 2,
       data: [{ action: "RECONCILIATION_CONFIRMED", entity: "Reconciliation" }],
     });
-    expect(repository.list).toHaveBeenCalledWith({ workspaceId: "workspace-1" }, 2, 2);
+    expect(repository.list).toHaveBeenCalledWith(
+      { workspaceId: "workspace-1" },
+      { page: 2, pageSize: 2 },
+    );
   });
 });

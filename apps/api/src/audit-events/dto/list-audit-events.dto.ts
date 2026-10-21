@@ -1,7 +1,21 @@
 import { Transform } from "class-transformer";
-import { Max, Min } from "class-validator";
+import { IsDateString, IsOptional, IsString, IsUUID, Max, Min, MaxLength } from "class-validator";
 
 export class ListAuditEventsDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  action?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  actor?: string;
+
+  @IsOptional()
+  @IsDateString()
+  from?: string;
+
   @Transform(({ value }) => parseInteger(value, 1))
   @Min(1)
   page = 1;
@@ -10,6 +24,10 @@ export class ListAuditEventsDto {
   @Min(1)
   @Max(100)
   pageSize = 25;
+
+  @IsOptional()
+  @IsDateString()
+  to?: string;
 }
 
 function parseInteger(value: unknown, fallback: number): unknown {

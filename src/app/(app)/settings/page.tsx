@@ -2,7 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
-import { getAuditEvents, type AuditEvent } from "@/lib/audit-events/audit-events";
+import {
+  getAuditEvents,
+  type AuditEvent,
+  type AuditEventFilters,
+} from "@/lib/audit-events/audit-events";
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
 import { ClipboardList, FolderPlus } from "lucide-react";
 import type { Metadata } from "next";
@@ -14,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 type SettingsPageProps = {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -39,12 +43,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     );
   }
 
-  const page = parsePage((await searchParams).page);
-  const auditEvents = await getAuditEvents(workspace.id, page);
+  const filters = parseAuditEventFilters(await searchParams);
+  const auditEvents = await getAuditEvents(workspace.id, filters);
 
   return (
     <section aria-labelledby="settings-title" className="space-y-8">
       <PageHeader workspaceName={workspace.name} />
+      <AuditEventFilters filters={filters} />
       {auditEvents === null ? (
         <ErrorState
           className="mt-8"
@@ -72,7 +77,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               ))}
             </CardContent>
           </Card>
-          <Pagination page={auditEvents.page} totalPages={auditEvents.totalPages} />
+          <Pagination
+            filters={filters}
+            page={auditEvents.page}
+            totalPages={auditEvents.totalPages}
+          />
         </div>
       )}
     </section>
@@ -118,13 +127,108 @@ function AuditEventRow({ event }: { event: AuditEvent }) {
   );
 }
 
-function Pagination({ page, totalPages }: { page: number; totalPages: number }) {
+function AuditEventFilters({ filters }: { filters: AuditEventFilters }) {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle as="h2">Filters</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Narrow activity by operation, actor, or date.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <form action="/settings" className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <FilterField id="audit-action" label="Action">
+            <select
+              className={inputClassName}
+              defaultValue={filters.action ?? ""}
+              id="audit-action"
+              name="action"
+            >
+              <option value="">All actions</option>
+              <option value="RECONCILIATION_CONFIRMED">Reconciliation confirmed</option>
+            </select>
+          </FilterField>
+          <FilterField id="audit-actor" label="Actor">
+            <input
+              className={inputClassName}
+              defaultValue={filters.actor ?? ""}
+              id="audit-actor"
+              maxLength={255}
+              name="actor"
+              placeholder="Name or email"
+              type="search"
+            />
+          </FilterField>
+          <FilterField id="audit-from" label="From">
+            <input
+              className={inputClassName}
+              defaultValue={filters.from ?? ""}
+              id="audit-from"
+              name="from"
+              type="date"
+            />
+          </FilterField>
+          <FilterField id="audit-to" label="To">
+            <input
+              className={inputClassName}
+              defaultValue={filters.to ?? ""}
+              id="audit-to"
+              name="to"
+              type="date"
+            />
+          </FilterField>
+          <div className="flex items-end gap-2">
+            <Button className="flex-1" type="submit">
+              Apply filters
+            </Button>
+            <Button asChild type="button" variant="outline">
+              <Link href="/settings">Clear</Link>
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function FilterField({
+  children,
+  id,
+  label,
+}: {
+  children: React.ReactNode;
+  id: string;
+  label: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-muted-foreground" htmlFor={id}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+const inputClassName =
+  "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+function Pagination({
+  filters,
+  page,
+  totalPages,
+}: {
+  filters: AuditEventFilters;
+  page: number;
+  totalPages: number;
+}) {
   if (totalPages <= 1) return null;
 
   return (
     <nav aria-label="Audit log pages" className="flex items-center justify-between gap-3">
       <Button asChild disabled={page <= 1} variant="outline">
-        <Link aria-disabled={page <= 1} href={page > 1 ? `?page=${page - 1}` : "?page=1"}>
+        <Link aria-disabled={page <= 1} href={createAuditLogPath(filters, page > 1 ? page - 1 : 1)}>
           Previous
         </Link>
       </Button>
@@ -134,7 +238,7 @@ function Pagination({ page, totalPages }: { page: number; totalPages: number }) 
       <Button asChild disabled={page >= totalPages} variant="outline">
         <Link
           aria-disabled={page >= totalPages}
-          href={page < totalPages ? `?page=${page + 1}` : `?page=${totalPages}`}
+          href={createAuditLogPath(filters, page < totalPages ? page + 1 : totalPages)}
         >
           Next
         </Link>
@@ -143,9 +247,41 @@ function Pagination({ page, totalPages }: { page: number; totalPages: number }) 
   );
 }
 
+function parseAuditEventFilters(
+  searchParams: Record<string, string | string[] | undefined>,
+): AuditEventFilters {
+  return {
+    action: getParameter(searchParams.action),
+    actor: getParameter(searchParams.actor),
+    from: getDateParameter(searchParams.from),
+    page: parsePage(getParameter(searchParams.page)),
+    to: getDateParameter(searchParams.to),
+  };
+}
+
+function createAuditLogPath(filters: AuditEventFilters, page: number) {
+  const query = new URLSearchParams();
+  for (const key of ["action", "actor", "from", "to"] as const) {
+    const value = filters[key];
+    if (value !== undefined) query.set(key, value);
+  }
+  if (page > 1) query.set("page", String(page));
+  const serialized = query.toString();
+  return serialized === "" ? "/settings" : `/settings?${serialized}`;
+}
+
 function parsePage(value: string | undefined) {
   const page = Number(value);
   return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function getParameter(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getDateParameter(value: string | string[] | undefined) {
+  const parameter = getParameter(value);
+  return parameter !== undefined && /^\d{4}-\d{2}-\d{2}$/u.test(parameter) ? parameter : undefined;
 }
 
 function formatAction(action: string) {
