@@ -286,15 +286,34 @@ export class WorkspacesRepository {
         availableAt: { lte: new Date() },
         attempts: { lt: 3 },
       },
-      data: { status: "PROCESSING" },
+      data: { processingAt: new Date(), status: "PROCESSING" },
     });
     return result.count === 1;
+  }
+
+  recoverStaleInvitationDeliveries(
+    staleBefore: Date,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ) {
+    return database.invitationDeliveryOutbox.updateMany({
+      where: { status: "PROCESSING", processingAt: { lt: staleBefore } },
+      data: {
+        availableAt: new Date(),
+        lastError: "Recovered after an interrupted delivery attempt.",
+        status: "FAILED",
+      },
+    });
   }
 
   markInvitationDeliverySent(id: string, database: WorkspaceQueryClient = this.prisma.database) {
     return database.invitationDeliveryOutbox.update({
       where: { id },
-      data: { status: "SENT", sentAt: new Date(), attempts: { increment: 1 } },
+      data: {
+        processingAt: null,
+        status: "SENT",
+        sentAt: new Date(),
+        attempts: { increment: 1 },
+      },
     });
   }
 
@@ -309,6 +328,7 @@ export class WorkspacesRepository {
         attempts: { increment: 1 },
         availableAt: new Date(Date.now() + 60_000),
         lastError: error,
+        processingAt: null,
         status: "FAILED",
       },
     });

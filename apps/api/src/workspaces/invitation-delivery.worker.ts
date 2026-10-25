@@ -11,6 +11,9 @@ export class InvitationDeliveryWorker {
   ) {}
 
   async processPending(limit = 25): Promise<{ failed: number; sent: number }> {
+    await this.workspacesRepository.recoverStaleInvitationDeliveries(
+      new Date(Date.now() - 5 * 60_000),
+    );
     const deliveries = await this.workspacesRepository.listPendingInvitationDeliveries(limit);
     let sent = 0;
     let failed = 0;
