@@ -1,5 +1,5 @@
 import { CurrentUser } from "@nestjs/authentication";
-import { Body, Controller, Get, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
 import { InviteWorkspaceMemberDto } from "./dto/invite-workspace-member.dto.js";
@@ -30,6 +30,11 @@ export class WorkspacesController {
   @Get()
   list(@CurrentUser() user: AuthenticatedUser): Promise<AccessibleWorkspace[]> {
     return this.workspacesService.listForUser(user);
+  }
+
+  @Post("invitations/:token/accept")
+  acceptInvitation(@CurrentUser() user: AuthenticatedUser, @Param("token") token: string) {
+    return this.workspacesService.acceptInvitation(token, user);
   }
 
   @Get(":workspaceId")

@@ -128,28 +128,22 @@ describe("WorkspacesService", () => {
     expect(rename).toHaveBeenCalledWith(access, "Renamed Studio");
   });
 
-  it("adds an existing user and records the invitation atomically", async () => {
+  it("creates an invitation and records it atomically", async () => {
     const transaction = {
       auditEvent: { create: vi.fn() },
     } as unknown as TransactionClient;
-    const findUserByEmail = vi.fn().mockResolvedValue({
-      id: "6efc89d9-c720-45f6-82cd-ee29e80314c1",
+    const createInvitation = vi.fn().mockResolvedValue({
+      acceptedAt: null,
       email: "accountant@acme.example",
-      displayName: "Acme Accountant",
-    });
-    const createMembership = vi.fn().mockResolvedValue({
-      createdAt: new Date("2026-10-20T12:00:00.000Z"),
+      expiresAt: new Date("2026-10-27T12:00:00.000Z"),
+      id: "invitation-1",
       role: WorkspaceRole.ACCOUNTANT,
-      user: {
-        id: "6efc89d9-c720-45f6-82cd-ee29e80314c1",
-        email: "accountant@acme.example",
-        displayName: "Acme Accountant",
-      },
+      workspaceId: createdWorkspace.id,
     });
     const withTransaction = vi.fn(async (work) => work(transaction));
     const service = new WorkspacesService(
       { withTransaction } as unknown as PrismaService,
-      { findUserByEmail, createMembership } as unknown as WorkspacesRepository,
+      { createInvitation } as unknown as WorkspacesRepository,
     );
 
     await expect(
@@ -157,11 +151,13 @@ describe("WorkspacesService", () => {
         email: "accountant@acme.example",
         role: WorkspaceRole.ACCOUNTANT,
       }),
-    ).resolves.toMatchObject({ role: WorkspaceRole.ACCOUNTANT });
-    expect(createMembership).toHaveBeenCalledWith(
-      createdWorkspace.id,
-      "6efc89d9-c720-45f6-82cd-ee29e80314c1",
-      WorkspaceRole.ACCOUNTANT,
+    ).resolves.toMatchObject({ role: WorkspaceRole.ACCOUNTANT, token: expect.any(String) });
+    expect(createInvitation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "accountant@acme.example",
+        role: WorkspaceRole.ACCOUNTANT,
+        workspaceId: createdWorkspace.id,
+      }),
       transaction,
     );
     expect(transaction.auditEvent.create).toHaveBeenCalled();

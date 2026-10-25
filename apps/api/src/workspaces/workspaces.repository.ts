@@ -3,7 +3,10 @@ import { WorkspaceRole, type PrismaClient } from "../generated/prisma/client.js"
 import { PrismaService } from "../database/prisma.service.js";
 import type { WorkspaceScope } from "./workspace-scope.js";
 
-type WorkspaceQueryClient = Pick<PrismaClient, "user" | "workspace" | "workspaceMembership">;
+type WorkspaceQueryClient = Pick<
+  PrismaClient,
+  "user" | "workspace" | "workspaceInvitation" | "workspaceMembership"
+>;
 
 export type WorkspaceWithOwnerMembership = {
   id: string;
@@ -37,6 +40,15 @@ export type WorkspaceUser = {
   displayName: string | null;
   email: string;
   id: string;
+};
+
+export type WorkspaceInvitationRecord = {
+  acceptedAt: Date | null;
+  email: string;
+  expiresAt: Date;
+  id: string;
+  role: WorkspaceRole;
+  workspaceId: string;
 };
 
 export type WorkspaceSummary = {
@@ -191,6 +203,54 @@ export class WorkspacesRepository {
         role: true,
         user: { select: { id: true, displayName: true, email: true } },
       },
+    });
+  }
+
+  createInvitation(
+    input: {
+      email: string;
+      expiresAt: Date;
+      invitedById: string;
+      role: WorkspaceRole;
+      tokenHash: string;
+      workspaceId: string;
+    },
+    database: WorkspaceQueryClient = this.prisma.database,
+  ) {
+    return database.workspaceInvitation.create({
+      data: input,
+      select: {
+        acceptedAt: true,
+        email: true,
+        expiresAt: true,
+        id: true,
+        role: true,
+        workspaceId: true,
+      },
+    });
+  }
+
+  findInvitationByTokenHash(
+    tokenHash: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<WorkspaceInvitationRecord | null> {
+    return database.workspaceInvitation.findUnique({
+      where: { tokenHash },
+      select: {
+        acceptedAt: true,
+        email: true,
+        expiresAt: true,
+        id: true,
+        role: true,
+        workspaceId: true,
+      },
+    });
+  }
+
+  markInvitationAccepted(id: string, database: WorkspaceQueryClient = this.prisma.database) {
+    return database.workspaceInvitation.update({
+      where: { id },
+      data: { acceptedAt: new Date() },
     });
   }
 

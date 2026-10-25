@@ -43,7 +43,8 @@ function InviteMemberForm({ workspaceId }: InviteMemberFormProps) {
         }
 
         form.reset();
-        setFeedback("The member was added to this workspace.");
+        const invitation = (await response.json()) as { token: string };
+        setFeedback(`Invitation created. Share this link: /invitations/${invitation.token}`);
         router.refresh();
       } catch {
         setFeedback("We couldn't reach FinFlow. Please try again.");

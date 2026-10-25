@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import {
   ConflictException,
   ForbiddenException,
@@ -12,11 +12,16 @@ import type { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
 import type { InviteWorkspaceMemberDto } from "./dto/invite-workspace-member.dto.js";
 import type { RenameWorkspaceDto } from "./dto/rename-workspace.dto.js";
 import type { WorkspaceAccess } from "./workspace-access.js";
-import { WorkspacesRepository, type WorkspaceMember } from "./workspaces.repository.js";
+import {
+  WorkspacesRepository,
+  type WorkspaceMember,
+  type WorkspaceInvitationRecord,
+} from "./workspaces.repository.js";
 
 const MAX_SLUG_LENGTH = 100;
 const SLUG_SUFFIX_LENGTH = 12;
 const MAX_SLUG_ATTEMPTS = 3;
+const INVITATION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 export type CreatedWorkspace = {
   id: string;
@@ -33,6 +38,8 @@ export type AccessibleWorkspace = {
   createdAt: Date;
   role: WorkspaceRole;
 };
+
+export type WorkspaceInvitation = WorkspaceInvitationRecord & { token: string };
 
 @Injectable()
 export class WorkspacesService {
@@ -113,7 +120,7 @@ export class WorkspacesService {
     access: WorkspaceAccess,
     actor: AuthenticatedUser,
     input: InviteWorkspaceMemberDto,
-  ): Promise<WorkspaceMember> {
+  ): Promise<WorkspaceInvitation> {
     if (!canAssignRole(access.role, input.role)) {
       throw new ForbiddenException({
         code: "WORKSPACE_ROLE_ASSIGNMENT_FORBIDDEN",
@@ -121,21 +128,19 @@ export class WorkspacesService {
       });
     }
 
-    const invitedUser = await this.workspacesRepository.findUserByEmail(input.email);
-
-    if (invitedUser === null) {
-      throw new NotFoundException({
-        code: "INVITED_USER_NOT_FOUND",
-        message: "No FinFlow account was found for that email address.",
-      });
-    }
-
     try {
+      const token = randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
       return await this.prisma.withTransaction(async (transaction) => {
-        const membership = await this.workspacesRepository.createMembership(
-          access.workspaceId,
-          invitedUser.id,
-          input.role,
+        const invitation = await this.workspacesRepository.createInvitation(
+          {
+            email: input.email,
+            expiresAt,
+            invitedById: actor.id,
+            role: input.role,
+            tokenHash: hashInvitationToken(token),
+            workspaceId: access.workspaceId,
+          },
           transaction,
         );
 
@@ -144,25 +149,75 @@ export class WorkspacesService {
             action: "WORKSPACE_MEMBER_INVITED",
             actorUserId: actor.id,
             entity: "WorkspaceMembership",
-            entityId: invitedUser.id,
-            metadata: { invitedEmail: invitedUser.email, role: input.role },
+            entityId: invitation.id,
+            metadata: { invitedEmail: input.email, role: input.role },
             workspaceId: access.workspaceId,
           },
         });
 
-        return {
-          createdAt: membership.createdAt,
-          displayName: membership.user.displayName,
-          email: membership.user.email,
-          role: membership.role,
-          userId: membership.user.id,
-        };
+        return { ...invitation, token };
+      });
+    } catch (error) {
+      if (isMembershipConflict(error)) {
+        throw new ConflictException({
+          code: "WORKSPACE_INVITATION_CONFLICT",
+          message: "A workspace invitation could not be created. Please try again.",
+        });
+      }
+
+      throw error;
+    }
+  }
+
+  async acceptInvitation(token: string, user: AuthenticatedUser) {
+    const invitation = await this.workspacesRepository.findInvitationByTokenHash(
+      hashInvitationToken(token),
+    );
+
+    if (
+      invitation === null ||
+      invitation.acceptedAt !== null ||
+      invitation.expiresAt <= new Date()
+    ) {
+      throw new NotFoundException({
+        code: "INVITATION_INVALID",
+        message: "This invitation is invalid or expired.",
+      });
+    }
+
+    if (invitation.email !== user.email) {
+      throw new ForbiddenException({
+        code: "INVITATION_EMAIL_MISMATCH",
+        message: "This invitation belongs to a different email address.",
+      });
+    }
+
+    try {
+      return await this.prisma.withTransaction(async (transaction) => {
+        const membership = await this.workspacesRepository.createMembership(
+          invitation.workspaceId,
+          user.id,
+          invitation.role,
+          transaction,
+        );
+        await this.workspacesRepository.markInvitationAccepted(invitation.id, transaction);
+        await transaction.auditEvent.create({
+          data: {
+            action: "WORKSPACE_INVITATION_ACCEPTED",
+            actorUserId: user.id,
+            entity: "WorkspaceMembership",
+            entityId: user.id,
+            metadata: { invitationId: invitation.id, role: invitation.role },
+            workspaceId: invitation.workspaceId,
+          },
+        });
+        return membership;
       });
     } catch (error) {
       if (isMembershipConflict(error)) {
         throw new ConflictException({
           code: "WORKSPACE_MEMBER_ALREADY_EXISTS",
-          message: "This user is already a member of the workspace.",
+          message: "You are already a member of this workspace.",
         });
       }
 
@@ -226,4 +281,8 @@ function isMembershipConflict(error: unknown): boolean {
 function canAssignRole(actorRole: WorkspaceRole, invitedRole: WorkspaceRole): boolean {
   if (invitedRole === WorkspaceRole.OWNER) return false;
   return actorRole === WorkspaceRole.OWNER || invitedRole !== WorkspaceRole.ADMIN;
+}
+
+function hashInvitationToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
