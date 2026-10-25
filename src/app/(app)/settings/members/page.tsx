@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { InviteMemberForm } from "@/components/workspaces/invite-member-form";
+import { PendingInvitations } from "@/components/workspaces/pending-invitations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { getWorkspaceMembers, type WorkspaceMember } from "@/lib/workspaces/workspace-members";
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
+import { getPendingInvitations } from "@/lib/workspaces/workspace-invitations";
 import { FolderPlus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -37,6 +39,7 @@ export default async function WorkspaceMembersPage() {
   }
 
   const members = await getWorkspaceMembers(workspace.id);
+  const invitations = await getPendingInvitations(workspace.id);
 
   return (
     <section aria-labelledby="members-title" className="space-y-8">
@@ -49,6 +52,9 @@ export default async function WorkspaceMembersPage() {
       ) : (
         <div className="space-y-4">
           <InviteMemberForm workspaceId={workspace.id} />
+          {invitations ? (
+            <PendingInvitations invitations={invitations} workspaceId={workspace.id} />
+          ) : null}
           <MemberList members={members} />
         </div>
       )}

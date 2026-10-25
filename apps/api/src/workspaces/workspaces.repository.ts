@@ -48,6 +48,7 @@ export type WorkspaceInvitationRecord = {
   expiresAt: Date;
   id: string;
   role: WorkspaceRole;
+  revokedAt: Date | null;
   workspaceId: string;
 };
 
@@ -225,6 +226,43 @@ export class WorkspacesRepository {
         expiresAt: true,
         id: true,
         role: true,
+        revokedAt: true,
+        workspaceId: true,
+      },
+    });
+  }
+
+  findPendingInvitation(
+    workspaceId: string,
+    email: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ) {
+    return database.workspaceInvitation.findFirst({
+      where: {
+        workspaceId,
+        email,
+        acceptedAt: null,
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true },
+    });
+  }
+
+  listPendingInvitations(
+    workspaceId: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<WorkspaceInvitationRecord[]> {
+    return database.workspaceInvitation.findMany({
+      where: { workspaceId, acceptedAt: null, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        acceptedAt: true,
+        email: true,
+        expiresAt: true,
+        id: true,
+        role: true,
+        revokedAt: true,
         workspaceId: true,
       },
     });
@@ -242,6 +280,7 @@ export class WorkspacesRepository {
         expiresAt: true,
         id: true,
         role: true,
+        revokedAt: true,
         workspaceId: true,
       },
     });
@@ -251,6 +290,14 @@ export class WorkspacesRepository {
     return database.workspaceInvitation.update({
       where: { id },
       data: { acceptedAt: new Date() },
+    });
+  }
+
+  revokeInvitation(id: string, database: WorkspaceQueryClient = this.prisma.database) {
+    return database.workspaceInvitation.update({
+      where: { id },
+      data: { revokedAt: new Date() },
+      select: { id: true, workspaceId: true },
     });
   }
 

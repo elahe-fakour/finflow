@@ -140,10 +140,11 @@ describe("WorkspacesService", () => {
       role: WorkspaceRole.ACCOUNTANT,
       workspaceId: createdWorkspace.id,
     });
+    const findPendingInvitation = vi.fn().mockResolvedValue(null);
     const withTransaction = vi.fn(async (work) => work(transaction));
     const service = new WorkspacesService(
       { withTransaction } as unknown as PrismaService,
-      { createInvitation } as unknown as WorkspacesRepository,
+      { createInvitation, findPendingInvitation } as unknown as WorkspacesRepository,
     );
 
     await expect(

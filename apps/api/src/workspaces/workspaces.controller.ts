@@ -62,6 +62,24 @@ export class WorkspacesController {
     return this.workspacesService.inviteMember(access, actor, input);
   }
 
+  @Get(":workspaceId/invitations")
+  @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
+  @RequireWorkspacePermission(WorkspacePermission.MANAGE_MEMBERS)
+  listPendingInvitations(@CurrentWorkspace() access: WorkspaceAccess) {
+    return this.workspacesService.listPendingInvitations(access);
+  }
+
+  @Post(":workspaceId/invitations/:invitationId/revoke")
+  @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
+  @RequireWorkspacePermission(WorkspacePermission.MANAGE_MEMBERS)
+  revokeInvitation(
+    @CurrentUser() actor: AuthenticatedUser,
+    @CurrentWorkspace() access: WorkspaceAccess,
+    @Param("invitationId") invitationId: string,
+  ) {
+    return this.workspacesService.revokeInvitation(access, actor, invitationId);
+  }
+
   @Patch(":workspaceId")
   @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_SETTINGS)

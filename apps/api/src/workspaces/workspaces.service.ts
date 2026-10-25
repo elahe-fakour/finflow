@@ -128,6 +128,17 @@ export class WorkspacesService {
       });
     }
 
+    const existingInvitation = await this.workspacesRepository.findPendingInvitation(
+      access.workspaceId,
+      input.email,
+    );
+    if (existingInvitation !== null) {
+      throw new ConflictException({
+        code: "WORKSPACE_INVITATION_ALREADY_EXISTS",
+        message: "An active invitation already exists for this email address.",
+      });
+    }
+
     try {
       const token = randomBytes(32).toString("hex");
       const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
@@ -177,6 +188,7 @@ export class WorkspacesService {
     if (
       invitation === null ||
       invitation.acceptedAt !== null ||
+      invitation.revokedAt !== null ||
       invitation.expiresAt <= new Date()
     ) {
       throw new NotFoundException({
@@ -223,6 +235,37 @@ export class WorkspacesService {
 
       throw error;
     }
+  }
+
+  listPendingInvitations(access: WorkspaceAccess): Promise<WorkspaceInvitationRecord[]> {
+    return this.workspacesRepository.listPendingInvitations(access.workspaceId);
+  }
+
+  async revokeInvitation(access: WorkspaceAccess, actor: AuthenticatedUser, invitationId: string) {
+    const invitation = await this.workspacesRepository.listPendingInvitations(access.workspaceId);
+    if (!invitation.some((item) => item.id === invitationId)) {
+      throw new NotFoundException({
+        code: "INVITATION_NOT_FOUND",
+        message: "Pending invitation not found.",
+      });
+    }
+
+    const revoked = await this.prisma.withTransaction(async (transaction) => {
+      const result = await this.workspacesRepository.revokeInvitation(invitationId, transaction);
+      await transaction.auditEvent.create({
+        data: {
+          action: "WORKSPACE_INVITATION_REVOKED",
+          actorUserId: actor.id,
+          entity: "WorkspaceInvitation",
+          entityId: invitationId,
+          metadata: {},
+          workspaceId: access.workspaceId,
+        },
+      });
+      return result;
+    });
+
+    return revoked;
   }
 
   listForUser(user: AuthenticatedUser): Promise<AccessibleWorkspace[]> {
