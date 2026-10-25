@@ -8,6 +8,7 @@ import { WorkspacesService } from "./workspaces.service.js";
 import { DevelopmentInvitationDelivery } from "./invitation-delivery.js";
 import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
 import { ResendInvitationDelivery } from "./resend-invitation-delivery.js";
+import { InvitationDeliveryScheduler } from "./invitation-delivery.scheduler.js";
 
 @Module({
   imports: [DatabaseModule],
@@ -32,6 +33,7 @@ import { ResendInvitationDelivery } from "./resend-invitation-delivery.js";
       },
     },
     InvitationDeliveryWorker,
+    InvitationDeliveryScheduler,
   ],
   exports: [
     WorkspacesRepository,
