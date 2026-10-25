@@ -1,5 +1,14 @@
 import { CurrentUser } from "@nestjs/authentication";
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
 import { InviteWorkspaceMemberDto } from "./dto/invite-workspace-member.dto.js";
@@ -14,10 +23,14 @@ import {
   type AccessibleWorkspace,
   type CreatedWorkspace,
 } from "./workspaces.service.js";
+import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
 
 @Controller("workspaces")
 export class WorkspacesController {
-  constructor(private readonly workspacesService: WorkspacesService) {}
+  constructor(
+    private readonly workspacesService: WorkspacesService,
+    private readonly invitationDeliveryWorker: InvitationDeliveryWorker,
+  ) {}
 
   @Post()
   create(
@@ -35,6 +48,15 @@ export class WorkspacesController {
   @Post("invitations/:token/accept")
   acceptInvitation(@CurrentUser() user: AuthenticatedUser, @Param("token") token: string) {
     return this.workspacesService.acceptInvitation(token, user);
+  }
+
+  @Post("internal/invitation-delivery/process")
+  processInvitationDelivery() {
+    if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
+      throw new ForbiddenException("Development invitation delivery is disabled in production.");
+    }
+
+    return this.invitationDeliveryWorker.processPending();
   }
 
   @Get(":workspaceId")
