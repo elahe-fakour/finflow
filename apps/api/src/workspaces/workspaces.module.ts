@@ -7,6 +7,7 @@ import { WorkspacesRepository } from "./workspaces.repository.js";
 import { WorkspacesService } from "./workspaces.service.js";
 import { DevelopmentInvitationDelivery } from "./invitation-delivery.js";
 import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
+import { ResendInvitationDelivery } from "./resend-invitation-delivery.js";
 
 @Module({
   imports: [DatabaseModule],
@@ -16,7 +17,20 @@ import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
     WorkspacesService,
     WorkspaceMembershipGuard,
     WorkspacePermissionGuard,
-    { provide: "InvitationDelivery", useClass: DevelopmentInvitationDelivery },
+    {
+      provide: "InvitationDelivery",
+      useFactory: () => {
+        const apiKey = process.env.RESEND_API_KEY?.trim();
+        const from = process.env.EMAIL_FROM?.trim();
+        const webOrigin = process.env.WEB_ORIGIN?.trim();
+
+        if (apiKey && from && webOrigin) {
+          return new ResendInvitationDelivery(apiKey, from, webOrigin);
+        }
+
+        return new DevelopmentInvitationDelivery();
+      },
+    },
     InvitationDeliveryWorker,
   ],
   exports: [
