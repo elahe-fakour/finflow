@@ -5,7 +5,7 @@ import type { WorkspaceScope } from "./workspace-scope.js";
 
 type WorkspaceQueryClient = Pick<
   PrismaClient,
-  "user" | "workspace" | "workspaceInvitation" | "workspaceMembership"
+  "user" | "workspace" | "workspaceInvitation" | "workspaceMembership" | "invitationDeliveryOutbox"
 >;
 
 export type WorkspaceWithOwnerMembership = {
@@ -230,6 +230,18 @@ export class WorkspacesRepository {
         workspaceId: true,
       },
     });
+  }
+
+  createInvitationDelivery(
+    input: {
+      encryptedToken: string;
+      invitationId: string;
+      recipientEmail: string;
+      workspaceId: string;
+    },
+    database: WorkspaceQueryClient = this.prisma.database,
+  ) {
+    return database.invitationDeliveryOutbox.create({ data: input });
   }
 
   findPendingInvitation(

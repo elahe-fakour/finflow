@@ -12,6 +12,7 @@ import type { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
 import type { InviteWorkspaceMemberDto } from "./dto/invite-workspace-member.dto.js";
 import type { RenameWorkspaceDto } from "./dto/rename-workspace.dto.js";
 import type { WorkspaceAccess } from "./workspace-access.js";
+import { encryptInvitationToken } from "../security/invitation-encryption.js";
 import {
   WorkspacesRepository,
   type WorkspaceMember,
@@ -150,6 +151,16 @@ export class WorkspacesService {
             invitedById: actor.id,
             role: input.role,
             tokenHash: hashInvitationToken(token),
+            workspaceId: access.workspaceId,
+          },
+          transaction,
+        );
+
+        await this.workspacesRepository.createInvitationDelivery(
+          {
+            encryptedToken: encryptInvitationToken(token),
+            invitationId: invitation.id,
+            recipientEmail: input.email,
             workspaceId: access.workspaceId,
           },
           transaction,

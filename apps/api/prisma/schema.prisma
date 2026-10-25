@@ -62,6 +62,12 @@ enum ReconciliationMatchType {
   MANUAL
 }
 
+enum InvitationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model User {
   id                 String                @id @default(uuid()) @db.Uuid
   email              String                @unique(map: "users_email_key") @db.VarChar(320)
@@ -119,6 +125,7 @@ model Workspace {
   invoices                Invoice[]
   memberships             WorkspaceMembership[]
   invitations             WorkspaceInvitation[]
+  invitationDeliveries    InvitationDeliveryOutbox[]
   payments                Payment[]
   reconciliations         Reconciliation[]
   vendors                 Vendor[]
@@ -175,10 +182,33 @@ model WorkspaceInvitation {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
   invitedBy User      @relation("WorkspaceInvitationInviter", fields: [invitedById], references: [id], onDelete: Restrict)
+  deliveries InvitationDeliveryOutbox[]
 
   @@index([workspaceId, email, acceptedAt], map: "workspace_invitations_workspace_email_idx")
   @@index([expiresAt], map: "workspace_invitations_expires_at_idx")
   @@map("workspace_invitations")
+}
+
+model InvitationDeliveryOutbox {
+  id                    String                   @id @default(uuid()) @db.Uuid
+  invitationId          String                   @map("invitation_id") @db.Uuid
+  workspaceId           String                   @map("workspace_id") @db.Uuid
+  recipientEmail        String                   @map("recipient_email") @db.VarChar(320)
+  encryptedToken        String                   @map("encrypted_token") @db.Text
+  status                InvitationDeliveryStatus @default(PENDING)
+  attempts              Int                      @default(0)
+  availableAt           DateTime                 @default(now()) @map("available_at") @db.Timestamptz(3)
+  sentAt                DateTime?                @map("sent_at") @db.Timestamptz(3)
+  lastError             String?                  @map("last_error") @db.Text
+  createdAt             DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  invitation WorkspaceInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  workspace  Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+
+  @@index([status, availableAt], map: "invitation_delivery_outbox_status_available_idx")
+  @@index([workspaceId, createdAt], map: "invitation_delivery_outbox_workspace_created_idx")
+  @@map("invitation_delivery_outbox")
 }
 
 model Customer {

@@ -129,6 +129,7 @@ describe("WorkspacesService", () => {
   });
 
   it("creates an invitation and records it atomically", async () => {
+    process.env.INVITATION_ENCRYPTION_KEY = "07".repeat(32);
     const transaction = {
       auditEvent: { create: vi.fn() },
     } as unknown as TransactionClient;
@@ -141,10 +142,15 @@ describe("WorkspacesService", () => {
       workspaceId: createdWorkspace.id,
     });
     const findPendingInvitation = vi.fn().mockResolvedValue(null);
+    const createInvitationDelivery = vi.fn().mockResolvedValue({});
     const withTransaction = vi.fn(async (work) => work(transaction));
     const service = new WorkspacesService(
       { withTransaction } as unknown as PrismaService,
-      { createInvitation, findPendingInvitation } as unknown as WorkspacesRepository,
+      {
+        createInvitation,
+        createInvitationDelivery,
+        findPendingInvitation,
+      } as unknown as WorkspacesRepository,
     );
 
     await expect(
@@ -162,6 +168,14 @@ describe("WorkspacesService", () => {
       transaction,
     );
     expect(transaction.auditEvent.create).toHaveBeenCalled();
+    expect(createInvitationDelivery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        invitationId: "invitation-1",
+        recipientEmail: "accountant@acme.example",
+        encryptedToken: expect.stringMatching(/^v1\./u),
+      }),
+      transaction,
+    );
   });
 
   it("prevents assigning the owner role through an invitation", async () => {
