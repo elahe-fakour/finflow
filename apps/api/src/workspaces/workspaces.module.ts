@@ -5,6 +5,8 @@ import { WorkspaceMembershipGuard } from "./workspace-membership.guard.js";
 import { WorkspacePermissionGuard } from "./workspace-permission.guard.js";
 import { WorkspacesRepository } from "./workspaces.repository.js";
 import { WorkspacesService } from "./workspaces.service.js";
+import { DevelopmentInvitationDelivery } from "./invitation-delivery.js";
+import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
 
 @Module({
   imports: [DatabaseModule],
@@ -14,7 +16,14 @@ import { WorkspacesService } from "./workspaces.service.js";
     WorkspacesService,
     WorkspaceMembershipGuard,
     WorkspacePermissionGuard,
+    { provide: "InvitationDelivery", useClass: DevelopmentInvitationDelivery },
+    InvitationDeliveryWorker,
   ],
-  exports: [WorkspacesRepository, WorkspaceMembershipGuard, WorkspacePermissionGuard],
+  exports: [
+    WorkspacesRepository,
+    WorkspaceMembershipGuard,
+    WorkspacePermissionGuard,
+    InvitationDeliveryWorker,
+  ],
 })
 export class WorkspacesModule {}

@@ -8,6 +8,16 @@ type WorkspaceQueryClient = Pick<
   "user" | "workspace" | "workspaceInvitation" | "workspaceMembership" | "invitationDeliveryOutbox"
 >;
 
+export type InvitationDeliveryOutboxRecord = {
+  attempts: number;
+  email: string;
+  encryptedToken: string;
+  expiresAt: Date;
+  id: string;
+  role: WorkspaceRole;
+  workspaceId: string;
+};
+
 export type WorkspaceWithOwnerMembership = {
   id: string;
   name: string;
@@ -242,6 +252,53 @@ export class WorkspacesRepository {
     database: WorkspaceQueryClient = this.prisma.database,
   ) {
     return database.invitationDeliveryOutbox.create({ data: input });
+  }
+
+  listPendingInvitationDeliveries(
+    limit: number,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ): Promise<InvitationDeliveryOutboxRecord[]> {
+    return database.invitationDeliveryOutbox
+      .findMany({
+        where: {
+          status: { in: ["PENDING", "FAILED"] },
+          availableAt: { lte: new Date() },
+          attempts: { lt: 3 },
+        },
+        orderBy: { createdAt: "asc" },
+        take: limit,
+        select: {
+          attempts: true,
+          encryptedToken: true,
+          invitation: { select: { email: true, expiresAt: true, role: true } },
+          id: true,
+          workspaceId: true,
+        },
+      })
+      .then((rows) => rows.map(({ invitation, ...row }) => ({ ...row, ...invitation })));
+  }
+
+  markInvitationDeliverySent(id: string, database: WorkspaceQueryClient = this.prisma.database) {
+    return database.invitationDeliveryOutbox.update({
+      where: { id },
+      data: { status: "SENT", sentAt: new Date(), attempts: { increment: 1 } },
+    });
+  }
+
+  markInvitationDeliveryFailed(
+    id: string,
+    error: string,
+    database: WorkspaceQueryClient = this.prisma.database,
+  ) {
+    return database.invitationDeliveryOutbox.update({
+      where: { id },
+      data: {
+        attempts: { increment: 1 },
+        availableAt: new Date(Date.now() + 60_000),
+        lastError: error,
+        status: "FAILED",
+      },
+    });
   }
 
   findPendingInvitation(
