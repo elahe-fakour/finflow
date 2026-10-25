@@ -9,6 +9,7 @@ import { DevelopmentInvitationDelivery } from "./invitation-delivery.js";
 import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
 import { ResendInvitationDelivery } from "./resend-invitation-delivery.js";
 import { InvitationDeliveryScheduler } from "./invitation-delivery.scheduler.js";
+import { InvitationDeliveryMetrics } from "./invitation-delivery.metrics.js";
 
 @Module({
   imports: [DatabaseModule],
@@ -34,6 +35,7 @@ import { InvitationDeliveryScheduler } from "./invitation-delivery.scheduler.js"
     },
     InvitationDeliveryWorker,
     InvitationDeliveryScheduler,
+    InvitationDeliveryMetrics,
   ],
   exports: [
     WorkspacesRepository,

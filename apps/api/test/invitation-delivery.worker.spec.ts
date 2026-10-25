@@ -3,6 +3,7 @@ import { encryptInvitationToken } from "../src/security/invitation-encryption.js
 import { InvitationDeliveryWorker } from "../src/workspaces/invitation-delivery.worker.js";
 import type { InvitationDelivery } from "../src/workspaces/invitation-delivery.js";
 import type { WorkspacesRepository } from "../src/workspaces/workspaces.repository.js";
+import { InvitationDeliveryMetrics } from "../src/workspaces/invitation-delivery.metrics.js";
 
 const key = Buffer.alloc(32, 7);
 
@@ -21,7 +22,7 @@ describe("InvitationDeliveryWorker", () => {
           workspaceId: "workspace-1",
         },
       ]),
-      recoverStaleInvitationDeliveries: vi.fn(),
+      recoverStaleInvitationDeliveries: vi.fn().mockResolvedValue({ count: 0 }),
       claimInvitationDelivery: vi.fn().mockResolvedValue(true),
       markInvitationDeliverySent: vi.fn(),
       markInvitationDeliveryFailed: vi.fn(),
@@ -29,6 +30,7 @@ describe("InvitationDeliveryWorker", () => {
     const worker = new InvitationDeliveryWorker(
       repository as unknown as WorkspacesRepository,
       { sendInvitation } as InvitationDelivery,
+      new InvitationDeliveryMetrics(),
     );
 
     process.env.INVITATION_ENCRYPTION_KEY = "07".repeat(32);
@@ -50,14 +52,18 @@ describe("InvitationDeliveryWorker", () => {
           workspaceId: "workspace-1",
         },
       ]),
-      recoverStaleInvitationDeliveries: vi.fn(),
+      recoverStaleInvitationDeliveries: vi.fn().mockResolvedValue({ count: 0 }),
       claimInvitationDelivery: vi.fn().mockResolvedValue(true),
       markInvitationDeliverySent: vi.fn(),
       markInvitationDeliveryFailed: vi.fn(),
     };
-    const worker = new InvitationDeliveryWorker(repository as unknown as WorkspacesRepository, {
-      sendInvitation: vi.fn().mockRejectedValue(new Error("SMTP unavailable")),
-    });
+    const worker = new InvitationDeliveryWorker(
+      repository as unknown as WorkspacesRepository,
+      {
+        sendInvitation: vi.fn().mockRejectedValue(new Error("SMTP unavailable")),
+      },
+      new InvitationDeliveryMetrics(),
+    );
 
     process.env.INVITATION_ENCRYPTION_KEY = "07".repeat(32);
     await expect(worker.processPending()).resolves.toEqual({ failed: 1, sent: 0 });
