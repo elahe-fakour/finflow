@@ -64,6 +64,7 @@ enum ReconciliationMatchType {
 
 enum InvitationDeliveryStatus {
   PENDING
+  PROCESSING
   SENT
   FAILED
 }

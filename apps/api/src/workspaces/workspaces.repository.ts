@@ -278,6 +278,19 @@ export class WorkspacesRepository {
       .then((rows) => rows.map(({ invitation, ...row }) => ({ ...row, ...invitation })));
   }
 
+  async claimInvitationDelivery(id: string, database: WorkspaceQueryClient = this.prisma.database) {
+    const result = await database.invitationDeliveryOutbox.updateMany({
+      where: {
+        id,
+        status: { in: ["PENDING", "FAILED"] },
+        availableAt: { lte: new Date() },
+        attempts: { lt: 3 },
+      },
+      data: { status: "PROCESSING" },
+    });
+    return result.count === 1;
+  }
+
   markInvitationDeliverySent(id: string, database: WorkspaceQueryClient = this.prisma.database) {
     return database.invitationDeliveryOutbox.update({
       where: { id },

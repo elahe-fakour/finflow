@@ -16,6 +16,7 @@ export class InvitationDeliveryWorker {
     let failed = 0;
 
     for (const delivery of deliveries) {
+      if (!(await this.workspacesRepository.claimInvitationDelivery(delivery.id))) continue;
       try {
         await this.invitationDelivery.sendInvitation({
           email: delivery.email,

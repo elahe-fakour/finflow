@@ -21,6 +21,7 @@ describe("InvitationDeliveryWorker", () => {
           workspaceId: "workspace-1",
         },
       ]),
+      claimInvitationDelivery: vi.fn().mockResolvedValue(true),
       markInvitationDeliverySent: vi.fn(),
       markInvitationDeliveryFailed: vi.fn(),
     };
@@ -48,6 +49,7 @@ describe("InvitationDeliveryWorker", () => {
           workspaceId: "workspace-1",
         },
       ]),
+      claimInvitationDelivery: vi.fn().mockResolvedValue(true),
       markInvitationDeliverySent: vi.fn(),
       markInvitationDeliveryFailed: vi.fn(),
     };
