@@ -9,6 +9,7 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import { RateLimitGuard } from "../security/rate-limit.guard.js";
 import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { CreateWorkspaceDto } from "./dto/create-workspace.dto.js";
 import { InviteWorkspaceMemberDto } from "./dto/invite-workspace-member.dto.js";
@@ -53,6 +54,7 @@ export class WorkspacesController {
   }
 
   @Post("internal/invitation-delivery/process")
+  @UseGuards(RateLimitGuard)
   processInvitationDelivery() {
     if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
       throw new ForbiddenException("Development invitation delivery is disabled in production.");
@@ -62,6 +64,7 @@ export class WorkspacesController {
   }
 
   @Get("internal/invitation-delivery/metrics")
+  @UseGuards(RateLimitGuard)
   metrics() {
     if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
       throw new ForbiddenException("Development invitation metrics are disabled in production.");
@@ -86,6 +89,7 @@ export class WorkspacesController {
 
   @Post(":workspaceId/members")
   @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
+  @UseGuards(RateLimitGuard)
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_MEMBERS)
   inviteMember(
     @CurrentUser() actor: AuthenticatedUser,

@@ -10,6 +10,7 @@ import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
 import { ResendInvitationDelivery } from "./resend-invitation-delivery.js";
 import { InvitationDeliveryScheduler } from "./invitation-delivery.scheduler.js";
 import { InvitationDeliveryMetrics } from "./invitation-delivery.metrics.js";
+import { RateLimitGuard } from "../security/rate-limit.guard.js";
 
 @Module({
   imports: [DatabaseModule],
@@ -36,6 +37,7 @@ import { InvitationDeliveryMetrics } from "./invitation-delivery.metrics.js";
     InvitationDeliveryWorker,
     InvitationDeliveryScheduler,
     InvitationDeliveryMetrics,
+    RateLimitGuard,
   ],
   exports: [
     WorkspacesRepository,
