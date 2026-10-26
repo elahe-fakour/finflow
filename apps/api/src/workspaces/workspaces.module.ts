@@ -42,6 +42,7 @@ import { InvitationDeliveryMetrics } from "./invitation-delivery.metrics.js";
     WorkspaceMembershipGuard,
     WorkspacePermissionGuard,
     InvitationDeliveryWorker,
+    InvitationDeliveryMetrics,
   ],
 })
 export class WorkspacesModule {}

@@ -1,5 +1,6 @@
 import { Public } from "@nestjs/authentication";
 import { Controller, Get } from "@nestjs/common";
+import { HealthService } from "./health.service.js";
 
 export type HealthResponse = {
   status: "ok";
@@ -7,9 +8,11 @@ export type HealthResponse = {
 
 @Controller("health")
 export class HealthController {
+  constructor(private readonly healthService: HealthService) {}
+
   @Get()
   @Public()
-  getHealth(): HealthResponse {
-    return { status: "ok" };
+  getHealth() {
+    return this.healthService.check();
   }
 }
