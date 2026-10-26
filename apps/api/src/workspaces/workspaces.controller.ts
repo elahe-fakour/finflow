@@ -24,12 +24,14 @@ import {
   type CreatedWorkspace,
 } from "./workspaces.service.js";
 import { InvitationDeliveryWorker } from "./invitation-delivery.worker.js";
+import { InvitationDeliveryMetrics } from "./invitation-delivery.metrics.js";
 
 @Controller("workspaces")
 export class WorkspacesController {
   constructor(
     private readonly workspacesService: WorkspacesService,
     private readonly invitationDeliveryWorker: InvitationDeliveryWorker,
+    private readonly invitationDeliveryMetrics: InvitationDeliveryMetrics,
   ) {}
 
   @Post()
@@ -57,6 +59,15 @@ export class WorkspacesController {
     }
 
     return this.invitationDeliveryWorker.processPending();
+  }
+
+  @Get("internal/invitation-delivery/metrics")
+  metrics() {
+    if (process.env.NODE_ENV?.trim().toLowerCase() === "production") {
+      throw new ForbiddenException("Development invitation metrics are disabled in production.");
+    }
+
+    return this.invitationDeliveryMetrics.snapshot();
   }
 
   @Get(":workspaceId")
