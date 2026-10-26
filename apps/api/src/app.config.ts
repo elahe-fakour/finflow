@@ -19,6 +19,18 @@ const API_VERSION = "1";
  * exercise the same pipeline as the running application.
  */
 export function configureApp(app: INestApplication): void {
+  app.enableCors({
+    credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    origin: getCorsOrigins(),
+  });
+  app.use((_request: unknown, response: SecurityResponse, next: () => void) => {
+    response.setHeader("X-Content-Type-Options", "nosniff");
+    response.setHeader("X-Frame-Options", "DENY");
+    response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    next();
+  });
   app.setGlobalPrefix(API_PREFIX);
   app.enableVersioning({
     type: VersioningType.URI,
@@ -40,6 +52,14 @@ export function configureApp(app: INestApplication): void {
     }),
   );
   app.useGlobalFilters(new ApiExceptionFilter(app.get(HttpAdapterHost)));
+}
+
+export function getCorsOrigins(): string[] {
+  const configuredOrigin = process.env.WEB_ORIGIN?.trim();
+  if (configuredOrigin) return [configuredOrigin];
+  return process.env.NODE_ENV?.trim().toLowerCase() === "production"
+    ? []
+    : ["http://localhost:3000"];
 }
 
 /**
@@ -67,4 +87,8 @@ type UnmatchedResponse = {
   status(statusCode: number): {
     json(body: ApiErrorResponse): void;
   };
+};
+
+type SecurityResponse = {
+  setHeader(name: string, value: string): void;
 };
