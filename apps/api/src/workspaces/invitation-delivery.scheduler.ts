@@ -21,8 +21,12 @@ export class InvitationDeliveryScheduler implements OnModuleInit, OnModuleDestro
     this.timer.unref();
   }
 
-  onModuleDestroy(): void {
+  async onModuleDestroy(): Promise<void> {
     if (this.timer) clearInterval(this.timer);
+    const deadline = Date.now() + 5_000;
+    while (this.running && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
   }
 
   async runOnce(): Promise<void> {

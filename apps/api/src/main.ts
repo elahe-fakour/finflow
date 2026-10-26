@@ -4,6 +4,7 @@ import { AppModule } from "./app.module.js";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks(["SIGINT", "SIGTERM"]);
   configureApp(app);
   await app.init();
   configureNotFoundHandler(app);
