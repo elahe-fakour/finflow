@@ -125,6 +125,11 @@ enable credentialed CORS only for configured trusted origins. Production also
 requires HTTPS; `SameSite=None` is not permitted unless a later deployment
 topology requires it and the cookie remains `Secure`.
 
+At API startup, production configuration is validated: `WEB_ORIGIN` must be a
+single absolute HTTPS origin without a path, query string, or fragment. The API
+does not silently fall back to localhost in production. Development keeps the
+`http://localhost:3000` default when `WEB_ORIGIN` is not set.
+
 ## Authorization Boundary
 
 Authentication answers: **which user made this request?**

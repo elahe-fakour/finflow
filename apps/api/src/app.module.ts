@@ -13,6 +13,7 @@ import { IncomeExpenseEntriesModule } from "./income-expense-entries/income-expe
 import { ReconciliationModule } from "./reconciliation/reconciliation.module.js";
 import { VendorsModule } from "./vendors/vendors.module.js";
 import { WorkspacesModule } from "./workspaces/workspaces.module.js";
+import { getSessionCookieOptions, getTrustedWebOrigins } from "./auth/auth-config.js";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
         idleTtl: "1d",
         touchInterval: "1m",
         trustedOrigins: getTrustedWebOrigins(),
+        cookie: getSessionCookieOptions(),
       },
     }),
     HealthModule,
@@ -40,13 +42,3 @@ import { WorkspacesModule } from "./workspaces/workspaces.module.js";
   ],
 })
 export class AppModule {}
-
-function getTrustedWebOrigins(): string[] {
-  if (process.env.WEB_ORIGIN !== undefined) {
-    return [process.env.WEB_ORIGIN];
-  }
-
-  return process.env.NODE_ENV?.trim().toLowerCase() === "production"
-    ? []
-    : ["http://localhost:3000"];
-}

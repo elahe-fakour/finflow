@@ -8,6 +8,7 @@ import { HttpAdapterHost } from "@nestjs/core";
 import { ApiExceptionFilter, createApiErrorResponse } from "./common/http/api-exception.filter.js";
 import type { ApiErrorResponse } from "./common/http/api-error-response.js";
 import { createValidationException } from "./common/http/validation-exception.js";
+import { getTrustedWebOrigins } from "./auth/auth-config.js";
 
 const API_PREFIX = "api";
 const API_VERSION = "1";
@@ -55,11 +56,7 @@ export function configureApp(app: INestApplication): void {
 }
 
 export function getCorsOrigins(): string[] {
-  const configuredOrigin = process.env.WEB_ORIGIN?.trim();
-  if (configuredOrigin) return [configuredOrigin];
-  return process.env.NODE_ENV?.trim().toLowerCase() === "production"
-    ? []
-    : ["http://localhost:3000"];
+  return getTrustedWebOrigins();
 }
 
 /**
