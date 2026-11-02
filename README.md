@@ -28,6 +28,8 @@ The current database contract and financial persistence invariants are in
 [docs/database.md](./docs/database.md).
 The approved backend-owned session design is in
 [docs/authentication.md](./docs/authentication.md).
+The provider-neutral production release runbook is in
+[docs/deployment.md](./docs/deployment.md).
 
 ## Current Technology
 
