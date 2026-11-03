@@ -1,0 +1,55 @@
+previews:
+  generation: off
+
+projects:
+  - name: FinFlow
+    environments:
+      - name: staging
+        services:
+          - type: web
+            name: finflow-staging-web
+            runtime: node
+            region: frankfurt
+            plan: free
+            buildCommand: npm ci && npm run build
+            startCommand: npm run start
+            autoDeployTrigger: checksPass
+            envVars:
+              - key: API_BASE_URL
+                fromService:
+                  name: finflow-staging-api
+                  type: web
+                  envVarKey: RENDER_EXTERNAL_URL
+
+          - type: web
+            name: finflow-staging-api
+            runtime: node
+            region: frankfurt
+            plan: 0.5c-512mb
+            buildCommand: npm ci && npm run prisma:generate && npm run build:api
+            preDeployCommand: npm run prisma:migrate:deploy
+            startCommand: npm run start --workspace @finflow/api
+            healthCheckPath: /api/v1/health
+            autoDeployTrigger: checksPass
+            envVars:
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: finflow-staging-db
+                  property: connectionString
+              - key: WEB_ORIGIN
+                fromService:
+                  name: finflow-staging-web
+                  type: web
+                  envVarKey: RENDER_EXTERNAL_URL
+              - key: INVITATION_ENCRYPTION_KEY
+                sync: false
+              - key: INVITATION_DELIVERY_INTERVAL_MS
+                value: "0"
+
+        databases:
+          - name: finflow-staging-db
+            databaseName: finflow_staging
+            postgresMajorVersion: "18"
+            region: frankfurt
+            plan: free
+            ipAllowList: []

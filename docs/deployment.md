@@ -87,6 +87,39 @@ build and before the new service version starts. They are intended for migration
 and are supported on paid web services. See Render's
 [deploy sequence](https://render.com/docs/deploys).
 
+## Staging environment
+
+The staging Render Blueprint is defined in [`render.yaml`](../render.yaml). It
+creates a separate `staging` environment with its own web service, API service,
+and private PostgreSQL database. It tracks the Blueprint's linked branch and
+deploys only after the GitHub checks pass.
+
+To provision it:
+
+1. Confirm the Render account can use the Frankfurt region and review the
+   current service and workspace charges. The Blueprint sets the web service
+   and PostgreSQL to free plans; the API uses a paid `0.5c-512mb` plan so its
+   migration pre-deploy command is available.
+2. In Render, select **New > Blueprint**, connect this repository, select the
+   reviewed branch, and use the root `render.yaml`. Review the proposed
+   resources before deploying the Blueprint.
+3. When prompted, provide `INVITATION_ENCRYPTION_KEY` generated with
+   `openssl rand -hex 32`. Keep it in Render's secret configuration only.
+4. Confirm the API environment received its own staging `DATABASE_URL` and the
+   web/API origin values reference the staging services. Do not copy production
+   secrets or database data into this environment.
+5. After Render reports both services healthy, verify
+   `https://<staging-api-host>/api/v1/health`, then smoke-test registration,
+   sign-in, protected dashboard access, and sign-out with a disposable account.
+
+This shared staging environment is for synthetic data. Its free PostgreSQL
+database expires after 30 days and has no backups, and the free web service can
+sleep when idle. Do not use it for production or real financial data. The paid
+API service is the only planned recurring staging compute charge; confirm its
+current rate before provisioning. Per-pull-request Render preview environments
+require a Pro workspace and incur additional resource charges, so they are not
+enabled by this Blueprint.
+
 ## Database safety
 
 - Create a logical export before a production migration that changes financial
