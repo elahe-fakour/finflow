@@ -1,8 +1,10 @@
 # FinFlow Deployment Runbook
 
 This document describes the release contract for the separate Next.js web
-application, NestJS API, and managed PostgreSQL database. It is intentionally
-provider-neutral until the hosting decision in Phase 14.1.
+application, NestJS API, and managed PostgreSQL database. The initial hosting
+target is Render, as recorded in
+[ADR 0006](./adr/0006-select-hosting-platform.md); the environment-variable and
+migration contracts remain portable across providers.
 
 ## Required production configuration
 
