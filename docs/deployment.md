@@ -28,35 +28,81 @@ origin. Production sessions use the secure `__Host-sid` cookie policy.
 ## Release order
 
 1. Build and test the exact commit in CI.
-2. Deploy the API application with production environment variables.
-3. Apply committed Prisma migrations from the API release image or build:
+2. Confirm the Render API service has production environment variables and points
+   `DATABASE_URL` at the production database in the same region. Keep the
+   database's public network access disabled.
+3. For a schema-changing release, create a logical database export before
+   deployment and confirm the database's point-in-time recovery window is
+   available. Do this before every production migration that changes financial
+   data.
+4. Configure the API service's Render **Pre-Deploy Command** as:
 
    ```bash
    npm run prisma:migrate:deploy
    ```
 
-   Never use `prisma db push` against production.
+   Configure it only on the API service. Render runs this command after the
+   build and before the new API instance is deployed; the new deployment fails
+   if the command fails. The existing instance may still be serving requests
+   while the migration runs, so every migration must remain compatible with the
+   currently deployed API. The pre-deploy command is available on paid web
+   services; use a paid API service for this production release path.
 
-4. Start or roll the API and verify the public health endpoint:
+   Build the API service from the repository root with:
+
+   ```bash
+   npm ci && npm run prisma:generate && npm run build:api
+   ```
+
+   Keep `apps/api/prisma/migrations/` and `apps/api/prisma/schema.prisma`
+   together in the deployed commit. `migrate deploy` applies committed pending
+   migrations; it does not generate Prisma Client. Never use `prisma db push`
+   or `prisma migrate dev` against production.
+
+5. Review the API deploy logs. Confirm that the migration completed and the API
+   deployment became healthy. If a migration fails, stop the release and inspect
+   the migration logs and `_prisma_migrations` state before taking any action.
+   Do not edit or delete an applied migration to force a retry.
+
+6. From the paid API service's shell, verify the migration status against the
+   production database:
+
+   ```bash
+   npm run prisma:migrate:status
+   ```
+
+7. Verify the public API health endpoint:
 
    ```text
    GET https://api.example.com/api/v1/health
    ```
 
-5. Deploy the Next.js application with its server-only `API_BASE_URL` and the
+8. Deploy the Next.js application with its server-only `API_BASE_URL` and the
    matching `WEB_ORIGIN` on the API.
-6. Run a smoke check: register or sign in with a disposable account, open the
+9. Run a smoke check: register or sign in with a disposable account, open the
    protected dashboard, and sign out. Do not use real financial data.
+
+Render runs pre-deploy commands on a separate temporary instance, after the
+build and before the new service version starts. They are intended for migrations
+and are supported on paid web services. See Render's
+[deploy sequence](https://render.com/docs/deploys).
 
 ## Database safety
 
-- Take the provider's backup before a migration that changes financial tables.
+- Create a logical export before a production migration that changes financial
+  tables, and confirm point-in-time recovery is enabled. Render's recovery window
+  depends on the workspace plan; review it in the dashboard before release.
 - Apply migrations forward-only and review the generated SQL before release.
+- Prefer expand-and-contract changes: add new schema first, deploy code that can
+  work with both old and new shapes, migrate/backfill data, then remove obsolete
+  schema in a later release after the old code is gone.
 - Keep production data separate from preview/staging data.
 - Seed only clearly marked demo records; never copy customer or bank data into a
   portfolio environment.
 - If a migration fails, stop the release, preserve the error, and investigate
-  before retrying. Do not delete the migration history to make it pass.
+  before retrying. A failed pre-deploy command cancels the new Render release,
+  but does not reverse database work that already completed. Do not delete the
+  migration history to make it pass.
 
 ## Health and rollback
 
@@ -66,6 +112,11 @@ and alert on repeated failures. Keep the previous application image available
 for rollback, but do not automatically roll back a database migration: database
 changes must be designed to remain compatible with the previous application
 version or have an explicit recovery plan.
+
+Render paid Postgres plans support point-in-time recovery; the available window
+depends on the workspace plan. A restore creates a separate database instance.
+Validate that instance before changing `DATABASE_URL` to point production at it.
+See [Render's recovery guide](https://render.com/docs/postgresql-backups).
 
 ## Pre-publication checklist
 
