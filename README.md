@@ -30,6 +30,8 @@ The approved backend-owned session design is in
 [docs/authentication.md](./docs/authentication.md).
 The provider-neutral production release runbook is in
 [docs/deployment.md](./docs/deployment.md).
+Dependency update and vulnerability checks are documented in
+[docs/dependency-security.md](./docs/dependency-security.md).
 
 ## Current Technology
 
