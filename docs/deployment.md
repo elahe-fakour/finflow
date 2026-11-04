@@ -71,10 +71,11 @@ origin. Production sessions use the secure `__Host-sid` cookie policy.
    npm run prisma:migrate:status
    ```
 
-7. Verify the public API health endpoint:
+7. Verify both public API health endpoints:
 
    ```text
    GET https://api.example.com/api/v1/health
+   GET https://api.example.com/api/v1/ready
    ```
 
 8. Deploy the Next.js application with its server-only `API_BASE_URL` and the
@@ -109,7 +110,8 @@ To provision it:
    web/API origin values reference the staging services. Do not copy production
    secrets or database data into this environment.
 5. After Render reports both services healthy, verify
-   `https://<staging-api-host>/api/v1/health`, then smoke-test registration,
+   `https://<staging-api-host>/api/v1/health` and
+   `https://<staging-api-host>/api/v1/ready`, then smoke-test registration,
    sign-in, protected dashboard access, and sign-out with a disposable account.
 
 This shared staging environment is for synthetic data. Its free PostgreSQL
@@ -139,12 +141,32 @@ enabled by this Blueprint.
 
 ## Health and rollback
 
-The health endpoint is for process and dependency checks, not a replacement for
-monitoring. Configure the hosting platform to restart unhealthy API instances
-and alert on repeated failures. Keep the previous application image available
-for rollback, but do not automatically roll back a database migration: database
-changes must be designed to remain compatible with the previous application
-version or have an explicit recovery plan.
+### Health, logs, and incident response
+
+`GET /api/v1/health` is liveness: it confirms the API process can answer HTTP
+without touching PostgreSQL. `GET /api/v1/ready` checks PostgreSQL and returns
+`503 SERVICE_NOT_READY` when the API cannot serve database-backed requests. The
+Render API service uses `/api/v1/ready` as its health check path. Keep both
+endpoints public so the host does not need session credentials.
+
+The API exception filter writes structured JSON records for unexpected `5xx`
+responses, including method, path without query parameters, error type, and
+stack frames. Next.js server request failures are also written as structured
+JSON. Neither logger includes request bodies, headers, exception messages, or
+query strings. These events go to the hosting provider's application logs; no
+external error service or DSN is configured by this change.
+
+For each production environment, retain access to API and web application logs,
+review them after a deployment, and configure provider notifications for failed
+deploys or sustained health-check failures. Add an external uptime probe for
+`/api/v1/ready` and alert on consecutive failures. During an incident, check
+service health and recent deploys first, then inspect API/web logs and database
+availability. Do not paste secrets or customer data into incident notes.
+
+Keep the previous application image available for rollback, but do not
+automatically roll back a database migration: database changes must be designed
+to remain compatible with the previous application version or have an explicit
+recovery plan.
 
 Render paid Postgres plans support point-in-time recovery; the available window
 depends on the workspace plan. A restore creates a separate database instance.
@@ -157,6 +179,7 @@ See [Render's recovery guide](https://render.com/docs/postgresql-backups).
 - [ ] CI passed lint, typecheck, tests, and production builds.
 - [ ] Production `WEB_ORIGIN` uses HTTPS and matches the web deployment exactly.
 - [ ] Database backup and migration review are complete.
-- [ ] Health check and error monitoring are configured.
+- [ ] The API readiness check, hosting notifications, and uptime probe are configured.
+- [ ] Operators can access the web and API application logs.
 - [ ] Demo data is synthetic and clearly labeled.
 - [ ] A smoke login, protected-route check, and logout succeeded.

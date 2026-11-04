@@ -14,7 +14,8 @@ FinFlow uses URI versioning. Product endpoints use this base path:
 /api/v1
 ```
 
-The current liveness endpoint is `GET /api/v1/health`. New incompatible HTTP
+The liveness endpoint is `GET /api/v1/health`; dependency readiness is reported
+by `GET /api/v1/ready`. New incompatible HTTP
 contracts will be introduced under a new major version such as `/api/v2`; they
 will not silently change the behavior of an existing version.
 
@@ -126,9 +127,11 @@ limited to liveness and the authentication lifecycle:
 | `GET /api/v1/auth/me`        | `200`   | Resolves the current public user from a live session.                              |
 | `POST /api/v1/auth/logout`   | `204`   | Revokes the current session and sends a clearing cookie.                           |
 
-`GET /api/v1/health` is also public so deployment health checks do not require a
-user session. Logout is public only to clear expired browser cookies; it revokes
-a live session when supplied.
+Both health endpoints are public so deployment checks do not require a user
+session. `/health` confirms the API process can serve HTTP without connecting to
+PostgreSQL. `/ready` checks PostgreSQL and returns `503 SERVICE_NOT_READY` when
+the dependency check fails. Logout is public only to clear expired browser
+cookies; it revokes a live session when supplied.
 
 Both requests validate an email address and a 15–128 character password. Login
 uses `401 INVALID_CREDENTIALS` for both an unknown email and an incorrect

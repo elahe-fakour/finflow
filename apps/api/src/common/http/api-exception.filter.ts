@@ -2,6 +2,7 @@ import {
   Catch,
   HttpException,
   HttpStatus,
+  Logger,
   type ArgumentsHost,
   type ExceptionFilter,
 } from "@nestjs/common";
@@ -13,6 +14,8 @@ type ExceptionResponse = Record<string, unknown>;
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(ApiExceptionFilter.name);
+
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -24,8 +27,42 @@ export class ApiExceptionFilter implements ExceptionFilter {
       this.httpAdapterHost.httpAdapter.getRequestUrl(httpContext.getRequest()),
     );
 
+    if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const request = httpContext.getRequest();
+      const requestUrl = this.httpAdapterHost.httpAdapter.getRequestUrl(request);
+      this.logger.error(
+        JSON.stringify({
+          event: "api.unhandled_exception",
+          method: this.httpAdapterHost.httpAdapter.getRequestMethod(request),
+          path: getPathname(requestUrl),
+          statusCode,
+          errorType: exception instanceof Error ? exception.name : "UnknownError",
+          stack: getStackFrames(exception),
+        }),
+      );
+    }
+
     this.httpAdapterHost.httpAdapter.reply(httpContext.getResponse(), response, statusCode);
   }
+}
+
+function getPathname(requestUrl: string): string {
+  try {
+    return new URL(requestUrl, "http://finflow.invalid").pathname;
+  } catch {
+    return "/";
+  }
+}
+
+function getStackFrames(exception: unknown): string[] | undefined {
+  if (!(exception instanceof Error) || !exception.stack) {
+    return undefined;
+  }
+
+  return exception.stack
+    .split("\n")
+    .slice(1, 21)
+    .map((frame) => frame.trim());
 }
 
 function getStatusCode(exception: unknown): number {

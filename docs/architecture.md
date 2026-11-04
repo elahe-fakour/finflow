@@ -30,7 +30,8 @@ NestJS API (`apps/api`)
   ├─ Global validation and consistent error responses
   ├─ Database-backed opaque session authentication
   ├─ Protected workspace creation with an atomic owner membership
-  └─ Liveness endpoint at GET /api/v1/health
+  ├─ Liveness endpoint at GET /api/v1/health
+  └─ Readiness endpoint at GET /api/v1/ready
 
 Local PostgreSQL (`compose.yaml`)
   ├─ Docker Compose service on port 5432 by default
@@ -95,9 +96,9 @@ contains no business logic, data fetching, or client-side state.
   type coercion. A global exception filter returns a documented, consistent JSON
   error shape without leaking unexpected server errors. See
   [api-conventions.md](./api-conventions.md).
-- **API liveness contract:** `GET /api/v1/health` confirms that NestJS can accept HTTP
-  requests. Its integration test bootstraps the real module graph and sends an
-  HTTP request in memory; it does not depend on a running PostgreSQL instance.
+- **API health contract:** `GET /api/v1/health` confirms that NestJS can accept
+  HTTP requests without connecting to PostgreSQL. `GET /api/v1/ready` checks
+  PostgreSQL and returns `503` when the API cannot serve database-backed work.
 - **Local database runtime:** `compose.yaml` defines PostgreSQL only. The API
   reads its ignored root `.env.local` in local development and connects lazily
   when a database-backed endpoint needs it; neither application is containerized
@@ -160,7 +161,7 @@ The API now has authentication and a minimal workspace feature layer, but no
 membership/role guard for accessing an existing workspace and no financial CRUD
 workflow. The local PostgreSQL startup and data-retention procedure is documented
 in [local-database.md](./local-database.md). Database readiness remains separate
-from the liveness health contract.
+from the liveness health contract; deployment health checks use readiness.
 The pure invoice calculation module is covered by focused unit tests; the UI
 must not pretend that persistence or complete financial workflows already exist.
 

@@ -77,9 +77,10 @@ npm run prisma:validate
 npm run test:api
 ```
 
-The health endpoint returns `{ "status": "ok" }` when the NestJS HTTP
-application can accept requests. It is deliberately a liveness check only; it
-does not report database readiness until Prisma Client is connected to NestJS.
+`GET /api/v1/health` returns `{ "status": "ok" }` when the NestJS HTTP
+application can accept requests; it does not connect to PostgreSQL.
+`GET /api/v1/ready` checks database readiness and returns HTTP `503` when the
+database is unavailable. Use readiness for deployment health checks.
 All API endpoints use the `/api/v1` base path, validate request DTOs before
 reaching business logic, and return a consistent JSON error contract. See
 [the API conventions](../../docs/api-conventions.md) for the policy.

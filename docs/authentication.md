@@ -11,7 +11,8 @@ sign-out UI.
 
 Current public endpoints:
 
-- `GET /api/v1/health` confirms that the API process can accept requests.
+- `GET /api/v1/health` confirms the API process can accept requests; `/api/v1/ready`
+  checks database readiness for deployment health checks.
 - `POST /api/v1/auth/register` creates a user and its private credential record.
 - `POST /api/v1/auth/login` verifies a password, sets the session cookie, and
   returns public user data.

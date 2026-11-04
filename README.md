@@ -81,7 +81,9 @@ npm run dev:api
 ```
 
 The API starts on port `3001`. Its liveness endpoint is available at
-`GET /api/v1/health` and responds with `{ "status": "ok" }`. The credential
+`GET /api/v1/health` and responds with `{ "status": "ok" }`; it does not depend
+on PostgreSQL. `GET /api/v1/ready` checks database readiness and returns HTTP
+`503` when a required dependency is unavailable. The credential
 endpoints are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
 `GET /api/v1/auth/me`, and `POST /api/v1/auth/logout`. They need a healthy
 local PostgreSQL service. Login creates an opaque, `HttpOnly` browser cookie;
