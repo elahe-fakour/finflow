@@ -37,7 +37,7 @@
   "devDependencies": {
     "@nestjs/cli": "^12.0.5",
     "@nestjs/schematics": "^12.0.0",
-    "@nestjs/testing": "^12.1.0",
+    "@nestjs/testing": "^12.3.2",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
