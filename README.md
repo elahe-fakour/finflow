@@ -4,14 +4,17 @@ FinFlow is a financial operations platform for freelancers and small businesses.
 It is being built as a production-minded portfolio project that combines practical
 accounting workflows with modern web engineering.
 
-> **Project status:** Phase 7 — Authentication & Authorization is in progress.
-> The repository contains a frontend workflow preview, a NestJS API, local
-> PostgreSQL Compose configuration, a tracked Prisma schema, and secure
-> registration/login with database-backed browser sessions and protected
-> application routes. Workspace guards, persisted financial API workflows, and
-> audit events are still planned work.
+**[GitHub repository](https://github.com/elahe-fakour/finflow)** · **Live demo:**
+deployment is being prepared. The demo will use synthetic data; do not enter real
+financial information.
 
-## Product Direction
+> **Project status:** Phase 14 — Production & Deployment. FinFlow has a Next.js
+> web app, a NestJS API, PostgreSQL persistence, database-backed sessions,
+> workspace access controls, financial API modules, and CI checks. Some screens
+> still use clearly labeled sample data. This is a portfolio demo, not a service
+> for real financial records.
+
+## Product Scope
 
 FinFlow will help business owners and accountants manage financial operations in
 one workspace, including:
@@ -87,7 +90,8 @@ on PostgreSQL. `GET /api/v1/ready` checks database readiness and returns HTTP
 endpoints are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
 `GET /api/v1/auth/me`, and `POST /api/v1/auth/logout`. They need a healthy
 local PostgreSQL service. Login creates an opaque, `HttpOnly` browser cookie;
-workspace authorization is introduced separately.
+the API also checks workspace membership and permissions for protected
+workspace operations.
 
 The browser-facing sign-in, account creation, and sign-out routes are served by
 the Next.js application. They relay only the session cookie to the API through a
@@ -158,8 +162,7 @@ plan.md        # Product roadmap, architecture direction, and delivery plan
 - Future monetary values will use integer minor units rather than JavaScript
   floating-point numbers.
 - Business and financial rules will live outside React UI components.
-- Authentication is enforced by the backend; workspace authorization follows in
-  the next milestone.
+- Authentication and workspace authorization are enforced by the backend.
 - Secrets and real financial data must never be committed. Use `.env.local` for
   local values and `.env.example` only for safe placeholders.
 

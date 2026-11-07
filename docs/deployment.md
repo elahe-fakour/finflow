@@ -88,39 +88,41 @@ build and before the new service version starts. They are intended for migration
 and are supported on paid web services. See Render's
 [deploy sequence](https://render.com/docs/deploys).
 
-## Staging environment
+## Preview and staging
 
-The staging Render Blueprint is defined in [`render.yaml`](../render.yaml). It
-creates a separate `staging` environment with its own web service, API service,
-and private PostgreSQL database. It tracks the Blueprint's linked branch and
-deploys only after the GitHub checks pass.
+Per-pull-request Render preview environments are disabled. The current
+Blueprint defines one public demo environment to keep the no-cost deployment
+within free resource limits. Add a separate staging environment only when
+ongoing pre-release testing needs it.
 
-To provision it:
+## Public portfolio demo
 
-1. Confirm the Render account can use the Frankfurt region and review the
-   current service and workspace charges. The Blueprint sets the web service
-   and PostgreSQL to free plans; the API uses a paid `0.5c-512mb` plan so its
-   migration pre-deploy command is available.
-2. In Render, select **New > Blueprint**, connect this repository, select the
-   reviewed branch, and use the root `render.yaml`. Review the proposed
-   resources before deploying the Blueprint.
-3. When prompted, provide `INVITATION_ENCRYPTION_KEY` generated with
-   `openssl rand -hex 32`. Keep it in Render's secret configuration only.
-4. Confirm the API environment received its own staging `DATABASE_URL` and the
-   web/API origin values reference the staging services. Do not copy production
-   secrets or database data into this environment.
-5. After Render reports both services healthy, verify
-   `https://<staging-api-host>/api/v1/health` and
-   `https://<staging-api-host>/api/v1/ready`, then smoke-test registration,
-   sign-in, protected dashboard access, and sign-out with a disposable account.
+The `demo` environment in [`render.yaml`](../render.yaml) uses Render's free web
+service plans and an external Neon Free PostgreSQL database. Do not add a
+payment method to the Render account. Render suspends free services if the
+workspace reaches its included resource limits without a payment method. Free
+services spin down after 15 minutes without traffic. Neon Free includes 1 GB of
+storage and 100 compute hours per month, and its compute scales to zero while
+idle. See Render's
+[free deployment guide](https://render.com/docs/your-first-deploy), [free plan
+limits](https://render.com/docs/free), and Neon's [Free plan](https://neon.com/docs/introduction/plans).
 
-This shared staging environment is for synthetic data. Its free PostgreSQL
-database expires after 30 days and has no backups, and the free web service can
-sleep when idle. Do not use it for production or real financial data. The paid
-API service is the only planned recurring staging compute charge; confirm its
-current rate before provisioning. Per-pull-request Render preview environments
-require a Pro workspace and incur additional resource charges, so they are not
-enabled by this Blueprint.
+Create a Neon project in the Frankfurt region and set its pooled PostgreSQL
+connection string as the Render API's `DATABASE_URL` secret. Put the same value
+in `.env.local` only for local deployment validation; never commit it. The API
+runs `prisma migrate deploy` at startup because Render's free service does not
+provide a pre-deploy command. This migration command is idempotent and targets
+the demo database only. Keep `INVITATION_ENCRYPTION_KEY` in Render's secret
+settings. When a Render free service reaches its monthly usage limit, Render
+suspends it rather than charging an account without a payment method.
+
+Visitors can create their own account and workspace; do not publish a shared
+demo password. Some screens still contain sample financial data. Do not enter
+real financial or personal information. Before sharing the link, create the
+Blueprint from the `demo` environment, set `DATABASE_URL` and a generated
+`INVITATION_ENCRYPTION_KEY`, wait for migrations and readiness to pass, then
+verify registration, login, workspace creation, and logout. Add the resulting
+web URL to the README only after these checks pass.
 
 ## Database safety
 

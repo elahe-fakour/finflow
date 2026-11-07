@@ -3,14 +3,14 @@ import { getApiUrl } from "@/lib/auth/api-url";
 import { sessionCookieName } from "@/lib/auth/session-cookie";
 import { isTrustedWriteOrigin } from "@/lib/security/same-origin";
 
-type ApiRequestMethod = "DELETE" | "PATCH" | "POST";
+type ApiRequestMethod = "DELETE" | "GET" | "PATCH" | "POST";
 
 async function forwardApiRequest(
   request: NextRequest,
   path: string,
   method: ApiRequestMethod,
 ): Promise<Response> {
-  if (!isTrustedWriteOrigin(request)) {
+  if (method !== "GET" && !isTrustedWriteOrigin(request)) {
     return forbiddenCrossOriginResponse();
   }
 
@@ -26,7 +26,7 @@ async function forwardApiRequest(
     headers.set("Idempotency-Key", idempotencyKey);
   }
 
-  const body = method === "DELETE" ? undefined : await request.text();
+  const body = method === "GET" || method === "DELETE" ? undefined : await request.text();
 
   try {
     const response = await fetch(getApiUrl(path), {
