@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsDateString, IsOptional, IsString, IsUUID, Max, Min, MaxLength } from "class-validator";
+import { IsDateString, IsOptional, IsString, Max, Min, MaxLength } from "class-validator";
 
 export class ListAuditEventsDto {
   @IsOptional()

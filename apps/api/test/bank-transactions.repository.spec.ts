@@ -1,5 +1,6 @@
 import type { PrismaService } from "../src/database/prisma.service.js";
 import { BankTransactionsRepository } from "../src/bank-transactions/bank-transactions.repository.js";
+import { BankTransactionDirection } from "../src/bank-transactions/dto/list-bank-transactions.dto.js";
 import { describe, expect, it, vi } from "vitest";
 
 const scope = { workspaceId: "6efc89d9-c720-45f6-82cd-ee29e80314b5" };
@@ -50,7 +51,7 @@ describe("BankTransactionsRepository", () => {
 
     await repository.list(scope, {
       bankAccountId,
-      direction: "OUTFLOW",
+      direction: BankTransactionDirection.OUTFLOW,
       from: new Date("2026-10-01T00:00:00.000Z"),
       page: 2,
       pageSize: 25,

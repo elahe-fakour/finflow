@@ -4,6 +4,8 @@ import type { Reflector } from "@nestjs/core";
 import type { AuthenticatedUser } from "../src/auth/auth.service.js";
 import { WorkspaceRole } from "../src/generated/prisma/client.js";
 import { WorkspacesController } from "../src/workspaces/workspaces.controller.js";
+import type { InvitationDeliveryMetrics } from "../src/workspaces/invitation-delivery.metrics.js";
+import type { InvitationDeliveryWorker } from "../src/workspaces/invitation-delivery.worker.js";
 import type { WorkspaceRequest } from "../src/workspaces/workspace-access.js";
 import { WorkspaceMembershipGuard } from "../src/workspaces/workspace-membership.guard.js";
 import { WorkspacePermissionGuard } from "../src/workspaces/workspace-permission.guard.js";
@@ -97,10 +99,14 @@ function createHarness(permission: WorkspacePermission = WorkspacePermission.VIE
     role: WorkspaceRole.OWNER,
   });
   const renameForManager = vi.fn();
-  const controller = new WorkspacesController({
-    getForMember,
-    renameForManager,
-  } as unknown as WorkspacesService);
+  const controller = new WorkspacesController(
+    {
+      getForMember,
+      renameForManager,
+    } as unknown as WorkspacesService,
+    {} as InvitationDeliveryWorker,
+    {} as InvitationDeliveryMetrics,
+  );
 
   return {
     findMembership,

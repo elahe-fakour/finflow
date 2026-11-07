@@ -9,6 +9,7 @@ import {
 import type { BankTransactionsRepository } from "../src/bank-transactions/bank-transactions.repository.js";
 import { BankTransactionsService } from "../src/bank-transactions/bank-transactions.service.js";
 import type { CreateBankTransactionDto } from "../src/bank-transactions/dto/create-bank-transaction.dto.js";
+import { BankTransactionDirection } from "../src/bank-transactions/dto/list-bank-transactions.dto.js";
 import { describe, expect, it, vi } from "vitest";
 
 const scope = { workspaceId: "6efc89d9-c720-45f6-82cd-ee29e80314b4" };
@@ -112,7 +113,7 @@ describe("BankTransactionsService", () => {
 
     await expect(
       service.list(scope, {
-        direction: "OUTFLOW",
+        direction: BankTransactionDirection.OUTFLOW,
         page: 2,
         pageSize: 25,
         q: "contractor",
@@ -234,6 +235,9 @@ function createBankTransaction(): BankTransaction {
     id: "6efc89d9-c720-45f6-82cd-ee29e80314b6",
     workspaceId: scope.workspaceId,
     bankAccountId,
+    categoryId: null,
+    importBatchId: null,
+    importSourceFingerprint: null,
     idempotencyKey,
     externalId: null,
     amountMinorUnits: -125050n,
