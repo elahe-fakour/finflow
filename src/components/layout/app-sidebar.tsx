@@ -18,14 +18,14 @@ function NavigationLink({ item, pathname }: { item: NavigationItem; pathname: st
     <Link
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex items-center gap-3 rounded-control px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "flex min-h-11 items-center gap-3 rounded-control px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         isActive
           ? "bg-primary text-primary-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
       href={item.href}
     >
-      <Icon aria-hidden="true" className="size-4 shrink-0" />
+      <Icon aria-hidden="true" className="size-5 shrink-0" />
       <span>{item.label}</span>
     </Link>
   );
@@ -37,7 +37,7 @@ function AppSidebar() {
   return (
     <aside
       aria-label="FinFlow application sidebar"
-      className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface lg:flex"
+      className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface/95 lg:flex"
     >
       <div className="flex h-16 items-center border-b border-border px-5">
         <Link
@@ -45,11 +45,11 @@ function AppSidebar() {
           className="flex items-center gap-3 rounded-control text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           href="/"
         >
-          <span className="flex size-8 items-center justify-center rounded-control bg-primary text-sm font-bold text-primary-foreground">
+          <span className="flex size-10 items-center justify-center rounded-control bg-primary text-base font-bold text-primary-foreground">
             F
           </span>
           <span>
-            <span className="block text-sm font-semibold">FinFlow</span>
+            <span className="block text-base font-semibold">FinFlow</span>
             <span className="block text-xs text-muted-foreground">Financial operations</span>
           </span>
         </Link>

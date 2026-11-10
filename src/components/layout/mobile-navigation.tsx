@@ -26,7 +26,7 @@ function MobileNavigationLink({ item, onNavigate, pathname }: MobileNavigationLi
     <Link
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex min-h-14 flex-col items-center justify-center gap-1 rounded-control px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "flex min-h-16 flex-col items-center justify-center gap-1 rounded-control px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         isActive
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -34,7 +34,7 @@ function MobileNavigationLink({ item, onNavigate, pathname }: MobileNavigationLi
       href={item.href}
       onClick={onNavigate}
     >
-      <Icon aria-hidden="true" className="size-4" />
+      <Icon aria-hidden="true" className="size-5" />
       <span>{item.label}</span>
     </Link>
   );
@@ -109,7 +109,7 @@ function MobileNavigation() {
             aria-expanded={isMoreMenuOpen}
             aria-haspopup="dialog"
             className={cn(
-              "flex min-h-14 flex-col items-center justify-center gap-1 rounded-control px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "flex min-h-16 flex-col items-center justify-center gap-1 rounded-control px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isMoreActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -117,7 +117,7 @@ function MobileNavigation() {
             onClick={openMoreMenu}
             type="button"
           >
-            <Menu aria-hidden="true" className="size-4" />
+            <Menu aria-hidden="true" className="size-5" />
             <span>More</span>
           </button>
         </div>
