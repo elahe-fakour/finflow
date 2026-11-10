@@ -24,7 +24,7 @@ function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   return (
     <Badge
       aria-label={`Invoice status: ${label}`}
-      className={cn("border", invoiceStatusClassNames[status])}
+      className={cn("h-9 rounded-full px-4 text-sm font-semibold", invoiceStatusClassNames[status])}
       variant="outline"
     >
       {label}
