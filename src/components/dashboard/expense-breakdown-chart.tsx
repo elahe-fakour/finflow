@@ -32,18 +32,22 @@ function formatUsdFromCents(cents: number) {
 }
 
 function ExpenseBreakdownChart({ data }: ExpenseBreakdownChartProps) {
+  const totalExpensesCents = data.reduce((total, item) => total + item.amountCents, 0);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle as="h2">Expense breakdown</CardTitle>
+        <CardTitle as="h2" className="text-xl font-semibold">
+          Expense breakdown
+        </CardTitle>
         <CardDescription>September 2026 spending by category.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
         </CardAction>
       </CardHeader>
       <CardContent className="pt-2">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
-          <div aria-hidden="true" className="mx-auto h-64 w-full max-w-xs">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-center">
+          <div aria-hidden="true" className="relative mx-auto h-64 w-full max-w-xs">
             <ResponsiveContainer height="100%" width="100%">
               <PieChart>
                 <Pie
@@ -72,7 +76,17 @@ function ExpenseBreakdownChart({ data }: ExpenseBreakdownChartProps) {
                 />
               </PieChart>
             </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-sm font-medium text-muted-foreground">Total expenses</span>
+              <span className="text-xl font-bold tabular-nums text-foreground">
+                {formatUsdFromCents(totalExpensesCents)}
+              </span>
+            </div>
           </div>
+          <p className="sr-only">
+            Total expenses: {formatUsdFromCents(totalExpensesCents)}. Expense amounts are listed by
+            category.
+          </p>
 
           <ul aria-label="Expense categories" className="grid gap-3 sm:grid-cols-2">
             {data.map((dataPoint) => (

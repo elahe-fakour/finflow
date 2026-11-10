@@ -20,6 +20,7 @@ import {
 import type { Metadata } from "next";
 import {
   CircleDollarSign,
+  CalendarDays,
   FileCheck2,
   FilePlus2,
   Landmark,
@@ -73,11 +74,11 @@ const cashFlowSampleData: CashFlowDataPoint[] = [
 ];
 
 const expenseBreakdownSampleData: ExpenseBreakdownDataPoint[] = [
-  { category: "Payroll", amountCents: 315_000, color: "#0f766e" },
-  { category: "Contractors", amountCents: 195_000, color: "#0284c7" },
-  { category: "Software", amountCents: 122_000, color: "#7c3aed" },
-  { category: "Marketing", amountCents: 104_000, color: "#d97706" },
-  { category: "Other", amountCents: 106_000, color: "#db2777" },
+  { category: "Payroll", amountCents: 315_000, color: "#117d73" },
+  { category: "Contractors", amountCents: 195_000, color: "#15998c" },
+  { category: "Software", amountCents: 122_000, color: "#22b8a7" },
+  { category: "Marketing", amountCents: 104_000, color: "#55cbb8" },
+  { category: "Other", amountCents: 106_000, color: "#94dfd2" },
 ];
 
 const recentInvoices: RecentInvoice[] = [
@@ -176,17 +177,25 @@ const profitLossSummary: ProfitLossSummary = {
 export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
-      <header className="space-y-2">
-        <p className="text-sm font-medium text-primary">Financial overview</p>
-        <h1
-          className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-          id="dashboard-title"
-        >
-          Dashboard
-        </h1>
-        <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Review your September 2026 sample financial data in one place.
-        </p>
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+            Financial overview
+          </p>
+          <h1
+            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
+            id="dashboard-title"
+          >
+            Dashboard
+          </h1>
+          <p className="max-w-2xl text-base leading-7 text-secondary-foreground">
+            An overview of your finances for September 2026.
+          </p>
+        </div>
+        <div className="inline-flex min-h-11 items-center gap-2 self-start rounded-control border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm sm:self-auto">
+          <CalendarDays aria-hidden="true" className="size-5 text-primary" />
+          September 2026 · sample
+        </div>
       </header>
 
       <section aria-labelledby="dashboard-metrics-title" className="mt-8">
@@ -200,11 +209,11 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section aria-label="Cash flow" className="mt-6">
+      <section
+        aria-label="Cash flow and expenses"
+        className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(21rem,0.9fr)] xl:items-stretch"
+      >
         <CashFlowChart data={cashFlowSampleData} />
-      </section>
-
-      <section aria-label="Expense breakdown" className="mt-6">
         <ExpenseBreakdownChart data={expenseBreakdownSampleData} />
       </section>
 

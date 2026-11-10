@@ -42,7 +42,9 @@ function CashFlowChart({ data }: CashFlowChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle as="h2">Cash flow</CardTitle>
+        <CardTitle as="h2" className="text-xl font-semibold">
+          Cash flow
+        </CardTitle>
         <CardDescription>April–September 2026 net cash flow in USD.</CardDescription>
         <CardAction>
           <Badge variant="outline">Sample data</Badge>
@@ -68,12 +70,12 @@ function CashFlowChart({ data }: CashFlowChartProps) {
               <XAxis
                 axisLine={false}
                 dataKey="period"
-                tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
+                tick={{ fill: "var(--text-secondary)", fontSize: 14 }}
                 tickLine={false}
               />
               <YAxis
                 axisLine={false}
-                tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
+                tick={{ fill: "var(--text-secondary)", fontSize: 14 }}
                 tickFormatter={(value: number) => formatUsdFromCents(value)}
                 tickLine={false}
                 width={64}
