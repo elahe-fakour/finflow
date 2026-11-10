@@ -46,8 +46,8 @@
 
   /* Shape */
   --shape-control: 0.75rem;
-  --shape-card: 1.125rem;
-  --shape-panel: 1.25rem;
+  --shape-card: 1.5rem;
+  --shape-panel: 1.5rem;
   --shape-pill: 9999px;
 }
 

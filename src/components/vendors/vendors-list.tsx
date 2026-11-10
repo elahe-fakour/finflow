@@ -5,16 +5,7 @@ import {
   type Vendor,
   type VendorCategory,
 } from "@/components/vendors/vendor-sample-data";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Building2, ChevronDown, Search, SearchX, SlidersHorizontal } from "lucide-react";
@@ -54,30 +45,27 @@ function VendorsList({ vendors }: VendorsListProps) {
   };
 
   return (
-    <Card className="mt-8">
-      <CardHeader>
-        <CardTitle as="h2">All vendors</CardTitle>
-        <CardDescription>
-          Filter vendor contacts, categories, and outstanding payables.
-        </CardDescription>
-        <CardAction>
-          <Badge variant="outline">Sample data</Badge>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="mt-8 space-y-5">
+      <section
+        aria-label="Vendor filters"
+        className="rounded-[1.5rem] border-2 border-border bg-card px-5 py-4 sm:px-7 sm:py-5"
+      >
+        <p className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          Search and filter vendors
+        </p>
+        <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex w-full flex-col gap-3 sm:flex-row lg:max-w-xl">
             <div className="relative w-full">
               <Search
                 aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
               />
               <label className="sr-only" htmlFor="vendor-search">
                 Search vendors
               </label>
               <Input
                 aria-describedby="vendor-search-results"
-                className="h-10 pl-9"
+                className="pl-11"
                 id="vendor-search"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search vendors"
@@ -89,18 +77,18 @@ function VendorsList({ vendors }: VendorsListProps) {
             <div className="relative w-full sm:max-w-56">
               <SlidersHorizontal
                 aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground"
               />
               <ChevronDown
                 aria-hidden="true"
-                className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-muted-foreground"
               />
               <label className="sr-only" htmlFor="vendor-category-filter">
                 Filter vendors by category
               </label>
               <select
                 aria-describedby="vendor-search-results"
-                className="h-10 w-full appearance-none rounded-lg border border-input bg-transparent py-1 pr-8 pl-9 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="h-11 w-full appearance-none rounded-control border border-input bg-transparent py-2 pr-10 pl-11 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 id="vendor-category-filter"
                 onChange={(event) => setSelectedCategory(event.target.value as VendorFilter)}
                 value={selectedCategory}
@@ -116,13 +104,6 @@ function VendorsList({ vendors }: VendorsListProps) {
           </div>
 
           <div className="flex items-center gap-3 lg:justify-end">
-            <p
-              aria-live="polite"
-              className="text-sm text-muted-foreground"
-              id="vendor-search-results"
-            >
-              {resultsMessage}
-            </p>
             {hasActiveFilters ? (
               <Button onClick={clearFilters} size="sm" type="button" variant="ghost">
                 Clear filters
@@ -130,108 +111,120 @@ function VendorsList({ vendors }: VendorsListProps) {
             ) : null}
           </div>
         </div>
+      </section>
 
-        {filteredVendors.length > 0 ? (
-          <>
-            <div className="mt-6 hidden overflow-x-auto md:block">
-              <table className="w-full min-w-[48rem] text-left text-sm">
-                <caption className="sr-only">Vendor sample data</caption>
-                <thead className="border-b border-border text-xs tracking-wide text-muted-foreground uppercase">
-                  <tr>
-                    <th className="pb-3 font-medium" scope="col">
-                      Vendor
-                    </th>
-                    <th className="pb-3 font-medium" scope="col">
-                      Contact
-                    </th>
-                    <th className="pb-3 font-medium" scope="col">
-                      Category
-                    </th>
-                    <th className="pb-3 text-right font-medium" scope="col">
-                      Open bills
-                    </th>
-                    <th className="pb-3 text-right font-medium" scope="col">
-                      Outstanding payable
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredVendors.map((vendor) => (
-                    <tr key={vendor.id}>
-                      <td className="py-4 pr-4">
-                        <Link
-                          className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          href={`/vendors/${vendor.id}`}
-                        >
-                          {vendor.name}
-                        </Link>
-                        <p className="mt-0.5 text-muted-foreground">{vendor.email}</p>
-                      </td>
-                      <td className="py-4 pr-4 text-muted-foreground">{vendor.contactName}</td>
-                      <td className="py-4 pr-4 text-muted-foreground">{vendor.category}</td>
-                      <td className="py-4 pr-4 text-right tabular-nums text-foreground">
-                        {vendor.openBills}
-                      </td>
-                      <td className="py-4 text-right font-medium tabular-nums text-foreground">
-                        {vendor.outstandingPayable}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      <div className="flex min-h-20 flex-wrap items-center justify-between gap-3 rounded-2xl bg-muted px-5 py-3 sm:px-7">
+        <p
+          aria-live="polite"
+          className="text-lg font-semibold text-foreground"
+          id="vendor-search-results"
+        >
+          {resultsMessage}
+        </p>
+        <span className="rounded-full border border-border bg-card px-3 py-1 text-sm font-medium text-secondary-foreground">
+          Sample data
+        </span>
+      </div>
 
-            <ul className="mt-6 space-y-3 md:hidden">
-              {filteredVendors.map((vendor) => (
-                <li
-                  className="rounded-control border border-border bg-muted/40 p-3"
-                  key={vendor.id}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+      {filteredVendors.length > 0 ? (
+        <section className="overflow-hidden rounded-[1.5rem] border-2 border-border bg-card px-5 py-4 sm:px-7 sm:py-6">
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[48rem] text-left text-base">
+              <caption className="sr-only">Vendor sample data</caption>
+              <thead className="border-b-2 border-border text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                <tr>
+                  <th className="px-1 py-4 font-semibold" scope="col">
+                    Vendor
+                  </th>
+                  <th className="px-1 py-4 font-semibold" scope="col">
+                    Contact
+                  </th>
+                  <th className="px-1 py-4 font-semibold" scope="col">
+                    Category
+                  </th>
+                  <th className="px-1 py-4 text-right font-semibold" scope="col">
+                    Open bills
+                  </th>
+                  <th className="px-1 py-4 text-right font-semibold" scope="col">
+                    Outstanding payable
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVendors.map((vendor) => (
+                  <tr key={vendor.id}>
+                    <td className="border-b border-border px-1 py-5">
                       <Link
-                        className="block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="font-semibold text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         href={`/vendors/${vendor.id}`}
                       >
                         {vendor.name}
                       </Link>
-                      <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {vendor.email}
-                      </p>
-                    </div>
-                    <p className="shrink-0 font-medium tabular-nums text-foreground">
+                      <p className="mt-0.5 text-secondary-foreground">{vendor.email}</p>
+                    </td>
+                    <td className="border-b border-border px-1 py-5 font-medium text-secondary-foreground">
+                      {vendor.contactName}
+                    </td>
+                    <td className="border-b border-border px-1 py-5 text-secondary-foreground">
+                      {vendor.category}
+                    </td>
+                    <td className="border-b border-border px-1 py-5 text-right tabular-nums text-secondary-foreground">
+                      {vendor.openBills}
+                    </td>
+                    <td className="border-b border-border px-1 py-5 text-right font-semibold tabular-nums text-foreground">
                       {vendor.outstandingPayable}
-                    </p>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="space-y-3 md:hidden">
+            {filteredVendors.map((vendor) => (
+              <li className="rounded-control border border-border bg-muted/40 p-3" key={vendor.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      className="block truncate font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      href={`/vendors/${vendor.id}`}
+                    >
+                      {vendor.name}
+                    </Link>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">{vendor.email}</p>
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                    <p className="truncate text-muted-foreground">{vendor.contactName}</p>
-                    <p className="shrink-0 text-muted-foreground">{vendor.category}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <EmptyState
-            action={
-              hasActiveFilters ? (
-                <Button onClick={clearFilters} type="button" variant="outline">
-                  Clear filters
-                </Button>
-              ) : undefined
-            }
-            className="mt-6"
-            description={
-              normalizedQuery
-                ? `No vendor matches “${searchQuery.trim()}”. Try a different name, email address, or category.`
-                : "No vendors match the selected category. Try a different filter."
-            }
-            icon={hasActiveFilters ? SearchX : Building2}
-            title={hasActiveFilters ? "No vendors found" : "No vendors yet"}
-          />
-        )}
-      </CardContent>
-    </Card>
+                  <p className="shrink-0 font-medium tabular-nums text-foreground">
+                    {vendor.outstandingPayable}
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                  <p className="truncate text-muted-foreground">{vendor.contactName}</p>
+                  <p className="shrink-0 text-muted-foreground">{vendor.category}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <EmptyState
+          action={
+            hasActiveFilters ? (
+              <Button onClick={clearFilters} type="button" variant="outline">
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+          className="mt-6"
+          description={
+            normalizedQuery
+              ? `No vendor matches “${searchQuery.trim()}”. Try a different name, email address, or category.`
+              : "No vendors match the selected category. Try a different filter."
+          }
+          icon={hasActiveFilters ? SearchX : Building2}
+          title={hasActiveFilters ? "No vendors found" : "No vendors yet"}
+        />
+      )}
+    </div>
   );
 }
 
