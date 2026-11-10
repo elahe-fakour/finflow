@@ -39,13 +39,13 @@ function AppSidebar() {
       aria-label="FinFlow application sidebar"
       className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface/95 lg:flex"
     >
-      <div className="flex h-16 items-center border-b border-border px-5">
+      <div className="flex h-20 items-center border-b border-border px-5">
         <Link
           aria-label="FinFlow dashboard"
-          className="flex items-center gap-3 rounded-control text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="flex items-center gap-3 rounded-xl text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           href="/"
         >
-          <span className="flex size-10 items-center justify-center rounded-control bg-primary text-base font-bold text-primary-foreground">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-sm">
             F
           </span>
           <span>
