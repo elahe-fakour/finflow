@@ -3,6 +3,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   Building2,
+  CircleDollarSign,
   FileText,
   Landmark,
   LayoutDashboard,
@@ -71,6 +72,12 @@ const reportsItem: NavigationItem = {
   label: "Reports",
 };
 
+const receivablesItem: NavigationItem = {
+  href: "/receivables",
+  icon: CircleDollarSign,
+  label: "Receivables",
+};
+
 const reconciliationItem: NavigationItem = {
   href: "/reconciliation",
   icon: Scale,
@@ -98,7 +105,7 @@ export const navigationGroups: NavigationGroup[] = [
   },
   {
     label: "Analysis",
-    items: [reportsItem, reconciliationItem],
+    items: [reportsItem, receivablesItem, reconciliationItem],
   },
 ];
 
@@ -116,6 +123,7 @@ export const mobileMoreNavigationItems = [
   vendorsItem,
   bankAccountsItem,
   incomeExpensesItem,
+  receivablesItem,
   reconciliationItem,
   settingsItem,
 ];
