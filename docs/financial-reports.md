@@ -12,6 +12,12 @@ accounts receivable, and category breakdowns. Accounts payable is deferred until
 FinFlow has a bill and vendor-payment model; an unpaid expense entry alone is not
 enough evidence to report a payable.
 
+The first API endpoint is
+`GET /api/v1/workspaces/:workspaceId/reports/profit-loss?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+It requires workspace `VIEW` permission and returns the requested range, `USD`
+currency, an `ACCRUAL` basis, invoice revenue, manual income, manual expenses,
+total income, total expenses, and net profit as integer minor-unit strings.
+
 ## Date Range and Currency
 
 - Report periods use inclusive ISO calendar dates: `from <= date <= to`.

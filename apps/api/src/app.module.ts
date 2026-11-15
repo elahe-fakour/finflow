@@ -11,6 +11,7 @@ import { IncomeExpenseCategoriesModule } from "./income-expense-categories/incom
 import { BankTransactionImportsModule } from "./bank-transaction-imports/bank-transaction-imports.module.js";
 import { IncomeExpenseEntriesModule } from "./income-expense-entries/income-expense-entries.module.js";
 import { ReconciliationModule } from "./reconciliation/reconciliation.module.js";
+import { ReportsModule } from "./reports/reports.module.js";
 import { VendorsModule } from "./vendors/vendors.module.js";
 import { WorkspacesModule } from "./workspaces/workspaces.module.js";
 import { getSessionCookieOptions, getTrustedWebOrigins } from "./auth/auth-config.js";
@@ -39,6 +40,7 @@ import { getSessionCookieOptions, getTrustedWebOrigins } from "./auth/auth-confi
     IncomeExpenseEntriesModule,
     VendorsModule,
     ReconciliationModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}
