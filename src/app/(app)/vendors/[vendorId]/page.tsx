@@ -1,7 +1,18 @@
 import { vendorSampleData } from "@/components/vendors/vendor-sample-data";
+import {
+  vendorBillSampleData,
+  vendorExpenseSampleData,
+} from "@/components/vendors/vendor-activity-sample-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CircleDollarSign, FilePenLine, ReceiptText } from "lucide-react";
 import type { Metadata } from "next";
@@ -28,6 +39,9 @@ export default async function VendorDetailPage({ params }: VendorDetailPageProps
   if (!vendor) {
     notFound();
   }
+
+  const expenses = vendorExpenseSampleData.filter((expense) => expense.vendorId === vendor.id);
+  const bills = vendorBillSampleData.filter((bill) => bill.vendorId === vendor.id);
 
   return (
     <section aria-labelledby="vendor-title">
@@ -116,31 +130,128 @@ export default async function VendorDetailPage({ params }: VendorDetailPageProps
         <Card>
           <CardHeader>
             <CardTitle as="h2">Expenses</CardTitle>
-            <CardDescription>Expense activity associated with {vendor.name}.</CardDescription>
+            <CardDescription>Recorded expense activity and payment status.</CardDescription>
+            <CardAction>
+              <Badge variant="outline">Sample data</Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
-            <EmptyState
-              description="Expense records for this vendor will appear here when expense management is introduced."
-              icon={ReceiptText}
-              title="Expense history is coming soon"
-            />
+            {expenses.length === 0 ? (
+              <EmptyState
+                description={`There are no expenses for ${vendor.name} in the current sample data.`}
+                icon={ReceiptText}
+                title="No expense history yet"
+              />
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-border">
+                <table className="w-full min-w-[34rem] text-left text-sm">
+                  <caption className="sr-only">Sample expense history for {vendor.name}</caption>
+                  <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Expense
+                      </th>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium" scope="col">
+                        Amount
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {expenses.map((expense) => (
+                      <tr key={expense.id}>
+                        <td className="px-4 py-4">
+                          <p className="font-semibold text-foreground">{expense.description}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{expense.category}</p>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">
+                          {formatSampleDate(expense.recordedDate)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <Badge variant={expense.status === "Paid" ? "secondary" : "outline"}>
+                            {expense.status}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-right font-medium tabular-nums text-foreground">
+                          {expense.amountLabel}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle as="h2">Accounts payable</CardTitle>
-            <CardDescription>Bill due dates and payment allocation history.</CardDescription>
+            <CardDescription>Open bills, due dates, and outstanding amounts.</CardDescription>
+            <CardAction>
+              <Badge variant="outline">Sample data</Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
-            <EmptyState
-              description="Bill details, due dates, and payable payment history will appear here in a later milestone."
-              icon={CircleDollarSign}
-              title="Payable details are coming soon"
-            />
+            {bills.length === 0 ? (
+              <EmptyState
+                description={`There are no open bills for ${vendor.name} in the current sample data.`}
+                icon={CircleDollarSign}
+                title="No open bills"
+              />
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-border">
+                <table className="w-full min-w-[30rem] text-left text-sm">
+                  <caption className="sr-only">Open sample bills for {vendor.name}</caption>
+                  <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Bill
+                      </th>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Due date
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium" scope="col">
+                        Outstanding
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {bills.map((bill) => (
+                      <tr key={bill.id}>
+                        <td className="px-4 py-4">
+                          <p className="font-semibold text-foreground">{bill.billNumber}</p>
+                          <Badge className="mt-2" variant="outline">
+                            Open
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">
+                          {formatSampleDate(bill.dueDate)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-right font-semibold tabular-nums text-foreground">
+                          {bill.amountLabel}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </section>
   );
+}
+
+function formatSampleDate(date: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00.000Z`));
 }
