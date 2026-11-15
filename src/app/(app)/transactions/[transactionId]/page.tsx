@@ -137,6 +137,7 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
           </CardContent>
         </Card>
         <ReconciliationSuggestions
+          canConfirm={workspace.role !== "MEMBER"}
           hasActiveReconciliation={
             reconciliationSuggestions.bankTransaction.hasActiveReconciliation
           }

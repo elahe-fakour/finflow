@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type ReconciliationSuggestionsProps = {
+  canConfirm: boolean;
   hasActiveReconciliation: boolean;
   transactionId: string;
   workspaceId: string;
@@ -16,6 +17,7 @@ type ReconciliationSuggestionsProps = {
 };
 
 function ReconciliationSuggestions({
+  canConfirm,
   hasActiveReconciliation,
   suggestions,
   transactionId,
@@ -111,14 +113,20 @@ function ReconciliationSuggestions({
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className="mt-4"
-                  disabled={isConfirming !== null}
-                  onClick={() => confirmSuggestion(suggestion)}
-                  type="button"
-                >
-                  {isConfirming === suggestion.invoiceId ? "Confirming…" : "Confirm match"}
-                </Button>
+                {canConfirm ? (
+                  <Button
+                    className="mt-4"
+                    disabled={isConfirming !== null}
+                    onClick={() => confirmSuggestion(suggestion)}
+                    type="button"
+                  >
+                    {isConfirming === suggestion.invoiceId ? "Confirming…" : "Confirm match"}
+                  </Button>
+                ) : (
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    An owner, admin, or accountant must confirm this match.
+                  </p>
+                )}
               </article>
             ))}
           </div>
