@@ -74,11 +74,11 @@ const cashFlowSampleData: CashFlowDataPoint[] = [
 ];
 
 const expenseBreakdownSampleData: ExpenseBreakdownDataPoint[] = [
-  { category: "Payroll", amountCents: 315_000, color: "#117d73" },
-  { category: "Contractors", amountCents: 195_000, color: "#15998c" },
-  { category: "Software", amountCents: 122_000, color: "#22b8a7" },
-  { category: "Marketing", amountCents: 104_000, color: "#55cbb8" },
-  { category: "Other", amountCents: 106_000, color: "#94dfd2" },
+  { amountMinorUnits: "315000", category: "Payroll", chartValue: 315_000, color: "#117d73" },
+  { amountMinorUnits: "195000", category: "Contractors", chartValue: 195_000, color: "#15998c" },
+  { amountMinorUnits: "122000", category: "Software", chartValue: 122_000, color: "#22b8a7" },
+  { amountMinorUnits: "104000", category: "Marketing", chartValue: 104_000, color: "#55cbb8" },
+  { amountMinorUnits: "106000", category: "Other", chartValue: 106_000, color: "#94dfd2" },
 ];
 
 const recentInvoices: RecentInvoice[] = [

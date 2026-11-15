@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
 import { getCashFlowReport } from "@/lib/reports/cash-flow-report";
+import { getCategoryBreakdownReport } from "@/lib/reports/category-breakdown-report";
 import { getProfitLossReport } from "@/lib/reports/profit-loss-report";
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
 import { CalendarDays, CircleDollarSign, FileText, ReceiptText, WalletCards } from "lucide-react";
@@ -18,20 +19,14 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Reports",
-  description: "Review workspace profit and loss and sample financial charts in FinFlow.",
+  description: "Review workspace profit and loss, cash flow, and category breakdowns in FinFlow.",
 };
 
 type ReportsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const expenseBreakdown: ExpenseBreakdownDataPoint[] = [
-  { category: "Payroll", amountCents: 315_000, color: "#117d73" },
-  { category: "Contractors", amountCents: 195_000, color: "#15998c" },
-  { category: "Software", amountCents: 122_000, color: "#22b8a7" },
-  { category: "Marketing", amountCents: 104_000, color: "#55cbb8" },
-  { category: "Other", amountCents: 106_000, color: "#94dfd2" },
-];
+const chartColors = ["#117d73", "#15998c", "#22b8a7", "#55cbb8", "#94dfd2"];
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const [workspace, params] = await Promise.all([getActiveWorkspace(), searchParams]);
@@ -39,13 +34,14 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const from = getCalendarDate(params.from) ?? defaults.from;
   const to = getCalendarDate(params.to) ?? defaults.to;
   const hasValidRange = from <= to;
-  const [report, cashFlowReport] =
+  const [report, cashFlowReport, categoryBreakdownReport] =
     workspace && hasValidRange
       ? await Promise.all([
           getProfitLossReport(workspace.id, from, to),
           getCashFlowReport(workspace.id, from, to),
+          getCategoryBreakdownReport(workspace.id, from, to),
         ])
-      : [null, null];
+      : [null, null, null];
 
   return (
     <section aria-labelledby="reports-title">
@@ -126,9 +122,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       ) : (
         <>
           <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-secondary-foreground sm:px-5">
-            Live accrual-basis figures for {formatDateRange(report.from, report.to)}. Cash flow
-            below uses bank transactions; the expense category chart remains illustrative sample
-            data.
+            Live accrual-basis figures for {formatDateRange(report.from, report.to)}. Cash flow uses
+            bank transactions. Category breakdowns cover manual income and expenses; invoice revenue
+            has no category in FinFlow yet.
           </div>
 
           <section
@@ -165,7 +161,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
       {workspace && hasValidRange ? (
         <section
-          aria-label="Cash flow and expense charts"
+          aria-label="Cash flow and category breakdown charts"
           className="mt-6 grid gap-6 xl:grid-cols-2"
         >
           {cashFlowReport === null ? (
@@ -184,7 +180,27 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
               periodDescription={formatDateRange(cashFlowReport.from, cashFlowReport.to)}
             />
           )}
-          <ExpenseBreakdownChart data={expenseBreakdown} />
+          {categoryBreakdownReport === null ? (
+            <ErrorState
+              description="We couldn't load category breakdowns for this period. Please try again shortly."
+              title="Category breakdown unavailable"
+            />
+          ) : (
+            <>
+              <ExpenseBreakdownChart
+                data={mapCategoryData(categoryBreakdownReport.expenses.categories)}
+                description={`Manual expenses by category for ${formatDateRange(categoryBreakdownReport.from, categoryBreakdownReport.to)}.`}
+                isSample={false}
+              />
+              <ExpenseBreakdownChart
+                data={mapCategoryData(categoryBreakdownReport.manualIncome.categories)}
+                description={`Categorized manual income for ${formatDateRange(categoryBreakdownReport.from, categoryBreakdownReport.to)}. Invoice revenue is not included.`}
+                isSample={false}
+                title="Manual income by category"
+                totalLabel="Total manual income"
+              />
+            </>
+          )}
         </section>
       ) : null}
 
@@ -199,8 +215,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             date, and manual income and expenses are counted by activity date.
           </p>
           <p>
-            Cash flow uses signed USD bank transactions grouped by month. The expense category chart
-            is still a sample illustration and is not calculated from workspace records.
+            Cash flow uses signed USD bank transactions grouped by month. Category breakdowns use
+            manual income and expense entries; invoice revenue is shown separately because invoices
+            do not have categories.
           </p>
         </CardContent>
       </Card>
@@ -240,4 +257,15 @@ function formatMonth(value: string): string {
     year: "2-digit",
     timeZone: "UTC",
   }).format(date);
+}
+
+function mapCategoryData(
+  categories: { amountMinorUnits: string; categoryId: string | null; categoryName: string }[],
+): ExpenseBreakdownDataPoint[] {
+  return categories.map((category, index) => ({
+    amountMinorUnits: category.amountMinorUnits,
+    category: category.categoryName,
+    chartValue: Number(category.amountMinorUnits),
+    color: chartColors[index % chartColors.length] ?? "#117d73",
+  }));
 }
