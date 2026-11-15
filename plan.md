@@ -357,7 +357,8 @@ without confusing cash and accrual concepts.
 
 **Milestone 11.1: Report queries**
 
-1. Define report date-range and cash/accrual assumptions in documentation.
+1. Define report date-range and cash/accrual assumptions in
+   [docs/financial-reports.md](./docs/financial-reports.md).
 2. Implement Profit & Loss report query and tests.
 3. Implement cash-flow report query and tests.
 4. Implement accounts-receivable and accounts-payable report queries and tests.

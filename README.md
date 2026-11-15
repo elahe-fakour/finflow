@@ -35,6 +35,8 @@ The provider-neutral production release runbook is in
 [docs/deployment.md](./docs/deployment.md).
 Dependency update and vulnerability checks are documented in
 [docs/dependency-security.md](./docs/dependency-security.md).
+Financial report date, cash-flow, and Profit & Loss rules are documented in
+[docs/financial-reports.md](./docs/financial-reports.md).
 
 ## Current Technology
 
