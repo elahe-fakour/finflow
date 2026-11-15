@@ -1,8 +1,13 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
 import type { CashFlowQueryDto } from "./dto/cash-flow-query.dto.js";
+import type { AccountsReceivableQueryDto } from "./dto/accounts-receivable-query.dto.js";
 import type { ProfitLossQueryDto } from "./dto/profit-loss-query.dto.js";
-import { ReportsRepository, type CashFlowTransaction } from "./reports.repository.js";
+import {
+  ReportsRepository,
+  type CashFlowTransaction,
+  type ReceivableInvoice,
+} from "./reports.repository.js";
 
 export type ProfitLossReportResponse = {
   basis: "ACCRUAL";
@@ -35,6 +40,29 @@ export type CashFlowReportResponse = {
   netCashFlowMinorUnits: string;
   outflowsMinorUnits: string;
   to: string;
+};
+
+export type AccountsReceivableReportResponse = {
+  asOf: string;
+  currency: "USD";
+  invoices: {
+    customerName: string;
+    dueDate: string;
+    invoiceId: string;
+    invoiceNumber: string;
+    issueDate: string;
+    outstandingMinorUnits: string;
+    paidMinorUnits: string;
+    status: "CURRENT" | "OVERDUE";
+    totalMinorUnits: string;
+  }[];
+  summary: {
+    currentMinorUnits: string;
+    currentInvoiceCount: number;
+    overdueInvoiceCount: number;
+    overdueMinorUnits: string;
+    totalOutstandingMinorUnits: string;
+  };
 };
 
 @Injectable()
@@ -112,6 +140,78 @@ export class ReportsService {
         })),
     };
   }
+
+  async getAccountsReceivable(
+    scope: WorkspaceScope,
+    input: AccountsReceivableQueryDto,
+  ): Promise<AccountsReceivableReportResponse> {
+    const asOf = parseCalendarDate(input.asOf, "asOf");
+    const invoices = await this.reportsRepository.getReceivableInvoices(scope, asOf);
+    return buildAccountsReceivableReport(input.asOf, invoices);
+  }
+}
+
+function buildAccountsReceivableReport(
+  asOf: string,
+  invoices: ReceivableInvoice[],
+): AccountsReceivableReportResponse {
+  let currentMinorUnits = 0n;
+  let overdueMinorUnits = 0n;
+  let currentInvoiceCount = 0;
+  let overdueInvoiceCount = 0;
+
+  const openInvoices = invoices.flatMap((invoice) => {
+    const paidMinorUnits = invoice.payments.reduce(
+      (total, payment) => total + payment.amountMinorUnits,
+      0n,
+    );
+    const outstandingMinorUnits = invoice.totalMinorUnits - paidMinorUnits;
+
+    if (outstandingMinorUnits < 0n) {
+      throw new BadRequestException({
+        code: "INVOICE_PAYMENT_EXCEEDS_TOTAL",
+        message: `Payments exceed invoice total for invoice ${invoice.invoiceNumber}.`,
+      });
+    }
+    if (outstandingMinorUnits === 0n) return [];
+
+    const dueDate = toCalendarDate(invoice.dueDate);
+    const status: "OVERDUE" | "CURRENT" = dueDate < asOf ? "OVERDUE" : "CURRENT";
+    if (status === "OVERDUE") {
+      overdueMinorUnits += outstandingMinorUnits;
+      overdueInvoiceCount += 1;
+    } else {
+      currentMinorUnits += outstandingMinorUnits;
+      currentInvoiceCount += 1;
+    }
+
+    return [
+      {
+        customerName: invoice.customer.name,
+        dueDate,
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        issueDate: toCalendarDate(invoice.issueDate),
+        outstandingMinorUnits: outstandingMinorUnits.toString(),
+        paidMinorUnits: paidMinorUnits.toString(),
+        status,
+        totalMinorUnits: invoice.totalMinorUnits.toString(),
+      },
+    ];
+  });
+
+  return {
+    asOf,
+    currency: "USD",
+    invoices: openInvoices,
+    summary: {
+      currentMinorUnits: currentMinorUnits.toString(),
+      currentInvoiceCount,
+      overdueInvoiceCount,
+      overdueMinorUnits: overdueMinorUnits.toString(),
+      totalOutstandingMinorUnits: (currentMinorUnits + overdueMinorUnits).toString(),
+    },
+  };
 }
 
 function aggregateCashFlow(transactions: CashFlowTransaction[]) {
@@ -143,7 +243,7 @@ function aggregateCashFlow(transactions: CashFlowTransaction[]) {
   return totals;
 }
 
-function parseCalendarDate(value: string, field: "from" | "to"): Date {
+function parseCalendarDate(value: string, field: "asOf" | "from" | "to"): Date {
   const date = new Date(`${value}T00:00:00.000Z`);
 
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
@@ -154,4 +254,8 @@ function parseCalendarDate(value: string, field: "from" | "to"): Date {
   }
 
   return date;
+}
+
+function toCalendarDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
 }

@@ -14,6 +14,17 @@ export type CashFlowTransaction = {
   transactionDate: Date;
 };
 
+export type ReceivableInvoice = {
+  customer: { name: string };
+  dueDate: Date;
+  id: string;
+  invoiceNumber: string;
+  issueDate: Date;
+  payments: { amountMinorUnits: bigint }[];
+  status: InvoiceStatus;
+  totalMinorUnits: bigint;
+};
+
 @Injectable()
 export class ReportsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -74,6 +85,33 @@ export class ReportsRepository {
       },
       select: { amountMinorUnits: true, transactionDate: true },
       orderBy: [{ transactionDate: "asc" }, { id: "asc" }],
+    });
+  }
+
+  getReceivableInvoices(scope: WorkspaceScope, asOf: Date): Promise<ReceivableInvoice[]> {
+    const endOfAsOfDay = new Date(asOf.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+    return this.prisma.database.invoice.findMany({
+      where: {
+        workspaceId: scope.workspaceId,
+        currency: "USD",
+        issueDate: { lte: asOf },
+        status: { in: ["SENT", "OVERDUE", "PAID"] },
+      },
+      select: {
+        customer: { select: { name: true } },
+        dueDate: true,
+        id: true,
+        invoiceNumber: true,
+        issueDate: true,
+        payments: {
+          where: { receivedAt: { lte: endOfAsOfDay } },
+          select: { amountMinorUnits: true },
+        },
+        status: true,
+        totalMinorUnits: true,
+      },
+      orderBy: [{ dueDate: "asc" }, { invoiceNumber: "asc" }],
     });
   }
 }

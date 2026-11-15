@@ -25,6 +25,12 @@ total outflows as positive magnitudes, net cash flow, and those same totals grou
 by calendar month. Each month is formatted as `YYYY-MM`. Empty periods return zero
 totals and an empty monthly breakdown.
 
+Accounts receivable is available at
+`GET /api/v1/workspaces/:workspaceId/reports/accounts-receivable?asOf=YYYY-MM-DD`.
+It returns only invoices with a positive outstanding balance, with paid and
+outstanding amounts per invoice and current/overdue totals and counts. Payments
+are included through the end of the requested UTC calendar date.
+
 ## Date Range and Currency
 
 - Report periods use inclusive ISO calendar dates: `from <= date <= to`.
