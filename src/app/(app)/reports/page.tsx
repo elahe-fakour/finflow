@@ -1,51 +1,28 @@
-import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
 import { CashFlowChart, type CashFlowDataPoint } from "@/components/dashboard/cash-flow-chart";
+import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
 import {
   ExpenseBreakdownChart,
   type ExpenseBreakdownDataPoint,
 } from "@/components/dashboard/expense-breakdown-chart";
-import {
-  ProfitLossSummaryPanel,
-  type ProfitLossSummary,
-} from "@/components/dashboard/dashboard-summary-panels";
-import { Badge } from "@/components/ui/badge";
+import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, CircleDollarSign, Landmark, ReceiptText, WalletCards } from "lucide-react";
+import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
+import { getProfitLossReport } from "@/lib/reports/profit-loss-report";
+import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
+import { CalendarDays, CircleDollarSign, FileText, ReceiptText, WalletCards } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Reports",
-  description: "Review sample cash flow, expenses, and profit and loss in FinFlow.",
+  description: "Review workspace profit and loss and sample financial charts in FinFlow.",
 };
 
-const reportingPeriod = "September 2026";
-
-const reportMetrics = [
-  {
-    description: `${reportingPeriod} · sample data`,
-    icon: CircleDollarSign,
-    label: "Income",
-    value: "$24,850.00",
-  },
-  {
-    description: `${reportingPeriod} · sample data`,
-    icon: ReceiptText,
-    label: "Expenses",
-    value: "$8,420.00",
-  },
-  {
-    description: "Income minus expenses · sample data",
-    icon: WalletCards,
-    label: "Net profit",
-    value: "$16,430.00",
-  },
-  {
-    description: "Across 3 accounts · sample data",
-    icon: Landmark,
-    label: "Cash balance",
-    value: "$31,620.00",
-  },
-];
+type ReportsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 const cashFlowData: CashFlowDataPoint[] = [
   { period: "Apr", netCashFlowCents: 425_000 },
@@ -64,13 +41,15 @@ const expenseBreakdown: ExpenseBreakdownDataPoint[] = [
   { category: "Other", amountCents: 106_000, color: "#94dfd2" },
 ];
 
-const profitLossSummary: ProfitLossSummary = {
-  income: "$24,850.00",
-  expenses: "($8,420.00)",
-  netProfit: "$16,430.00",
-};
+export default async function ReportsPage({ searchParams }: ReportsPageProps) {
+  const [workspace, params] = await Promise.all([getActiveWorkspace(), searchParams]);
+  const defaults = getCurrentMonthRange();
+  const from = getCalendarDate(params.from) ?? defaults.from;
+  const to = getCalendarDate(params.to) ?? defaults.to;
+  const hasValidRange = from <= to;
+  const report =
+    workspace && hasValidRange ? await getProfitLossReport(workspace.id, from, to) : null;
 
-export default function ReportsPage() {
   return (
     <section aria-labelledby="reports-title">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
@@ -85,58 +64,153 @@ export default function ReportsPage() {
             Reports
           </h1>
           <p className="max-w-2xl text-base leading-7 text-secondary-foreground">
-            Review cash movement, spending categories, and a profit and loss summary.
+            Review your workspace profit and loss for a selected date range.
           </p>
-        </div>
-        <div className="inline-flex min-h-11 items-center gap-2 self-start rounded-control border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm sm:self-auto">
-          <CalendarDays aria-hidden="true" className="size-5 text-primary" />
-          {reportingPeriod}
-          <Badge variant="outline">Sample</Badge>
         </div>
       </header>
 
-      <div className="mt-6 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-sm leading-6 text-secondary-foreground sm:px-5">
-        These figures are illustrative sample data. Reports are not connected to live workspace
-        records yet.
-      </div>
-
-      <section
-        aria-label="Key report metrics"
-        className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      <form
+        action="/reports"
+        className="mt-6 flex flex-wrap items-end gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5"
       >
-        {reportMetrics.map((metric) => (
-          <DashboardKpiCard key={metric.label} {...metric} />
-        ))}
-      </section>
+        <div className="flex min-h-11 items-center gap-2 pr-1 text-sm font-semibold text-foreground">
+          <CalendarDays aria-hidden="true" className="size-5 text-primary" />
+          Report period
+        </div>
+        <label className="grid gap-1.5 text-sm font-medium text-secondary-foreground">
+          From
+          <input
+            className="h-11 rounded-lg border border-input bg-background px-3 text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            defaultValue={from}
+            name="from"
+            required
+            type="date"
+          />
+        </label>
+        <label className="grid gap-1.5 text-sm font-medium text-secondary-foreground">
+          To
+          <input
+            className="h-11 rounded-lg border border-input bg-background px-3 text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            defaultValue={to}
+            name="to"
+            required
+            type="date"
+          />
+        </label>
+        <Button className="min-h-11" type="submit">
+          Update report
+        </Button>
+      </form>
 
-      <section
-        aria-label="Cash flow and expense reports"
-        className="mt-6 grid gap-6 xl:grid-cols-2"
-      >
+      {!workspace ? (
+        <EmptyState
+          action={
+            <Button asChild>
+              <Link href="/onboarding">Create workspace</Link>
+            </Button>
+          }
+          className="mt-6"
+          description="Create or join a workspace to view its financial reports."
+          icon={FileText}
+          title="No workspace available"
+        />
+      ) : !hasValidRange ? (
+        <ErrorState
+          className="mt-6"
+          description="Choose a start date that is on or before the end date, then update the report."
+          title="Invalid report period"
+        />
+      ) : report === null ? (
+        <ErrorState
+          className="mt-6"
+          description="We couldn't load this workspace report. Check your connection and try again."
+          title="Report unavailable"
+        />
+      ) : (
+        <>
+          <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-secondary-foreground sm:px-5">
+            Live accrual-basis figures for {formatDateRange(report.from, report.to)}. The charts
+            below are illustrative sample data and are not part of this report.
+          </div>
+
+          <section
+            aria-label="Profit and loss metrics"
+            className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          >
+            <DashboardKpiCard
+              description="From invoices and manual income · USD"
+              icon={CircleDollarSign}
+              label="Total income"
+              value={formatUsdMinorUnits(report.income.totalMinorUnits)}
+            />
+            <DashboardKpiCard
+              description="Invoice revenue · USD"
+              icon={FileText}
+              label="Invoice revenue"
+              value={formatUsdMinorUnits(report.income.invoiceRevenueMinorUnits)}
+            />
+            <DashboardKpiCard
+              description="Manual expenses · USD"
+              icon={ReceiptText}
+              label="Expenses"
+              value={formatUsdMinorUnits(report.expenses.totalMinorUnits)}
+            />
+            <DashboardKpiCard
+              description="Income less expenses · USD"
+              icon={WalletCards}
+              label="Net profit"
+              value={formatUsdMinorUnits(report.netProfitMinorUnits)}
+            />
+          </section>
+        </>
+      )}
+
+      <section aria-label="Illustrative sample charts" className="mt-6 grid gap-6 xl:grid-cols-2">
         <CashFlowChart data={cashFlowData} />
         <ExpenseBreakdownChart data={expenseBreakdown} />
       </section>
 
-      <section aria-label="Profit and loss report" className="mt-6 grid gap-6 xl:grid-cols-2">
-        <ProfitLossSummaryPanel summary={profitLossSummary} />
-        <Card>
-          <CardHeader>
-            <CardTitle as="h2">About this report</CardTitle>
-            <CardDescription>How to read the current sample figures.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm leading-6 text-secondary-foreground">
-            <p>The cash flow chart shows monthly net movement from April through September 2026.</p>
-            <p>
-              The expense chart groups the September sample expenses by category. Net profit is the
-              sample income total less sample expenses.
-            </p>
-            <p>
-              Cash and profit are different measures: the cash balance shown here is an illustrative
-              account total, not the net profit calculation.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle as="h2">About these reports</CardTitle>
+          <CardDescription>Data sources and calculation basis.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm leading-6 text-secondary-foreground">
+          <p>
+            The profit and loss figures use accrual accounting: invoice revenue is counted by issue
+            date, and manual income and expenses are counted by activity date.
+          </p>
+          <p>
+            Cash flow and expense category charts are sample illustrations. They are not calculated
+            from the selected dates or workspace records yet.
+          </p>
+        </CardContent>
+      </Card>
     </section>
   );
+}
+
+function getCurrentMonthRange(): { from: string; to: string } {
+  const today = new Date().toISOString().slice(0, 10);
+  return { from: `${today.slice(0, 7)}-01`, to: today };
+}
+
+function getCalendarDate(value: string | string[] | undefined): string | null {
+  const dateValue = Array.isArray(value) ? value[0] : value;
+  if (dateValue === undefined || !/^\d{4}-\d{2}-\d{2}$/u.test(dateValue)) return null;
+
+  const date = new Date(`${dateValue}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === dateValue
+    ? dateValue
+    : null;
+}
+
+function formatDateRange(from: string, to: string): string {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+    year: "numeric",
+  });
+  return `${formatter.format(new Date(`${from}T00:00:00.000Z`))} – ${formatter.format(new Date(`${to}T00:00:00.000Z`))}`;
 }
