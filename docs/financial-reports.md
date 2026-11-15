@@ -31,6 +31,14 @@ It returns only invoices with a positive outstanding balance, with paid and
 outstanding amounts per invoice and current/overdue totals and counts. Payments
 are included through the end of the requested UTC calendar date.
 
+Manual income and expense breakdowns are available at
+`GET /api/v1/workspaces/:workspaceId/reports/category-breakdown?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+The response contains expense categories and manual-income categories for the
+inclusive period, with integer minor-unit totals. Entries without a category are
+grouped under `Uncategorized`. Invoice revenue is excluded because invoices do not
+have a category field; the response must not be presented as a breakdown of all
+revenue.
+
 ## Date Range and Currency
 
 - Report periods use inclusive ISO calendar dates: `from <= date <= to`.

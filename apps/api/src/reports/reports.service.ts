@@ -2,9 +2,11 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
 import type { CashFlowQueryDto } from "./dto/cash-flow-query.dto.js";
 import type { AccountsReceivableQueryDto } from "./dto/accounts-receivable-query.dto.js";
+import type { CategoryBreakdownQueryDto } from "./dto/category-breakdown-query.dto.js";
 import type { ProfitLossQueryDto } from "./dto/profit-loss-query.dto.js";
 import {
   ReportsRepository,
+  type CategoryBreakdownGroup,
   type CashFlowTransaction,
   type ReceivableInvoice,
 } from "./reports.repository.js";
@@ -63,6 +65,29 @@ export type AccountsReceivableReportResponse = {
     overdueMinorUnits: string;
     totalOutstandingMinorUnits: string;
   };
+};
+
+export type CategoryBreakdownReportResponse = {
+  basis: "ACCRUAL";
+  currency: "USD";
+  expenses: {
+    categories: {
+      amountMinorUnits: string;
+      categoryId: string | null;
+      categoryName: string;
+    }[];
+    totalMinorUnits: string;
+  };
+  from: string;
+  manualIncome: {
+    categories: {
+      amountMinorUnits: string;
+      categoryId: string | null;
+      categoryName: string;
+    }[];
+    totalMinorUnits: string;
+  };
+  to: string;
 };
 
 @Injectable()
@@ -149,6 +174,47 @@ export class ReportsService {
     const invoices = await this.reportsRepository.getReceivableInvoices(scope, asOf);
     return buildAccountsReceivableReport(input.asOf, invoices);
   }
+
+  async getCategoryBreakdown(
+    scope: WorkspaceScope,
+    input: CategoryBreakdownQueryDto,
+  ): Promise<CategoryBreakdownReportResponse> {
+    const from = parseCalendarDate(input.from, "from");
+    const to = parseCalendarDate(input.to, "to");
+
+    if (from > to) {
+      throw new BadRequestException({
+        code: "INVALID_REPORT_DATE_RANGE",
+        message: "from must be on or before to.",
+      });
+    }
+
+    const groups = await this.reportsRepository.getCategoryBreakdown(scope, from, to);
+    const expenses = groups.filter((group) => group.type === "EXPENSE");
+    const manualIncome = groups.filter((group) => group.type === "INCOME");
+
+    return {
+      basis: "ACCRUAL",
+      currency: "USD",
+      from: input.from,
+      to: input.to,
+      expenses: mapCategoryTotals(expenses),
+      manualIncome: mapCategoryTotals(manualIncome),
+    };
+  }
+}
+
+function mapCategoryTotals(groups: CategoryBreakdownGroup[]) {
+  const categories = groups
+    .map((group) => ({
+      amountMinorUnits: group.amountMinorUnits.toString(),
+      categoryId: group.categoryId,
+      categoryName: group.categoryName,
+    }))
+    .sort((left, right) => left.categoryName.localeCompare(right.categoryName));
+  const totalMinorUnits = groups.reduce((total, group) => total + group.amountMinorUnits, 0n);
+
+  return { categories, totalMinorUnits: totalMinorUnits.toString() };
 }
 
 function buildAccountsReceivableReport(

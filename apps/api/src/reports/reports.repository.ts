@@ -1,5 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { IncomeExpenseType, InvoiceStatus } from "../generated/prisma/client.js";
+import {
+  IncomeExpenseType,
+  InvoiceStatus,
+  type IncomeExpenseType as IncomeExpenseTypeValue,
+} from "../generated/prisma/client.js";
 import { PrismaService } from "../database/prisma.service.js";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
 
@@ -23,6 +27,13 @@ export type ReceivableInvoice = {
   payments: { amountMinorUnits: bigint }[];
   status: InvoiceStatus;
   totalMinorUnits: bigint;
+};
+
+export type CategoryBreakdownGroup = {
+  amountMinorUnits: bigint;
+  categoryId: string | null;
+  categoryName: string;
+  type: IncomeExpenseTypeValue;
 };
 
 @Injectable()
@@ -113,5 +124,42 @@ export class ReportsRepository {
       },
       orderBy: [{ dueDate: "asc" }, { invoiceNumber: "asc" }],
     });
+  }
+
+  async getCategoryBreakdown(
+    scope: WorkspaceScope,
+    from: Date,
+    to: Date,
+  ): Promise<CategoryBreakdownGroup[]> {
+    const database = this.prisma.database;
+    const groups = await database.incomeExpenseEntry.groupBy({
+      by: ["categoryId", "type"],
+      where: {
+        workspaceId: scope.workspaceId,
+        currency: "USD",
+        occurredOn: { gte: from, lte: to },
+      },
+      _sum: { amountMinorUnits: true },
+    });
+    const categoryIds = groups.flatMap((group) =>
+      group.categoryId === null ? [] : [group.categoryId],
+    );
+    const categories = categoryIds.length
+      ? await database.incomeExpenseCategory.findMany({
+          where: { workspaceId: scope.workspaceId, id: { in: categoryIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+    const categoryNames = new Map(categories.map((category) => [category.id, category.name]));
+
+    return groups.map((group) => ({
+      amountMinorUnits: group._sum.amountMinorUnits ?? 0n,
+      categoryId: group.categoryId,
+      categoryName:
+        group.categoryId === null
+          ? "Uncategorized"
+          : (categoryNames.get(group.categoryId) ?? "Category"),
+      type: group.type,
+    }));
   }
 }

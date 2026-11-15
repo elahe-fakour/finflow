@@ -5,11 +5,13 @@ import { WorkspaceMembershipGuard } from "../workspaces/workspace-membership.gua
 import { WorkspacePermissionGuard } from "../workspaces/workspace-permission.guard.js";
 import { WorkspacePermission } from "../workspaces/workspace-permissions.js";
 import { AccountsReceivableQueryDto } from "./dto/accounts-receivable-query.dto.js";
+import { CategoryBreakdownQueryDto } from "./dto/category-breakdown-query.dto.js";
 import { CashFlowQueryDto } from "./dto/cash-flow-query.dto.js";
 import { ProfitLossQueryDto } from "./dto/profit-loss-query.dto.js";
 import {
   ReportsService,
   type AccountsReceivableReportResponse,
+  type CategoryBreakdownReportResponse,
   type CashFlowReportResponse,
   type ProfitLossReportResponse,
 } from "./reports.service.js";
@@ -44,5 +46,14 @@ export class ReportsController {
     @Query() input: AccountsReceivableQueryDto,
   ): Promise<AccountsReceivableReportResponse> {
     return this.reportsService.getAccountsReceivable(access, input);
+  }
+
+  @Get("category-breakdown")
+  @RequireWorkspacePermission(WorkspacePermission.VIEW)
+  getCategoryBreakdown(
+    @CurrentWorkspace() access: WorkspaceAccess,
+    @Query() input: CategoryBreakdownQueryDto,
+  ): Promise<CategoryBreakdownReportResponse> {
+    return this.reportsService.getCategoryBreakdown(access, input);
   }
 }
