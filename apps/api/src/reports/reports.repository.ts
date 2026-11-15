@@ -9,6 +9,11 @@ export type ProfitLossTotals = {
   manualExpenseMinorUnits: bigint;
 };
 
+export type CashFlowTransaction = {
+  amountMinorUnits: bigint;
+  transactionDate: Date;
+};
+
 @Injectable()
 export class ReportsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -54,5 +59,21 @@ export class ReportsRepository {
       manualIncomeMinorUnits: manualIncome._sum.amountMinorUnits ?? 0n,
       manualExpenseMinorUnits: manualExpenses._sum.amountMinorUnits ?? 0n,
     };
+  }
+
+  getCashFlowTransactions(
+    scope: WorkspaceScope,
+    from: Date,
+    to: Date,
+  ): Promise<CashFlowTransaction[]> {
+    return this.prisma.database.bankTransaction.findMany({
+      where: {
+        workspaceId: scope.workspaceId,
+        transactionDate: { gte: from, lte: to },
+        bankAccount: { is: { currency: "USD" } },
+      },
+      select: { amountMinorUnits: true, transactionDate: true },
+      orderBy: [{ transactionDate: "asc" }, { id: "asc" }],
+    });
   }
 }

@@ -18,6 +18,13 @@ It requires workspace `VIEW` permission and returns the requested range, `USD`
 currency, an `ACCRUAL` basis, invoice revenue, manual income, manual expenses,
 total income, total expenses, and net profit as integer minor-unit strings.
 
+Cash flow is queried separately at
+`GET /api/v1/workspaces/:workspaceId/reports/cash-flow?from=YYYY-MM-DD&to=YYYY-MM-DD`.
+It returns the inclusive date range, `USD` currency, a `CASH` basis, total inflows,
+total outflows as positive magnitudes, net cash flow, and those same totals grouped
+by calendar month. Each month is formatted as `YYYY-MM`. Empty periods return zero
+totals and an empty monthly breakdown.
+
 ## Date Range and Currency
 
 - Report periods use inclusive ISO calendar dates: `from <= date <= to`.

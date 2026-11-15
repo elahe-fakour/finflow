@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import type { WorkspaceScope } from "../workspaces/workspace-scope.js";
+import type { CashFlowQueryDto } from "./dto/cash-flow-query.dto.js";
 import type { ProfitLossQueryDto } from "./dto/profit-loss-query.dto.js";
-import { ReportsRepository } from "./reports.repository.js";
+import { ReportsRepository, type CashFlowTransaction } from "./reports.repository.js";
 
 export type ProfitLossReportResponse = {
   basis: "ACCRUAL";
@@ -17,6 +18,22 @@ export type ProfitLossReportResponse = {
     totalMinorUnits: string;
   };
   netProfitMinorUnits: string;
+  to: string;
+};
+
+export type CashFlowReportResponse = {
+  basis: "CASH";
+  currency: "USD";
+  from: string;
+  inflowsMinorUnits: string;
+  months: {
+    inflowsMinorUnits: string;
+    month: string;
+    netMinorUnits: string;
+    outflowsMinorUnits: string;
+  }[];
+  netCashFlowMinorUnits: string;
+  outflowsMinorUnits: string;
   to: string;
 };
 
@@ -59,6 +76,71 @@ export class ReportsService {
       netProfitMinorUnits: netProfit.toString(),
     };
   }
+
+  async getCashFlow(
+    scope: WorkspaceScope,
+    input: CashFlowQueryDto,
+  ): Promise<CashFlowReportResponse> {
+    const from = parseCalendarDate(input.from, "from");
+    const to = parseCalendarDate(input.to, "to");
+
+    if (from > to) {
+      throw new BadRequestException({
+        code: "INVALID_REPORT_DATE_RANGE",
+        message: "from must be on or before to.",
+      });
+    }
+
+    const transactions = await this.reportsRepository.getCashFlowTransactions(scope, from, to);
+    const totals = aggregateCashFlow(transactions);
+
+    return {
+      basis: "CASH",
+      currency: "USD",
+      from: input.from,
+      to: input.to,
+      inflowsMinorUnits: totals.inflowsMinorUnits.toString(),
+      outflowsMinorUnits: totals.outflowsMinorUnits.toString(),
+      netCashFlowMinorUnits: (totals.inflowsMinorUnits - totals.outflowsMinorUnits).toString(),
+      months: [...totals.months.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([month, values]) => ({
+          month,
+          inflowsMinorUnits: values.inflowsMinorUnits.toString(),
+          outflowsMinorUnits: values.outflowsMinorUnits.toString(),
+          netMinorUnits: (values.inflowsMinorUnits - values.outflowsMinorUnits).toString(),
+        })),
+    };
+  }
+}
+
+function aggregateCashFlow(transactions: CashFlowTransaction[]) {
+  const totals = {
+    inflowsMinorUnits: 0n,
+    outflowsMinorUnits: 0n,
+    months: new Map<string, { inflowsMinorUnits: bigint; outflowsMinorUnits: bigint }>(),
+  };
+
+  for (const transaction of transactions) {
+    const month = transaction.transactionDate.toISOString().slice(0, 7);
+    const monthlyTotals = totals.months.get(month) ?? {
+      inflowsMinorUnits: 0n,
+      outflowsMinorUnits: 0n,
+    };
+
+    if (transaction.amountMinorUnits > 0n) {
+      totals.inflowsMinorUnits += transaction.amountMinorUnits;
+      monthlyTotals.inflowsMinorUnits += transaction.amountMinorUnits;
+    } else if (transaction.amountMinorUnits < 0n) {
+      const outflowMinorUnits = -transaction.amountMinorUnits;
+      totals.outflowsMinorUnits += outflowMinorUnits;
+      monthlyTotals.outflowsMinorUnits += outflowMinorUnits;
+    }
+
+    totals.months.set(month, monthlyTotals);
+  }
+
+  return totals;
 }
 
 function parseCalendarDate(value: string, field: "from" | "to"): Date {

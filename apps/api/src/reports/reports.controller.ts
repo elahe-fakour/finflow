@@ -4,8 +4,13 @@ import { CurrentWorkspace, type WorkspaceAccess } from "../workspaces/workspace-
 import { WorkspaceMembershipGuard } from "../workspaces/workspace-membership.guard.js";
 import { WorkspacePermissionGuard } from "../workspaces/workspace-permission.guard.js";
 import { WorkspacePermission } from "../workspaces/workspace-permissions.js";
+import { CashFlowQueryDto } from "./dto/cash-flow-query.dto.js";
 import { ProfitLossQueryDto } from "./dto/profit-loss-query.dto.js";
-import { ReportsService, type ProfitLossReportResponse } from "./reports.service.js";
+import {
+  ReportsService,
+  type CashFlowReportResponse,
+  type ProfitLossReportResponse,
+} from "./reports.service.js";
 
 @Controller("workspaces/:workspaceId/reports")
 @UseGuards(WorkspaceMembershipGuard, WorkspacePermissionGuard)
@@ -19,5 +24,14 @@ export class ReportsController {
     @Query() input: ProfitLossQueryDto,
   ): Promise<ProfitLossReportResponse> {
     return this.reportsService.getProfitLoss(access, input);
+  }
+
+  @Get("cash-flow")
+  @RequireWorkspacePermission(WorkspacePermission.VIEW)
+  getCashFlow(
+    @CurrentWorkspace() access: WorkspaceAccess,
+    @Query() input: CashFlowQueryDto,
+  ): Promise<CashFlowReportResponse> {
+    return this.reportsService.getCashFlow(access, input);
   }
 }
