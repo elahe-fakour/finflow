@@ -1,4 +1,4 @@
-import { CashFlowChart, type CashFlowDataPoint } from "@/components/dashboard/cash-flow-chart";
+import { CashFlowChart } from "@/components/dashboard/cash-flow-chart";
 import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
 import {
   ExpenseBreakdownChart,
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
+import { getCashFlowReport } from "@/lib/reports/cash-flow-report";
 import { getProfitLossReport } from "@/lib/reports/profit-loss-report";
 import { getActiveWorkspace } from "@/lib/workspaces/current-workspace";
 import { CalendarDays, CircleDollarSign, FileText, ReceiptText, WalletCards } from "lucide-react";
@@ -24,15 +25,6 @@ type ReportsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const cashFlowData: CashFlowDataPoint[] = [
-  { period: "Apr", netCashFlowCents: 425_000 },
-  { period: "May", netCashFlowCents: 510_000 },
-  { period: "Jun", netCashFlowCents: 378_000 },
-  { period: "Jul", netCashFlowCents: 642_000 },
-  { period: "Aug", netCashFlowCents: 584_000 },
-  { period: "Sep", netCashFlowCents: 711_000 },
-];
-
 const expenseBreakdown: ExpenseBreakdownDataPoint[] = [
   { category: "Payroll", amountCents: 315_000, color: "#117d73" },
   { category: "Contractors", amountCents: 195_000, color: "#15998c" },
@@ -47,8 +39,13 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const from = getCalendarDate(params.from) ?? defaults.from;
   const to = getCalendarDate(params.to) ?? defaults.to;
   const hasValidRange = from <= to;
-  const report =
-    workspace && hasValidRange ? await getProfitLossReport(workspace.id, from, to) : null;
+  const [report, cashFlowReport] =
+    workspace && hasValidRange
+      ? await Promise.all([
+          getProfitLossReport(workspace.id, from, to),
+          getCashFlowReport(workspace.id, from, to),
+        ])
+      : [null, null];
 
   return (
     <section aria-labelledby="reports-title">
@@ -129,8 +126,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       ) : (
         <>
           <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-6 text-secondary-foreground sm:px-5">
-            Live accrual-basis figures for {formatDateRange(report.from, report.to)}. The charts
-            below are illustrative sample data and are not part of this report.
+            Live accrual-basis figures for {formatDateRange(report.from, report.to)}. Cash flow
+            below uses bank transactions; the expense category chart remains illustrative sample
+            data.
           </div>
 
           <section
@@ -165,10 +163,30 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         </>
       )}
 
-      <section aria-label="Illustrative sample charts" className="mt-6 grid gap-6 xl:grid-cols-2">
-        <CashFlowChart data={cashFlowData} />
-        <ExpenseBreakdownChart data={expenseBreakdown} />
-      </section>
+      {workspace && hasValidRange ? (
+        <section
+          aria-label="Cash flow and expense charts"
+          className="mt-6 grid gap-6 xl:grid-cols-2"
+        >
+          {cashFlowReport === null ? (
+            <ErrorState
+              description="We couldn't load cash flow for this period. Please try again shortly."
+              title="Cash flow unavailable"
+            />
+          ) : (
+            <CashFlowChart
+              data={cashFlowReport.months.map((month) => ({
+                chartValue: Number(month.netMinorUnits),
+                netCashFlowMinorUnits: month.netMinorUnits,
+                period: formatMonth(month.month),
+              }))}
+              isSample={false}
+              periodDescription={formatDateRange(cashFlowReport.from, cashFlowReport.to)}
+            />
+          )}
+          <ExpenseBreakdownChart data={expenseBreakdown} />
+        </section>
+      ) : null}
 
       <Card className="mt-6">
         <CardHeader>
@@ -181,8 +199,8 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             date, and manual income and expenses are counted by activity date.
           </p>
           <p>
-            Cash flow and expense category charts are sample illustrations. They are not calculated
-            from the selected dates or workspace records yet.
+            Cash flow uses signed USD bank transactions grouped by month. The expense category chart
+            is still a sample illustration and is not calculated from workspace records.
           </p>
         </CardContent>
       </Card>
@@ -213,4 +231,13 @@ function formatDateRange(from: string, to: string): string {
     year: "numeric",
   });
   return `${formatter.format(new Date(`${from}T00:00:00.000Z`))} – ${formatter.format(new Date(`${to}T00:00:00.000Z`))}`;
+}
+
+function formatMonth(value: string): string {
+  const date = new Date(`${value}-01T00:00:00.000Z`);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "2-digit",
+    timeZone: "UTC",
+  }).format(date);
 }

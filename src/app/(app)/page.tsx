@@ -65,12 +65,12 @@ const dashboardMetrics = [
 ];
 
 const cashFlowSampleData: CashFlowDataPoint[] = [
-  { period: "Apr", netCashFlowCents: 425_000 },
-  { period: "May", netCashFlowCents: 510_000 },
-  { period: "Jun", netCashFlowCents: 378_000 },
-  { period: "Jul", netCashFlowCents: 642_000 },
-  { period: "Aug", netCashFlowCents: 584_000 },
-  { period: "Sep", netCashFlowCents: 711_000 },
+  { chartValue: 425_000, netCashFlowMinorUnits: "425000", period: "Apr" },
+  { chartValue: 510_000, netCashFlowMinorUnits: "510000", period: "May" },
+  { chartValue: 378_000, netCashFlowMinorUnits: "378000", period: "Jun" },
+  { chartValue: 642_000, netCashFlowMinorUnits: "642000", period: "Jul" },
+  { chartValue: 584_000, netCashFlowMinorUnits: "584000", period: "Aug" },
+  { chartValue: 711_000, netCashFlowMinorUnits: "711000", period: "Sep" },
 ];
 
 const expenseBreakdownSampleData: ExpenseBreakdownDataPoint[] = [
