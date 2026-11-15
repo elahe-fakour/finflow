@@ -1,7 +1,16 @@
 import { customerSampleData } from "@/components/customers/customer-sample-data";
+import { invoiceDetailSampleData } from "@/components/invoices/invoice-sample-data";
+import { InvoiceStatusBadge } from "@/components/invoices/invoice-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CircleDollarSign, FilePenLine, FileText } from "lucide-react";
 import type { Metadata } from "next";
@@ -24,6 +33,16 @@ export default async function CustomerDetailPage(props: PageProps<"/customers/[c
   if (!customer) {
     notFound();
   }
+
+  const invoices = invoiceDetailSampleData.filter((invoice) => invoice.customerId === customer.id);
+  const payments = invoices
+    .flatMap((invoice) =>
+      invoice.paymentHistory.map((payment) => ({
+        ...payment,
+        invoiceNumber: invoice.invoiceNumber,
+      })),
+    )
+    .sort((first, second) => second.receivedAt.localeCompare(first.receivedAt));
 
   return (
     <section aria-labelledby="customer-title">
@@ -110,31 +129,122 @@ export default async function CustomerDetailPage(props: PageProps<"/customers/[c
         <Card>
           <CardHeader>
             <CardTitle as="h2">Invoices</CardTitle>
-            <CardDescription>Invoice history for {customer.name}.</CardDescription>
+            <CardDescription>Invoice status, due dates, and outstanding amounts.</CardDescription>
+            <CardAction>
+              <Badge variant="outline">Sample data</Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
-            <EmptyState
-              description="Detailed invoice records will appear here when invoice management is introduced."
-              icon={FileText}
-              title="Invoice history is coming soon"
-            />
+            {invoices.length === 0 ? (
+              <EmptyState
+                description={`There are no invoices for ${customer.name} in the current sample data.`}
+                icon={FileText}
+                title="No invoice history yet"
+              />
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-border">
+                <table className="w-full min-w-[34rem] text-left text-sm">
+                  <caption className="sr-only">Sample invoices for {customer.name}</caption>
+                  <thead className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Invoice
+                      </th>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Due date
+                      </th>
+                      <th className="px-4 py-3 font-medium" scope="col">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium" scope="col">
+                        Outstanding
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {invoices.map((invoice) => (
+                      <tr key={invoice.id}>
+                        <td className="px-4 py-4">
+                          <Link
+                            className="font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            href={`/invoices/${invoice.id}`}
+                          >
+                            {invoice.invoiceNumber}
+                          </Link>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-muted-foreground">
+                          {formatSampleDate(invoice.dueDate)}
+                        </td>
+                        <td className="px-4 py-4">
+                          <InvoiceStatusBadge status={invoice.status} />
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-right font-medium tabular-nums text-foreground">
+                          {invoice.totalsDisplay.outstandingLabel}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle as="h2">Payments</CardTitle>
-            <CardDescription>Payment activity and allocation history.</CardDescription>
+            <CardDescription>Received amounts linked to this customer’s invoices.</CardDescription>
+            <CardAction>
+              <Badge variant="outline">Sample data</Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
-            <EmptyState
-              description="Recorded payments and their invoice allocations will appear here in a later milestone."
-              icon={CircleDollarSign}
-              title="Payment history is coming soon"
-            />
+            {payments.length === 0 ? (
+              <EmptyState
+                description={`There are no recorded payments for ${customer.name} in the current sample data.`}
+                icon={CircleDollarSign}
+                title="No payments recorded"
+              />
+            ) : (
+              <ul className="divide-y divide-border">
+                {payments.map((payment) => (
+                  <li
+                    className="flex flex-col gap-2 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
+                    key={payment.id}
+                  >
+                    <div className="min-w-0">
+                      <Link
+                        className="font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        href={`/invoices/${payment.invoiceId}`}
+                      >
+                        {payment.invoiceNumber}
+                      </Link>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {payment.receivedAtLabel} · {payment.methodLabel}
+                      </p>
+                      {payment.reference ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Reference: {payment.reference}
+                        </p>
+                      ) : null}
+                    </div>
+                    <p className="shrink-0 font-semibold tabular-nums text-success">
+                      {payment.amountLabel}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
     </section>
   );
+}
+
+function formatSampleDate(date: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00.000Z`));
 }
