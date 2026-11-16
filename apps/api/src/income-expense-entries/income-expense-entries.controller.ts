@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
+import { CurrentUser } from "@nestjs/authentication";
+import type { AuthenticatedUser } from "../auth/auth.service.js";
 import { RequireWorkspacePermission } from "../workspaces/require-workspace-permission.decorator.js";
 import { CurrentWorkspace, type WorkspaceAccess } from "../workspaces/workspace-access.js";
 import { WorkspaceMembershipGuard } from "../workspaces/workspace-membership.guard.js";
@@ -41,9 +43,10 @@ export class IncomeExpenseEntriesController {
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_FINANCIAL_DATA)
   create(
     @CurrentWorkspace() access: WorkspaceAccess,
+    @CurrentUser() user: AuthenticatedUser,
     @Body() input: CreateIncomeExpenseEntryDto,
   ): Promise<IncomeExpenseEntryResponse> {
-    return this.entriesService.create(access, input);
+    return this.entriesService.create(access, user.id, input);
   }
 
   @Get(":entryId")
@@ -59,9 +62,10 @@ export class IncomeExpenseEntriesController {
   @RequireWorkspacePermission(WorkspacePermission.MANAGE_FINANCIAL_DATA)
   update(
     @CurrentWorkspace() access: WorkspaceAccess,
+    @CurrentUser() user: AuthenticatedUser,
     @Param("entryId", new ParseUUIDPipe()) entryId: string,
     @Body() input: UpdateIncomeExpenseEntryDto,
   ): Promise<IncomeExpenseEntryResponse> {
-    return this.entriesService.update(access, entryId, input);
+    return this.entriesService.update(access, user.id, entryId, input);
   }
 }

@@ -79,5 +79,6 @@ the UI; it must never be interpreted as HTML.
 Use stable lowercase dotted names, with the business entity first and the past
 tense operation second. Examples include `invoice.created`,
 `invoice.status_changed`, `payment.recorded`, `income_expense.created`,
+`income_expense.updated`,
 `reconciliation.confirmed`, and `reconciliation.reversed`. Do not rename an
 action after it has been persisted; add a new action when its meaning changes.

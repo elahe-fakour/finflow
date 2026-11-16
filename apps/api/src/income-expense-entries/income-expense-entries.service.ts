@@ -77,12 +77,36 @@ export class IncomeExpenseEntriesService {
 
   async create(
     scope: WorkspaceScope,
+    actorUserId: string,
     input: CreateIncomeExpenseEntryDto,
   ): Promise<IncomeExpenseEntryResponse> {
     const entry = await this.prisma.withTransaction(async (transaction) => {
       const persistenceInput = await this.toPersistenceInput(scope, input, transaction);
+      const createdEntry = await this.entriesRepository.create(
+        scope,
+        persistenceInput,
+        transaction,
+      );
 
-      return this.entriesRepository.create(scope, persistenceInput, transaction);
+      await transaction.auditEvent.create({
+        data: {
+          workspaceId: scope.workspaceId,
+          actorUserId,
+          action: "income_expense.created",
+          entity: "IncomeExpenseEntry",
+          entityId: createdEntry.id,
+          metadata: {
+            amountMinorUnits: createdEntry.amountMinorUnits.toString(),
+            categoryId: createdEntry.categoryId,
+            currency: createdEntry.currency,
+            occurredOn: toCalendarDate(createdEntry.occurredOn),
+            type: createdEntry.type,
+            ...(createdEntry.vendorId === null ? {} : { vendorId: createdEntry.vendorId }),
+          },
+        },
+      });
+
+      return createdEntry;
     });
 
     return serializeEntry(entry);
@@ -90,6 +114,7 @@ export class IncomeExpenseEntriesService {
 
   async update(
     scope: WorkspaceScope,
+    actorUserId: string,
     entryId: string,
     input: UpdateIncomeExpenseEntryDto,
   ): Promise<IncomeExpenseEntryResponse> {
@@ -119,7 +144,40 @@ export class IncomeExpenseEntriesService {
         transaction,
       );
 
-      return this.entriesRepository.update(scope, entryId, persistenceInput, transaction);
+      const updatedEntry = await this.entriesRepository.update(
+        scope,
+        entryId,
+        persistenceInput,
+        transaction,
+      );
+      const changedFields = getChangedFields(input);
+
+      await transaction.auditEvent.create({
+        data: {
+          workspaceId: scope.workspaceId,
+          actorUserId,
+          action: "income_expense.updated",
+          entity: "IncomeExpenseEntry",
+          entityId: updatedEntry.id,
+          metadata: {
+            changedFields,
+            ...(changedFields.includes("amountMinorUnits")
+              ? { amountMinorUnits: updatedEntry.amountMinorUnits.toString() }
+              : {}),
+            ...(changedFields.includes("categoryId")
+              ? { categoryId: updatedEntry.categoryId }
+              : {}),
+            ...(changedFields.includes("currency") ? { currency: updatedEntry.currency } : {}),
+            ...(changedFields.includes("occurredOn")
+              ? { occurredOn: toCalendarDate(updatedEntry.occurredOn) }
+              : {}),
+            ...(changedFields.includes("type") ? { type: updatedEntry.type } : {}),
+            ...(changedFields.includes("vendorId") ? { vendorId: updatedEntry.vendorId } : {}),
+          },
+        },
+      });
+
+      return updatedEntry;
     });
 
     return serializeEntry(entry);
@@ -304,6 +362,19 @@ function toCalendarDate(value: Date): string {
 
 function hasOwn(object: object, property: string): boolean {
   return Object.prototype.hasOwnProperty.call(object, property);
+}
+
+function getChangedFields(input: UpdateIncomeExpenseEntryDto): string[] {
+  return [
+    "type",
+    "amountMinorUnits",
+    "currency",
+    "occurredOn",
+    "description",
+    "categoryId",
+    "vendorId",
+    "reference",
+  ].filter((field) => hasOwn(input, field));
 }
 
 function entryNotFound(): NotFoundException {
