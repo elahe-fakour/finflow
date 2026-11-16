@@ -207,6 +207,8 @@ For financial features:
 - Workspace access control is enforced by the backend, not only hidden in the
   UI.
 - Important financial operations will create audit events.
+- Audit-event fields, access, metadata redaction, and MVP retention are defined in
+  [audit-events.md](./audit-events.md).
 
 ## Architectural Change Policy
 

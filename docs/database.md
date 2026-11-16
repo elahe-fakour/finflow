@@ -2,8 +2,8 @@
 
 ## Status and Source of Truth
 
-This document describes the PostgreSQL persistence contract through Phase 8,
-Milestone 8.1, Task 3. It is a guide for contributors and reviewers. The
+This document describes the current PostgreSQL persistence contract. It is a
+guide for contributors and reviewers. The
 executable source of truth is:
 
 - [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) for Prisma
@@ -15,8 +15,9 @@ The NestJS API has a lazily initialized Prisma service, a workspace-scoped
 customer repository pattern, authentication endpoints, revocable session
 persistence, and manual income/expense entry endpoints. Private password hashes
 are stored separately from public user data. Workspace membership and role checks
-are enforced for workspace-scoped routes. Audit-event writing remains in its
-planned milestone.
+are enforced for workspace-scoped routes. The audit-event schema and read API are
+in place; writing events from financial workflows is still being implemented.
+The event and metadata contract is defined in [audit-events.md](./audit-events.md).
 
 ## Design Goals
 
@@ -34,6 +35,7 @@ planned milestone.
 User -- UserCredential
 User --< UserSession
 User --< WorkspaceMembership >-- Workspace
+User --< AuditEvent >-- Workspace
 Workspace --< Customer --< Invoice --< InvoiceLineItem
                          |
                          +--< Payment --< Reconciliation >-- BankTransaction
@@ -47,15 +49,16 @@ will be designed explicitly in the reconciliation milestone.
 
 ## Model Map
 
-| Area              | Models                                        | Purpose                                                                                                 |
-| ----------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Identity          | `User`, `UserCredential`, `UserSession`       | Separates public identity data, private password hashes, and revocable session verifiers.               |
-| Workspace access  | `Workspace`, `WorkspaceMembership`            | Represents businesses and workspace-specific roles for users.                                           |
-| Contacts          | `Customer`, `Vendor`                          | Holds invoice customers and expense vendors.                                                            |
-| Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment`       | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.           |
-| Manual operations | `IncomeExpenseCategory`, `IncomeExpenseEntry` | Stores workspace-specific income/expense categories and positive manual income or expense facts.        |
-| Banking           | `BankAccount`, `BankTransaction`              | Stores financial accounts, opening balances, and signed transaction facts.                              |
-| Reconciliation    | `Reconciliation`                              | Records suggested or manual matches between bank transactions and payments, including reversal history. |
+| Area              | Models                                        | Purpose                                                                                                      |
+| ----------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Identity          | `User`, `UserCredential`, `UserSession`       | Separates public identity data, private password hashes, and revocable session verifiers.                    |
+| Workspace access  | `Workspace`, `WorkspaceMembership`            | Represents businesses and workspace-specific roles for users.                                                |
+| Contacts          | `Customer`, `Vendor`                          | Holds invoice customers and expense vendors.                                                                 |
+| Invoicing         | `Invoice`, `InvoiceLineItem`, `Payment`       | Stores invoice snapshots, their line-level calculation inputs/results, and recorded payments.                |
+| Manual operations | `IncomeExpenseCategory`, `IncomeExpenseEntry` | Stores workspace-specific income/expense categories and positive manual income or expense facts.             |
+| Banking           | `BankAccount`, `BankTransaction`              | Stores financial accounts, opening balances, and signed transaction facts.                                   |
+| Reconciliation    | `Reconciliation`                              | Records suggested or manual matches between bank transactions and payments, including reversal history.      |
+| Audit             | `AuditEvent`                                  | Append-only workspace history for important operations; details are in [audit-events.md](./audit-events.md). |
 
 ## Workspace Isolation
 
@@ -232,7 +235,7 @@ financial schema because it bypasses reviewable migration history.
 - CSV import source metadata beyond `BankTransaction.externalId`
 - Exchange rates and multi-currency conversion
 - A general ledger or tax-jurisdiction engine
-- Audit-event writing and reconciliation scoring behavior
+- Business-workflow audit-event writing and reconciliation scoring behavior
 
 These omissions are intentional. Each becomes a separate task when its business
 rules and operational requirements are clear.

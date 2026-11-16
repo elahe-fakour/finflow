@@ -176,4 +176,4 @@ integer strings, converting with `BigInt` only inside the server. The API reject
 decimal, zero, negative, and out-of-range values. Any workflow that records a
 payment and changes an invoice balance will run in a database transaction and
 create an audit event. See [database.md](./database.md) for the persistence model
-and database-enforced rules.
+and [audit-events.md](./audit-events.md) for event metadata and retention rules.
