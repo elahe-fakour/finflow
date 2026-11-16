@@ -128,20 +128,46 @@ export class ReconciliationService {
         select: { bankTransactionId: true, id: true, paymentId: true, status: true },
       });
 
-      await database.auditEvent.create({
-        data: {
-          workspaceId: scope.workspaceId,
-          actorUserId,
-          action: "RECONCILIATION_CONFIRMED",
-          entity: "Reconciliation",
-          entityId: reconciliation.id,
-          metadata: {
-            bankTransactionId,
-            confidenceBasisPoints: input.confidenceBasisPoints,
-            invoiceId: input.invoiceId,
-            paymentId: payment.id,
+      await database.auditEvent.createMany({
+        data: [
+          {
+            workspaceId: scope.workspaceId,
+            actorUserId,
+            action: "payment.recorded",
+            entity: "Payment",
+            entityId: payment.id,
+            metadata: {
+              amountMinorUnits: transaction.amountMinorUnits.toString(),
+              bankTransactionId,
+              currency: invoice.currency,
+              invoiceId: input.invoiceId,
+            },
           },
-        },
+          {
+            workspaceId: scope.workspaceId,
+            actorUserId,
+            action: "invoice.status_changed",
+            entity: "Invoice",
+            entityId: input.invoiceId,
+            metadata: {
+              fromStatus: invoice.status,
+              toStatus: InvoiceStatus.PAID,
+            },
+          },
+          {
+            workspaceId: scope.workspaceId,
+            actorUserId,
+            action: "reconciliation.confirmed",
+            entity: "Reconciliation",
+            entityId: reconciliation.id,
+            metadata: {
+              bankTransactionId,
+              confidenceBasisPoints: input.confidenceBasisPoints,
+              invoiceId: input.invoiceId,
+              paymentId: payment.id,
+            },
+          },
+        ],
       });
 
       return { idempotencyReplayed: false, ...reconciliation };
