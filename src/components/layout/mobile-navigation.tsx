@@ -98,7 +98,7 @@ function MobileNavigation() {
     <>
       <nav
         aria-label="Mobile navigation"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(15_23_42/0.08)] backdrop-blur lg:hidden"
+        className="print-hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgb(15_23_42/0.08)] backdrop-blur lg:hidden"
       >
         <div className="grid grid-cols-5 gap-1">
           {mobilePrimaryNavigationItems.map((item) => (
@@ -109,7 +109,7 @@ function MobileNavigation() {
             aria-expanded={isMoreMenuOpen}
             aria-haspopup="dialog"
             className={cn(
-        "flex min-h-16 flex-col items-center justify-center gap-1 rounded-control px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "flex min-h-16 flex-col items-center justify-center gap-1 rounded-control px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               isMoreActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -126,7 +126,7 @@ function MobileNavigation() {
       <dialog
         aria-labelledby="mobile-navigation-title"
         aria-modal="true"
-        className="m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-panel border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-foreground/35 lg:hidden"
+        className="print-hidden m-auto w-[calc(100%_-_2rem)] max-w-sm rounded-panel border border-border bg-surface p-0 text-foreground shadow-2xl backdrop:bg-foreground/35 lg:hidden"
         id="mobile-navigation-dialog"
         onClose={() => setIsMoreMenuOpen(false)}
         ref={dialogRef}

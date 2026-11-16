@@ -11,7 +11,7 @@ function AppTopbar({ user }: AppTopbarProps) {
   const accountInitial = accountLabel.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center border-b border-border bg-surface/95 backdrop-blur-xl">
+    <header className="print-hidden sticky top-0 z-30 flex h-20 shrink-0 items-center border-b border-border bg-surface/95 backdrop-blur-xl">
       <div className="flex w-full items-center gap-2 px-3 sm:gap-3 sm:px-5 lg:px-8">
         <div
           aria-label="Search will be available in a future milestone"

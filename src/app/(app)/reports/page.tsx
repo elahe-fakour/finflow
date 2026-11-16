@@ -7,6 +7,7 @@ import {
 import { ErrorState } from "@/components/ui/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { PrintReportButton } from "@/components/reports/print-report-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
 import { getCashFlowReport } from "@/lib/reports/cash-flow-report";
@@ -44,7 +45,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
       : [null, null, null];
 
   return (
-    <section aria-labelledby="reports-title">
+    <section aria-labelledby="reports-title" className="report-print-root">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold tracking-wide text-primary uppercase">
@@ -60,11 +61,22 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
             Review your workspace profit and loss for a selected date range.
           </p>
         </div>
+        {workspace && report ? <PrintReportButton /> : null}
       </header>
+
+      {workspace && report ? (
+        <div className="print-only mt-4">
+          <p className="text-sm font-semibold text-foreground">FinFlow · Financial report</p>
+          <p className="text-sm text-secondary-foreground">
+            Workspace: {workspace.name} · Period: {formatDateRange(report.from, report.to)} ·
+            Prepared {formatDate(new Date())}
+          </p>
+        </div>
+      ) : null}
 
       <form
         action="/reports"
-        className="mt-6 flex flex-wrap items-end gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5"
+        className="print-hidden mt-6 flex flex-wrap items-end gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5"
       >
         <div className="flex min-h-11 items-center gap-2 pr-1 text-sm font-semibold text-foreground">
           <CalendarDays aria-hidden="true" className="size-5 text-primary" />
@@ -257,6 +269,15 @@ function formatMonth(value: string): string {
     year: "2-digit",
     timeZone: "UTC",
   }).format(date);
+}
+
+function formatDate(value: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(value);
 }
 
 function mapCategoryData(

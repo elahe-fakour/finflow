@@ -37,7 +37,7 @@ function AppSidebar() {
   return (
     <aside
       aria-label="FinFlow application sidebar"
-      className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface/95 lg:flex"
+      className="print-hidden sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-border bg-surface/95 lg:flex"
     >
       <div className="flex h-20 items-center border-b border-border px-5">
         <Link

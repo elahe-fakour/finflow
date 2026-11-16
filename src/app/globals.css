@@ -191,3 +191,58 @@ textarea {
     transition-duration: 0.01ms !important;
   }
 }
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #17243d !important;
+    font-size: 10pt;
+    print-color-adjust: exact;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .app-shell,
+  .app-main {
+    min-height: 0 !important;
+    background: #ffffff !important;
+    background-image: none !important;
+  }
+
+  #main-content {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  #main-content > div {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .report-print-root [data-slot="card"] {
+    break-inside: avoid-page;
+    border-color: #d1d9df !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  .report-print-root svg {
+    max-width: 100%;
+  }
+}
