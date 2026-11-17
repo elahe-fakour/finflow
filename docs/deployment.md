@@ -158,6 +158,15 @@ JSON. Neither logger includes request bodies, headers, exception messages, or
 query strings. These events go to the hosting provider's application logs; no
 external error service or DSN is configured by this change.
 
+The API rate limit for invitation-management and development delivery routes is
+stored in PostgreSQL. Each authenticated user and handler shares a fixed
+one-minute window across API instances; requests after ten in that window
+receive `429`. Bucket keys are SHA-256 hashes, and expired rows are pruned during
+rate-limited traffic. This avoids relying on per-process memory when the API has
+more than one instance. These low-volume controls do not replace edge protection
+against broad denial-of-service traffic; configure provider-level protection
+before exposing higher-risk unauthenticated endpoints.
+
 For each production environment, retain access to API and web application logs,
 review them after a deployment, and configure provider notifications for failed
 deploys or sustained health-check failures. Add an external uptime probe for

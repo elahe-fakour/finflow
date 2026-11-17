@@ -55,10 +55,9 @@ The role map currently grants:
   standalone HTTP controller; customer operations are currently service-level
   building blocks. Any future customer or vendor routes must declare an explicit
   permission and preserve workspace-scoped repository access.
-- The current `RateLimitGuard` keeps counters in process memory. It is suitable
-  only as a basic single-instance control; multi-instance enforcement needs a
-  shared store or a host-level rate limiter before relying on it as a production
-  abuse-control boundary.
+- Rate-limit counters are shared through PostgreSQL so limits apply across API
+  instances. This is intended for the current low-volume invitation routes and
+  does not replace host-level protection from broad denial-of-service traffic.
 - Add integration coverage for cross-workspace access and role matrices in
   Phase 13. This review does not claim those behaviors have been exercised
   end-to-end.
