@@ -1,19 +1,26 @@
 # Testing Guide
 
-This guide records repeatable checks for FinFlow while the application is still
-frontend-only. It complements the automated financial unit tests.
+This guide records repeatable checks for FinFlow's web application and API. It
+complements automated unit and API tests; browser automation and database-backed
+integration coverage are still being expanded.
 
 ## Current Testing Layers
 
-- **Unit tests:** Run `npm run test:run` to verify pure money, invoice-total,
-  balance, and status rules.
+- **Web unit tests:** Run `npm run test:run` for pure money, invoice-total,
+  balance, status, and web API-client behavior.
+- **API unit and integration tests:** Run `npm run test:api`; API test files live
+  in `apps/api/test/` and share typed fixture builders from
+  `apps/api/test/factories.ts`.
+- **Complete automated suite:** Run `npm run test:run:all` to run both suites in
+  sequence.
 - **Manual tests:** Use the payment-preview checklist below to verify the
   browser interaction, accessible validation feedback, and visible invoice
   updates.
 
-Browser automation is intentionally deferred until Phase 13. The payment flow
-currently uses sample data and browser-session state only; it does not create a
-database record.
+The invoice payment-preview flow uses sample data and browser-session state; it
+does not create a database record. API integration tests use mocked repositories
+unless a test explicitly provisions an isolated database. Playwright browser
+automation remains a separate follow-up.
 
 ## Payment Preview Checklist
 
@@ -112,10 +119,12 @@ Expected result:
 
 ## Regression Commands
 
-Run these before review or a commit:
+Run these before review or a commit when you are asked to run the automated
+checks:
 
 ```bash
 npm run test:run
+npm run test:api
 npm run lint
 npm run typecheck
 npm run build -- --webpack
