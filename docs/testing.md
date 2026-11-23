@@ -11,6 +11,9 @@ integration coverage are still being expanded.
 - **API unit and integration tests:** Run `npm run test:api`; API test files live
   in `apps/api/test/` and share typed fixture builders from
   `apps/api/test/factories.ts`.
+- **API database isolation:** Review
+  [the database isolation strategy](./api-test-database-isolation.md) before
+  introducing a spec that writes to PostgreSQL.
 - **Complete automated suite:** Run `npm run test:run:all` to run both suites in
   sequence.
 - **Manual tests:** Use the payment-preview checklist below to verify the
