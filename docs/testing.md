@@ -16,6 +16,8 @@ integration coverage are still being expanded.
   introducing a spec that writes to PostgreSQL.
 - **Complete automated suite:** Run `npm run test:run:all` to run both suites in
   sequence.
+- **Browser smoke test:** Run `npm run test:e2e` after installing the Chromium
+  browser with `npx playwright install chromium`.
 - **Manual tests:** Use the payment-preview checklist below to verify the
   browser interaction, accessible validation feedback, and visible invoice
   updates.

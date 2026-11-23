@@ -17,6 +17,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:run:all": "npm run test:run && npm run test:api",
+    "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run typecheck && npm run test:run && npm run build",
@@ -47,6 +48,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.13.6",
     "@types/react": "^19",
