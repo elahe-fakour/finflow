@@ -1,4 +1,5 @@
 import { BankAccountsWorkspace } from "@/components/bank-accounts/bank-accounts-workspace";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -63,18 +64,16 @@ export default async function BankAccountsPage() {
 
 function PageHeader({ workspaceName }: { workspaceName: string | null }) {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Cash management</p>
-      <h1
-        className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-        id="bank-accounts-title"
-      >
-        Bank Accounts
-      </h1>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Review the opening balances for bank, cash, and payment processor accounts.
-        {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
-      </p>
-    </header>
+    <PageHeading
+      description={
+        <>
+          Review the opening balances for bank, cash, and payment processor accounts.
+          {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
+        </>
+      }
+      eyebrow="Cash management"
+      id="bank-accounts-title"
+      title="Bank Accounts"
+    />
   );
 }

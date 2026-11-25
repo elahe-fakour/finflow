@@ -1,5 +1,6 @@
 import { CategoryManagement } from "@/components/income-expenses/category-management";
 import { ExpenseEntryForm } from "@/components/income-expenses/expense-entry-form";
+import { PageHeading } from "@/components/layout/page-heading";
 import { IncomeEntryForm } from "@/components/income-expenses/income-entry-form";
 import { IncomeExpenseEntryList } from "@/components/income-expenses/income-expense-entry-list";
 import { ErrorState } from "@/components/ui/error-state";
@@ -143,18 +144,16 @@ export default async function IncomeExpensesPage({ searchParams }: IncomeExpense
 
 function PageHeader({ workspaceName }: { workspaceName: string | null }) {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Financial classification</p>
-      <h1
-        className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-        id="income-expenses-title"
-      >
-        Income & Expenses
-      </h1>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Manage the categories used to keep income and spending consistent.
-        {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
-      </p>
-    </header>
+    <PageHeading
+      description={
+        <>
+          Manage the categories used to keep income and spending consistent.
+          {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
+        </>
+      }
+      eyebrow="Financial classification"
+      id="income-expenses-title"
+      title="Income & Expenses"
+    />
   );
 }

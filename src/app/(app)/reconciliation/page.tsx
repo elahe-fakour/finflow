@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -163,23 +164,17 @@ export default async function ReconciliationPage() {
 
 function PageHeader() {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Banking</p>
-      <div className="flex flex-wrap items-center gap-3">
-        <h1
-          className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-          id="reconciliation-title"
-        >
-          Reconciliation
-        </h1>
+    <PageHeading
+      action={
         <Badge variant="outline">
           <ArrowDownLeft aria-hidden="true" />
           Incoming payments
         </Badge>
-      </div>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Match bank deposits to invoices with clear evidence and an explicit confirmation step.
-      </p>
-    </header>
+      }
+      description="Match bank deposits to invoices with clear evidence and an explicit confirmation step."
+      eyebrow="Banking"
+      id="reconciliation-title"
+      title="Reconciliation"
+    />
   );
 }

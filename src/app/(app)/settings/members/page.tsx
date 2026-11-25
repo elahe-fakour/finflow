@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { PageHeading } from "@/components/layout/page-heading";
 import { InviteMemberForm } from "@/components/workspaces/invite-member-form";
 import { PendingInvitations } from "@/components/workspaces/pending-invitations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,19 +65,17 @@ export default async function WorkspaceMembersPage() {
 
 function PageHeader({ workspaceName }: { workspaceName?: string }) {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Workspace controls</p>
-      <h1
-        className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-        id="members-title"
-      >
-        Workspace members
-      </h1>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Review who can access this workspace and which role they hold.
-        {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
-      </p>
-    </header>
+    <PageHeading
+      description={
+        <>
+          Review who can access this workspace and which role they hold.
+          {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
+        </>
+      }
+      eyebrow="Workspace controls"
+      id="members-title"
+      title="Workspace members"
+    />
   );
 }
 

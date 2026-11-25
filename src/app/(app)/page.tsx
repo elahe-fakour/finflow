@@ -13,6 +13,7 @@ import {
   type ExpenseBreakdownDataPoint,
 } from "@/components/dashboard/expense-breakdown-chart";
 import { QuickActionsPanel, type QuickAction } from "@/components/dashboard/quick-actions-panel";
+import { PageHeading } from "@/components/layout/page-heading";
 import {
   RecentInvoicesPanel,
   type RecentInvoice,
@@ -177,26 +178,18 @@ const profitLossSummary: ProfitLossSummary = {
 export default function DashboardPage() {
   return (
     <section aria-labelledby="dashboard-title">
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">
-            Financial overview
-          </p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="dashboard-title"
-          >
-            Dashboard
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-secondary-foreground">
-            An overview of your finances for September 2026.
-          </p>
-        </div>
-        <div className="inline-flex min-h-11 items-center gap-2 self-start rounded-control border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm sm:self-auto">
-          <CalendarDays aria-hidden="true" className="size-5 text-primary" />
-          September 2026 · sample
-        </div>
-      </header>
+      <PageHeading
+        action={
+          <div className="inline-flex min-h-11 items-center gap-2 self-start rounded-control border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm sm:self-auto">
+            <CalendarDays aria-hidden="true" className="size-5 text-primary" />
+            September 2026 · sample
+          </div>
+        }
+        description="An overview of your finances for September 2026."
+        eyebrow="Financial overview"
+        id="dashboard-title"
+        title="Dashboard"
+      />
 
       <section aria-labelledby="dashboard-metrics-title" className="mt-8">
         <h2 className="sr-only" id="dashboard-metrics-title">

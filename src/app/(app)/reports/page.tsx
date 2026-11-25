@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { PrintReportButton } from "@/components/reports/print-report-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeading } from "@/components/layout/page-heading";
 import { formatUsdMinorUnits } from "@/lib/money/format-minor-units";
 import { getCashFlowReport } from "@/lib/reports/cash-flow-report";
 import { getCategoryBreakdownReport } from "@/lib/reports/category-breakdown-report";
@@ -46,23 +47,13 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
 
   return (
     <section aria-labelledby="reports-title" className="report-print-root">
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold tracking-wide text-primary uppercase">
-            Financial analysis
-          </p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="reports-title"
-          >
-            Reports
-          </h1>
-          <p className="max-w-2xl text-base leading-7 text-secondary-foreground">
-            Review your workspace profit and loss for a selected date range.
-          </p>
-        </div>
-        {workspace && report ? <PrintReportButton /> : null}
-      </header>
+      <PageHeading
+        action={workspace && report ? <PrintReportButton /> : undefined}
+        description="Review your workspace profit and loss for a selected date range."
+        eyebrow="Financial analysis"
+        id="reports-title"
+        title="Reports"
+      />
 
       {workspace && report ? (
         <div className="print-only mt-4">

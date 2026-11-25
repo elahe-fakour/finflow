@@ -1,4 +1,5 @@
 import { DashboardKpiCard } from "@/components/dashboard/dashboard-kpi-card";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,18 +30,12 @@ export default async function ReceivablesPage({ searchParams }: ReceivablesPageP
 
   return (
     <section aria-labelledby="receivables-title">
-      <header className="space-y-2">
-        <p className="text-sm font-semibold tracking-wide text-primary uppercase">Sales analysis</p>
-        <h1
-          className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-          id="receivables-title"
-        >
-          Accounts Receivable
-        </h1>
-        <p className="max-w-2xl text-base leading-7 text-secondary-foreground">
-          Review open customer invoices and what remains to be collected.
-        </p>
-      </header>
+      <PageHeading
+        description="Review open customer invoices and what remains to be collected."
+        eyebrow="Sales analysis"
+        id="receivables-title"
+        title="Accounts Receivable"
+      />
 
       <form
         action="/receivables"

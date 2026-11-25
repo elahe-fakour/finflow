@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -95,19 +96,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
 function PageHeader({ workspaceName }: { workspaceName?: string }) {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Workspace controls</p>
-      <h1
-        className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-        id="settings-title"
-      >
-        Audit log
-      </h1>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Review important actions recorded for your FinFlow workspace.
-        {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
-      </p>
-    </header>
+    <PageHeading
+      description={
+        <>
+          Review important actions recorded for your FinFlow workspace.
+          {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
+        </>
+      }
+      eyebrow="Workspace controls"
+      id="settings-title"
+      title="Audit log"
+    />
   );
 }
 

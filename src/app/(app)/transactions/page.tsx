@@ -1,4 +1,5 @@
 import { BankTransactionList } from "@/components/bank-transactions/bank-transaction-list";
+import { PageHeading } from "@/components/layout/page-heading";
 import { BankTransactionImportHistory } from "@/components/bank-transactions/bank-transaction-import-history";
 import { CreateBankTransactionForm } from "@/components/bank-transactions/create-bank-transaction-form";
 import { CsvImportPreview } from "@/components/bank-transactions/csv-import-preview";
@@ -109,18 +110,16 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
 
 function PageHeader({ workspaceName }: { workspaceName: string | null }) {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Cash movement</p>
-      <h1
-        className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-        id="transactions-title"
-      >
-        Transactions
-      </h1>
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Search and review the money moving through your bank accounts.
-        {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
-      </p>
-    </header>
+    <PageHeading
+      description={
+        <>
+          Search and review the money moving through your bank accounts.
+          {workspaceName ? ` Workspace: ${workspaceName}.` : ""}
+        </>
+      }
+      eyebrow="Cash movement"
+      id="transactions-title"
+      title="Transactions"
+    />
   );
 }
