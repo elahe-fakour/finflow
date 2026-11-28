@@ -1,4 +1,5 @@
 import { vendorSampleData } from "@/components/vendors/vendor-sample-data";
+import { PageHeading } from "@/components/layout/page-heading";
 import {
   vendorBillSampleData,
   vendorExpenseSampleData,
@@ -56,29 +57,25 @@ export default async function VendorDetailPage({ params }: VendorDetailPageProps
         <span aria-current="page">{vendor.name}</span>
       </nav>
 
-      <header className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-primary">Vendor profile</p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="vendor-title"
-          >
-            {vendor.name}
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-            {vendor.contactName} · {vendor.email}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="outline">Sample data</Badge>
-          <Button asChild size="lg" variant="outline">
-            <Link href={`/vendors/${vendor.id}/edit`}>
-              <FilePenLine aria-hidden="true" />
-              Edit vendor
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <div className="mt-4">
+        <PageHeading
+          action={
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="outline">Sample data</Badge>
+              <Button asChild size="lg" variant="outline">
+                <Link href={`/vendors/${vendor.id}/edit`}>
+                  <FilePenLine aria-hidden="true" />
+                  Edit vendor
+                </Link>
+              </Button>
+            </div>
+          }
+          description={`${vendor.contactName} · ${vendor.email}`}
+          eyebrow="Vendor profile"
+          id="vendor-title"
+          title={vendor.name}
+        />
+      </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <Card>

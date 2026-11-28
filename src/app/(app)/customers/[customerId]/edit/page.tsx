@@ -1,5 +1,6 @@
 import { CustomerForm } from "@/components/customers/customer-form";
 import { customerSampleData } from "@/components/customers/customer-sample-data";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
@@ -29,24 +30,17 @@ export default async function EditCustomerPage({ params }: EditCustomerPageProps
 
   return (
     <section aria-labelledby="edit-customer-title">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-primary">Customer relationships</p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="edit-customer-title"
-          >
-            Edit {customer.name}
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Validate changes to this customer&apos;s contact details before persistence is
-            available.
-          </p>
-        </div>
-        <Badge className="w-fit" variant="outline">
-          Validation preview
-        </Badge>
-      </header>
+      <PageHeading
+        action={
+          <Badge className="w-fit" variant="outline">
+            Validation preview
+          </Badge>
+        }
+        description={`Validate changes to ${customer.name}'s contact details before persistence is available.`}
+        eyebrow="Customer relationships"
+        id="edit-customer-title"
+        title={`Edit ${customer.name}`}
+      />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <CustomerForm

@@ -1,5 +1,6 @@
 import { VendorForm } from "@/components/vendors/vendor-form";
 import { vendorSampleData } from "@/components/vendors/vendor-sample-data";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
@@ -29,23 +30,17 @@ export default async function EditVendorPage({ params }: EditVendorPageProps) {
 
   return (
     <section aria-labelledby="edit-vendor-title">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-primary">Vendor relationships</p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="edit-vendor-title"
-          >
-            Edit {vendor.name}
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Validate changes to this vendor&apos;s details before persistence is available.
-          </p>
-        </div>
-        <Badge className="w-fit" variant="outline">
-          Validation preview
-        </Badge>
-      </header>
+      <PageHeading
+        action={
+          <Badge className="w-fit" variant="outline">
+            Validation preview
+          </Badge>
+        }
+        description={`Validate changes to ${vendor.name}'s details before persistence is available.`}
+        eyebrow="Vendor relationships"
+        id="edit-vendor-title"
+        title={`Edit ${vendor.name}`}
+      />
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <VendorForm

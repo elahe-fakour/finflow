@@ -5,6 +5,7 @@ import type {
   PaymentHistoryItem,
 } from "@/components/invoices/invoice-sample-data";
 import { InvoiceStatusBadge } from "@/components/invoices/invoice-status-badge";
+import { PageHeading } from "@/components/layout/page-heading";
 import {
   RecordPaymentForm,
   type ValidatedPaymentInput,
@@ -163,24 +164,20 @@ function InvoiceDetailWorkspace({ invoice }: InvoiceDetailWorkspaceProps) {
         <span aria-current="page">{invoice.invoiceNumber}</span>
       </nav>
 
-      <header className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-primary">Sales operations</p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="invoice-title"
-          >
-            {invoice.invoiceNumber}
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-            {invoice.customerName} · Due {invoice.dueDate}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="outline">Sample data</Badge>
-          <InvoiceStatusBadge status={financialState.status} />
-        </div>
-      </header>
+      <div className="mt-4">
+        <PageHeading
+          action={
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="outline">Sample data</Badge>
+              <InvoiceStatusBadge status={financialState.status} />
+            </div>
+          }
+          description={`${invoice.customerName} · Due ${invoice.dueDate}`}
+          eyebrow="Sales operations"
+          id="invoice-title"
+          title={invoice.invoiceNumber}
+        />
+      </div>
 
       {confirmation ? (
         <div

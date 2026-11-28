@@ -1,5 +1,6 @@
 import { customerSampleData } from "@/components/customers/customer-sample-data";
 import { invoiceDetailSampleData } from "@/components/invoices/invoice-sample-data";
+import { PageHeading } from "@/components/layout/page-heading";
 import { InvoiceStatusBadge } from "@/components/invoices/invoice-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,29 +58,25 @@ export default async function CustomerDetailPage(props: PageProps<"/customers/[c
         <span aria-current="page">{customer.name}</span>
       </nav>
 
-      <header className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-primary">Customer profile</p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="customer-title"
-          >
-            {customer.name}
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-            {customer.contactName} · {customer.email}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="outline">Sample data</Badge>
-          <Button asChild size="lg" variant="outline">
-            <Link href={`/customers/${customer.id}/edit`}>
-              <FilePenLine aria-hidden="true" />
-              Edit customer
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <div className="mt-4">
+        <PageHeading
+          action={
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="outline">Sample data</Badge>
+              <Button asChild size="lg" variant="outline">
+                <Link href={`/customers/${customer.id}/edit`}>
+                  <FilePenLine aria-hidden="true" />
+                  Edit customer
+                </Link>
+              </Button>
+            </div>
+          }
+          description={`${customer.contactName} · ${customer.email}`}
+          eyebrow="Customer profile"
+          id="customer-title"
+          title={customer.name}
+        />
+      </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <Card>

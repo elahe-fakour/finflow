@@ -1,5 +1,6 @@
 import { TransactionCategoryAssignment } from "@/components/bank-transactions/transaction-category-assignment";
 import { ReconciliationSuggestions } from "@/components/reconciliation/reconciliation-suggestions";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +59,10 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
   if (categories === null || reconciliationSuggestions === null) {
     return (
       <section aria-labelledby="transaction-title">
-        <PageHeader description={transaction.description} />
+        <PageHeader
+          description={transaction.description}
+          isInflow={BigInt(transaction.amountMinorUnits) > 0n}
+        />
         <ErrorState
           className="mt-8"
           description="We couldn't load transaction categories or reconciliation suggestions. Please try again shortly."
@@ -82,12 +86,8 @@ export default async function TransactionDetailPage({ params }: TransactionDetai
         <span aria-hidden="true"> / </span>
         <span aria-current="page">{transaction.description}</span>
       </nav>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader description={transaction.description} />
-        <Badge variant={isInflow ? "default" : "secondary"}>
-          {isInflow ? <ArrowDownLeft aria-hidden="true" /> : <ArrowUpRight aria-hidden="true" />}
-          {isInflow ? "Inflow" : "Outflow"}
-        </Badge>
+      <div className="mt-4">
+        <PageHeader description={transaction.description} isInflow={isInflow} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -159,19 +159,19 @@ function DetailRow({ children, label }: { children: React.ReactNode; label: stri
   );
 }
 
-function PageHeader({ description }: { description: string }) {
+function PageHeader({ description, isInflow }: { description: string; isInflow: boolean }) {
   return (
-    <header className="space-y-2">
-      <p className="text-sm font-medium text-primary">Cash movement</p>
-      <h1
-        className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-        id="transaction-title"
-      >
-        {description}
-      </h1>
-      <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-        Review bank activity and assign its reporting category.
-      </p>
-    </header>
+    <PageHeading
+      action={
+        <Badge variant={isInflow ? "default" : "secondary"}>
+          {isInflow ? <ArrowDownLeft aria-hidden="true" /> : <ArrowUpRight aria-hidden="true" />}
+          {isInflow ? "Inflow" : "Outflow"}
+        </Badge>
+      }
+      description="Review bank activity and assign its reporting category."
+      eyebrow="Cash movement"
+      id="transaction-title"
+      title={description}
+    />
   );
 }

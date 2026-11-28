@@ -1,4 +1,5 @@
 import { VendorForm } from "@/components/vendors/vendor-form";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,23 +22,19 @@ export default function NewVendorPage() {
         </Link>
       </Button>
 
-      <header className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-primary">Vendor relationships</p>
-          <h1
-            className="text-page-title font-semibold tracking-tight text-foreground sm:text-display"
-            id="new-vendor-title"
-          >
-            New vendor
-          </h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Validate a new vendor&apos;s details before vendor persistence is available.
-          </p>
-        </div>
-        <Badge className="w-fit" variant="outline">
-          Validation preview
-        </Badge>
-      </header>
+      <div className="mt-6">
+        <PageHeading
+          action={
+            <Badge className="w-fit" variant="outline">
+              Validation preview
+            </Badge>
+          }
+          description="Validate a new vendor's details before vendor persistence is available."
+          eyebrow="Vendor relationships"
+          id="new-vendor-title"
+          title="New vendor"
+        />
+      </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <VendorForm mode="create" returnHref="/vendors" />
